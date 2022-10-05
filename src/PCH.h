@@ -20,7 +20,6 @@
 #include "pugixml.hpp"
 #include "nlohmann/json.hpp"
 
-// Compatible declarations with other sample projects.
 #define DLLEXPORT __declspec(dllexport)
 
 using namespace std::literals;
