@@ -109,7 +109,7 @@ namespace util {
 
     // Derived from: https://github.com/powerof3/PapyrusExtenderSSE
     void iterate_attached_cells(const RE::NiPoint3& a_origin, float a_radius,
-                                std::function<bool(RE::TESObjectREFR&)> a_fn) {
+                                std::function<RE::BSContainer::ForEachResult(RE::TESObjectREFR&)> a_fn) {
         auto TES = RE::TES::GetSingleton();
         if (!TES) return;
 

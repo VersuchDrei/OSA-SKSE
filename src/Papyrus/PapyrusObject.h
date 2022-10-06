@@ -52,7 +52,7 @@ namespace PapyrusObject {
                 bool sameFloor = (a_sameFloor > 0.0) ? (std::fabs(originPos.z - refPos.z) <= a_sameFloor) : true;
                 if (sameFloor && a_ref.HasKeyword(keyword) && IsBed(&a_ref)) vec.push_back(&a_ref);
             }
-            return true;
+            return RE::BSContainer::ForEachResult::kContinue;
         });
 
         if (!vec.empty()) {
@@ -121,7 +121,7 @@ namespace PapyrusObject {
             return 0.0f;
         }
 
-        return static_cast<float>(a_ref->refScale) / 100.0f;
+        return static_cast<float>(a_ref->GetReferenceRuntimeData().refScale) / 100.0f;
     }
 
     RE::TESObjectREFR* GetLocationMarker(RE::BSScript::IVirtualMachine* a_vm, RE::VMStackID a_stackID,
