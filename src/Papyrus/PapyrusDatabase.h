@@ -96,6 +96,32 @@ namespace PapyrusDatabase {
                         if (auto id = anim.attribute("id")) j_obj["OAanimids"].push_back(id.value());
                 }
             }
+
+            if (!j_obj["NumActors"].empty()) {
+                j_obj["actors"] = json::array();
+
+                int actorCount = j_obj["NumActors"];
+                for (int i = 0; i < actorCount; i++) {
+                    j_obj["actors"].push_back(json::object());
+                }
+
+                if (auto actors = scene.child("actors")) {
+
+                    for (auto& actor : actors.children("actor")) {
+                        if (auto position = actor.attribute("position")) {
+                            int pos = position.as_int();
+                            if (pos >= 0 && pos < actorCount) {
+                                if (auto penisAngle = actor.attribute("penisAngle")) {
+                                    j_obj["actors"][pos]["penisAngle"] = penisAngle.as_int();
+                                }
+                                if (auto scale = actor.attribute("scale")) {
+                                    j_obj["actors"][pos]["scale"] = scale.as_float();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         auto anim_class = cls_path.filename().string();
