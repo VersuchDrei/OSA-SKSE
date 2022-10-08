@@ -97,6 +97,23 @@ namespace PapyrusDatabase {
                 }
             }
 
+            j_obj["tags"] = json::array();
+            if (auto metadata = scene.child("metadata")) {
+                if (auto tags = metadata.attribute("tags")) {
+                    std::string delimiter = ",";
+                    std::string tagStr = tags.as_string();
+                    std::transform(tagStr.begin(), tagStr.end(), tagStr.begin(), ::tolower);
+                    size_t index = 0;
+                    std::string tag;
+                    while ((index = tagStr.find(delimiter)) != std::string::npos) {
+                        tag = tagStr.substr(0, index);
+                        j_obj["tags"].push_back(tag);
+                        tagStr.erase(0, index + delimiter.length());
+                    }
+                    j_obj["tags"].push_back(tagStr);
+                }
+            }
+
             if (!j_obj["NumActors"].empty()) {
                 j_obj["actors"] = json::array();
 
@@ -106,16 +123,33 @@ namespace PapyrusDatabase {
                 }
 
                 if (auto actors = scene.child("actors")) {
-
                     for (auto& actor : actors.children("actor")) {
+
                         if (auto position = actor.attribute("position")) {
                             int pos = position.as_int();
                             if (pos >= 0 && pos < actorCount) {
+
                                 if (auto penisAngle = actor.attribute("penisAngle")) {
                                     j_obj["actors"][pos]["penisAngle"] = penisAngle.as_int();
                                 }
+
                                 if (auto scale = actor.attribute("scale")) {
                                     j_obj["actors"][pos]["scale"] = scale.as_float();
+                                }
+
+                                j_obj["actors"][pos]["tags"] = json::array();
+                                if (auto tags = actor.attribute("tags")) {
+                                    std::string delimiter = ",";
+                                    std::string tagStr = tags.as_string();
+                                    std::transform(tagStr.begin(), tagStr.end(), tagStr.begin(), ::tolower);
+                                    size_t index = 0;
+                                    std::string tag;
+                                    while ((index = tagStr.find(delimiter)) != std::string::npos) {
+                                        tag = tagStr.substr(0, index);
+                                        j_obj["actors"][pos]["tags"].push_back(tag);
+                                        tagStr.erase(0, index + delimiter.length());
+                                    }
+                                    j_obj["actors"][pos]["tags"].push_back(tagStr);
                                 }
                             }
                         }
