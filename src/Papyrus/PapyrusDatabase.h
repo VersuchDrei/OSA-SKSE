@@ -156,6 +156,32 @@ namespace PapyrusDatabase {
                     }
                 }
             }
+
+            if (auto actions = scene.child("actions")) {
+                j_obj["actions"] = json::array();
+
+                for (auto& action : actions.children("action")) {
+                    auto type = action.attribute("type");
+                    auto actor = action.attribute("actor");
+                    if (!type || !actor) {
+                        continue;
+                    }
+
+                    auto actionObj = json::object();
+                    actionObj["type"] = type.as_string();
+                    actionObj["actor"] = actor.as_int();
+
+                    if (auto target = action.attribute("target")) {
+                        actionObj["target"] = target.as_int();
+                    }
+
+                    if (auto targetIsPerformer = action.attribute("targetIsPerformer")) {
+                        actionObj["targetIsPerformer"] = targetIsPerformer.as_int();
+                    }
+
+                    j_obj["actions"].push_back(actionObj);
+                }
+            }
         }
 
         auto anim_class = cls_path.filename().string();
