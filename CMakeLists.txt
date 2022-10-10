@@ -33,6 +33,7 @@ set(sources
 	src/Papyrus/Papyrus.h
 	src/Papyrus/PapyrusActor.h
 	src/Papyrus/PapyrusCamera.h
+    src/Papyrus/PapyrusControl.h
 	src/Papyrus/PapyrusDatabase.h
 	src/Papyrus/PapyrusFace.h
 	src/Papyrus/PapyrusObject.h
