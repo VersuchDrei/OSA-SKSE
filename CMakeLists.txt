@@ -24,6 +24,9 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Core/Singleton.h
+    src/Core/ThreadManager.cpp
+    src/Core/ThreadManager.h
     src/Game/LocaleManager.cpp
 	src/Game/LocaleManager.h
 	src/Game/Locker.h
@@ -37,6 +40,7 @@ set(sources
 	src/Papyrus/PapyrusDatabase.h
 	src/Papyrus/PapyrusFace.h
 	src/Papyrus/PapyrusObject.h
+    src/Papyrus/PapyrusScenes.h
 	src/Papyrus/PapyrusUtil.h
 	src/Papyrus/Script.h
 	src/Serial/Manager.cpp
