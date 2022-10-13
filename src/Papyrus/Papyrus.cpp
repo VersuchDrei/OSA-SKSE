@@ -28,4 +28,8 @@ namespace Papyrus {
             papyrus->Register(PapyrusUtil::Bind);
         }
     }
+
+    void Build() {
+        PapyrusDatabase::BuildDB();
+    }
 }  // namespace Papyrus

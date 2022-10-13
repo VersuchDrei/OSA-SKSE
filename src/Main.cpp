@@ -66,6 +66,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     Init(skse);
     Patch::Install();
     Papyrus::Bind();
+    Papyrus::Build();
 
     const auto serial = SKSE::GetSerializationInterface();
     serial->SetUniqueID(Serialization::kOSA);
