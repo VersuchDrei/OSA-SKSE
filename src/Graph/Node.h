@@ -1,3 +1,5 @@
+#pragma once
+
 namespace Graph {
     struct Action {
     public:
