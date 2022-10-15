@@ -25,6 +25,7 @@ set(headers
 
 set(sources
     src/Game/LocaleManager.cpp
+    src/Graph/LookupTable.cpp
 	src/Papyrus/Papyrus.cpp
 	src/Serial/Manager.cpp
 	src/Util.cpp
