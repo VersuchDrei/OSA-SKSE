@@ -163,6 +163,16 @@ namespace PapyrusDatabase {
 
                             if (auto scale = actor.attribute("scale")) {
                                 node->actors[pos]->scale = scale.as_float();
+                            } else if (pos == 0) {
+                                node->actors[pos]->scale = 1.03;
+                            }
+
+                            if (auto scaleHeight = actor.attribute("scaleHeight")) {
+                                node->actors[pos]->scaleHeight = scaleHeight.as_float();
+                            }
+
+                            if (auto heelScaling = actor.attribute("heelScaling")) {
+                                node->actors[pos]->heelScaling = heelScaling.as_bool();
                             }
 
                             if (auto tags = actor.attribute("tags")) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Graph/LookupTable.h"
+
 namespace PapyrusActor {
     using VM = RE::BSScript::IVirtualMachine;
 
@@ -197,6 +199,12 @@ namespace PapyrusActor {
         return result;
     }
 
+    void ScaleActor(RE::StaticFunctionTag*, RE::Actor* actor, std::string id, int position) {
+        if(auto node = Graph::LookupTable::GetNodeById(id)) {
+            node->scaleActor(actor, position);
+        }
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
@@ -213,6 +221,7 @@ namespace PapyrusActor {
         BIND(LookupRelationshipPartners, true);
         BIND(ToggleCombat);
         BIND(DetectionActive);
+        BIND(ScaleActor);
 
         return true;
     }
