@@ -1,6 +1,7 @@
 #include "Graph/LookupTable.h"
 
 #include "Graph/Node.h"
+#include "SKEE.h"
 
 namespace Graph {
     void LookupTable::AddNode(Node* node) {
@@ -24,5 +25,13 @@ namespace Graph {
             return iter->second;
         }
         return nullptr;
+    }
+
+    bool LookupTable::SetNiTransfromInterface(SKEE::INiTransformInterface* nioInterface) {
+        return nioInterface->GetVersion() ? niTransformInterface = nioInterface : false;
+    }
+
+    SKEE::INiTransformInterface* LookupTable::GetNiTransformInterface() {
+        return niTransformInterface;
     }
 }

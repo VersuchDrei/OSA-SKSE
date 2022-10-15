@@ -14,6 +14,8 @@ namespace Graph {
         std::string position;
         int32_t penisAngle;
         float scale = 1.0;
+        float scaleHeight = 120.748;
+        bool heelScaling = true;
         std::vector<std::string> tags;
     };
 
@@ -36,5 +38,7 @@ namespace Graph {
         // maybe remove this in a later iteration?
         std::string sourceModule;
         std::string animClass;
+
+        void scaleActor(RE::Actor* actor, int position);
     };
 }

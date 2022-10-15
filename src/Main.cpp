@@ -1,6 +1,8 @@
 #include "Game/Patch.h"
+#include "Graph/LookupTable.h"
 #include "Papyrus/Papyrus.h"
 #include "Serial/Manager.h"
+#include "SKEE.h"
 
 #include <stddef.h>
 
@@ -10,17 +12,6 @@ using namespace SKSE::log;
 using namespace SKSE::stl;
 
 namespace {
-    /**
-     * Setup logging.
-     *
-     * <p>
-     * Logging is important to track issues. CommonLibSSE bundles functionality for spdlog, a common C++ logging
-     * framework. Here we initialize it, using values from the configuration file. This includes support for a debug
-     * logger that shows output in your IDE when it has a debugger attached to Skyrim, as well as a file logger which
-     * writes data to the standard SKSE logging directory at <code>Documents/My Games/Skyrim Special Edition/SKSE</code>
-     * (or <code>Skyrim VR</code> if you are using VR).
-     * </p>
-     */
     void InitializeLogging() {
         auto path = log_directory();
         if (!path) {
@@ -43,18 +34,32 @@ namespace {
         spdlog::set_default_logger(std::move(log));
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
     }
+
+    void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {
+        switch (a_msg->type) {
+            case SKSE::MessagingInterface::kPostPostLoad: {
+                SKEE::InterfaceExchangeMessage msg;
+                auto intfc = SKSE::GetMessagingInterface();
+                intfc->Dispatch(SKEE::InterfaceExchangeMessage::kExchangeInterface, (void*)&msg, sizeof(SKEE::InterfaceExchangeMessage*), "skee");
+                if (!msg.interfaceMap) {
+                    logger::critical("Couldn't get interface map!");
+                    return;
+                }
+
+                auto nioInterface = static_cast<SKEE::INiTransformInterface*>(msg.interfaceMap->QueryInterface("NiTransform"));
+                if (!nioInterface) {
+                    logger::critical("Couldn't get serialization NiTransformInterface!");
+                }
+
+                logger::info("NiTransform version {}", nioInterface->GetVersion());
+                if (!Graph::LookupTable::SetNiTransfromInterface(nioInterface)) {
+                    logger::info("NiTransformInterface not provided.");
+                }
+            }
+        }
+    }
 }
 
-/**
- * This if the main callback for initializing your SKSE plugin, called just before Skyrim runs its main function.
- *
- * <p>
- * This is your main entry point to your plugin, where you should initialize everything you need. Many things can't be
- * done yet here, since Skyrim has not initialized and the Windows loader lock is not released (so don't do any
- * multithreading). But you can register to listen for messages for later stages of Skyrim startup to perform such
- * tasks.
- * </p>
- */
 SKSEPluginLoad(const LoadInterface* skse) {
     InitializeLogging();
 
@@ -64,6 +69,12 @@ SKSEPluginLoad(const LoadInterface* skse) {
 
 
     Init(skse);
+
+    auto message = SKSE::GetMessagingInterface();
+    if (!message->RegisterListener(MessageHandler)) {
+        return false;
+    }
+
     Patch::Install();
     Papyrus::Bind();
     Papyrus::Build();
