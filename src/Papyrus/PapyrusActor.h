@@ -199,9 +199,9 @@ namespace PapyrusActor {
         return result;
     }
 
-    void ScaleActor(RE::StaticFunctionTag*, RE::Actor* actor, std::string id, int position) {
-        if(auto node = Graph::LookupTable::GetNodeById(id)) {
-            node->scaleActor(actor, position);
+    void UpdateForScene(RE::StaticFunctionTag*, std::string id, std::vector<RE::Actor*> actors, std::vector<float> offsets) {
+        if (auto node = Graph::LookupTable::GetNodeById(id)) {
+            node->updateActors(actors, offsets);
         }
     }
 
@@ -221,7 +221,7 @@ namespace PapyrusActor {
         BIND(LookupRelationshipPartners, true);
         BIND(ToggleCombat);
         BIND(DetectionActive);
-        BIND(ScaleActor);
+        BIND(UpdateForScene);
 
         return true;
     }
