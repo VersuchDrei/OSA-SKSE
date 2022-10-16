@@ -15,7 +15,7 @@ namespace Graph {
         int32_t penisAngle;
         float scale = 1.0;
         float scaleHeight = 120.748;
-        bool heelScaling = true;
+        bool feetOnGround;
         std::vector<std::string> tags;
     };
 
@@ -40,5 +40,6 @@ namespace Graph {
         std::string animClass;
 
         void scaleActor(RE::Actor* actor, int position);
+        void updateActors(std::vector<RE::Actor*> actors, std::vector<float> offsets);
     };
 }
