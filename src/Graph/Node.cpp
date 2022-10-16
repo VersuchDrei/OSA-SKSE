@@ -46,8 +46,8 @@ namespace Graph {
     void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> offsets) {
         int count = std::min(actors.size(), reActors.size());
         for (int i = 0; i < count; i++) {
-            // benis bending
-            reActors[i]->NotifyAnimationGraph("SOSBend" + actors[i]->penisAngle);
+            // penis bending
+            reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
 
             // scaling
             float newScale = actors[i]->scale / (reActors[i]->GetScale() / (static_cast<float>(reActors[i]->GetReferenceRuntimeData().refScale) / 100.0f));
