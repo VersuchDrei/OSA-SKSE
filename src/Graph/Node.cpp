@@ -74,7 +74,14 @@ namespace Graph {
                     auto nioInterface = Graph::LookupTable::GetNiTransformInterface();
                     bool hasOffset = nioInterface->HasNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal");
                     if (actors[i]->feetOnGround) {
-                        if (!hasOffset) {
+                        if (hasOffset) {
+                            auto offset = nioInterface->GetNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal");
+                            if (offset.z == 0) {
+                                offset.z = offsets[i];
+                            nioInterface->AddNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal", offset);
+                            nioInterface->UpdateNodeTransforms(reActors[i], false, isFemale, "NPC");
+                            }
+                        } else {
                             SKEE::INiTransformInterface::Position offset{};
                             offset.z = offsets[i];
                             nioInterface->AddNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal", offset);
