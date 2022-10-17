@@ -28,8 +28,12 @@ set(sources
         src/Core/ThreadManager.cpp
         src/Core/ThreadManager.h
         src/Game/LocaleManager.cpp
+	src/Game/LocaleManager.h
         src/Graph/LookupTable.cpp
         src/Graph/Node.cpp
+	src/Game/Locker.h
+	src/Game/Patch.h
+	src/PCH.h
 	src/Papyrus/Papyrus.cpp
 	src/Papyrus/Papyrus.h
 	src/Papyrus/PapyrusActor.h
