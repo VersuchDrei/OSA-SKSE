@@ -12,6 +12,7 @@
 #include "Papyrus/PapyrusDatabase.h"
 #include "Papyrus/PapyrusFace.h"
 #include "Papyrus/PapyrusObject.h"
+#include "Papyrus/PapyrusScenes.h"
 #include "Papyrus/PapyrusUtil.h"
 #undef BIND
 
@@ -25,6 +26,7 @@ namespace Papyrus {
             papyrus->Register(PapyrusDatabase::Bind);
             papyrus->Register(PapyrusFace::Bind);
             papyrus->Register(PapyrusObject::Bind);
+            papyrus->Register(PapyrusScenes::Bind);
             papyrus->Register(PapyrusUtil::Bind);
         }
     }
