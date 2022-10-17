@@ -1,8 +1,10 @@
 #pragma once
+
 namespace PapyrusScenes {
     using VM = RE::BSScript::IVirtualMachine;
 
 	void StartScene(RE::StaticFunctionTag*, int64_t a_id, std::vector<RE::Actor*> a_actors) {
+		
 		auto tm = OStim::ThreadManager::GetSingleton();
 		tm->TrackThread(a_id, a_actors);
 	}
