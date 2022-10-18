@@ -2,7 +2,7 @@
 
 namespace OStim {
     void ThreadManager::TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
-        OstimThread* t = new OstimThread(a_id, a_actors);
+        Thread* t = new Thread(a_id, a_actors);
         m_threadMap.insert(std::make_pair(a_id, t));
         auto log = RE::ConsoleLog::GetSingleton();
         if (log) {
@@ -10,12 +10,12 @@ namespace OStim {
         }
     }
 
-    OstimThread* ThreadManager::GetThread(ThreadId a_id)
-    {
+    Thread* ThreadManager::GetThread(ThreadId a_id) {
         auto it = m_threadMap.find(a_id);
-        assert(it != m_threadMap.end());
+        if (it == m_threadMap.end()) {
+            return nullptr;
+        }
         return it->second;
-         
     }
 
     void ThreadManager::UnTrackThread(ThreadId a_id) {

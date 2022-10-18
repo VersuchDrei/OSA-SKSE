@@ -24,25 +24,18 @@ set(headers
         include/Header/Header.h)
 
 set(sources
-        src/Core/Singleton.h
-        src/Core/ThreadManager.cpp
-        src/Core/ThreadManager.h
-        src/Game/LocaleManager.cpp
+    src/Core/Singleton.h
+    src/Core/Thread.cpp
+    src/Core/ThreadManager.cpp
+    src/Core/ThreadManager.h
+    src/Game/LocaleManager.cpp
 	src/Game/LocaleManager.h
-        src/Graph/LookupTable.cpp
-        src/Graph/Node.cpp
+    src/Graph/LookupTable.cpp
+    src/Graph/Node.cpp
 	src/Game/Locker.h
 	src/Game/Patch.h
 	src/PCH.h
 	src/Papyrus/Papyrus.cpp
-	src/Papyrus/Papyrus.h
-	src/Papyrus/PapyrusActor.h
-	src/Papyrus/PapyrusCamera.h
-	src/Papyrus/PapyrusDatabase.h
-	src/Papyrus/PapyrusFace.h
-	src/Papyrus/PapyrusObject.h
-        src/Papyrus/PapyrusScenes.h
-	src/Papyrus/PapyrusUtil.h
 	src/Papyrus/Script.h
 	src/Serial/Manager.cpp
 	src/Util.cpp
