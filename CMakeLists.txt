@@ -29,6 +29,7 @@ set(sources
     src/Graph/Node.cpp
 	src/Papyrus/Papyrus.cpp
 	src/Serial/Manager.cpp
+    src/Util/ActorUtil.cpp
 	src/Util.cpp
 	src/main.cpp
 

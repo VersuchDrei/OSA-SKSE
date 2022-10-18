@@ -1,63 +1,76 @@
 #include "Graph/Node.h"
 
 #include "Graph/LookupTable.h"
+#include "Util/ActorUtil.h"
+#include "Util/VectorUtil.h"
 #include "SKEE.h"
 
 namespace Graph {
-    void Node::scaleActor(RE::Actor* actor, int position) {
-        if (position < 0 || position >= actors.size()) {
-            return;
-        }
+    bool Node::hasActorTag(int position, std::string tag) {
+        return VectorUtil::contains(actors[position]->tags, tag); }
 
-        float newScale = actors[position]->scale / (actor->GetScale() / (static_cast<float>(actor->GetReferenceRuntimeData().refScale) / 100.0f));
-        if (actors[position]->feetOnGround) {
-            // the NiTransformInterface has only been added to RaceMenu after the AE update
-            // so for SE we have to invoke Papyrus here :^(
-            if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
-                bool isFemale = actor->GetActorBase()->GetSex() == RE::SEX::kFemale;
-                auto nioInterface = Graph::LookupTable::GetNiTransformInterface();
-                if (nioInterface->HasNodeTransformPosition(actor, false, isFemale, "NPC", "internal")) {
-                    float offset = nioInterface->GetNodeTransformPosition(actor, false, isFemale, "NPC", "internal").z;
-                    newScale *= actors[position]->scaleHeight / (actors[position]->scaleHeight + offset);
-                }
-            } else {
-                const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-                auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-                if (vm) {
-                    RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                    float height = actors[position]->scaleHeight;
-                    auto args = RE::MakeFunctionArguments(std::move(actor), std::move(newScale), std::move(height));
-                    vm->DispatchStaticCall("OSANative", "ScaleActorInner", args, callback);
-                }
-                return;
+    int Node::findAction(std::function<bool(Action*)> condition) {
+        size_t size = actions.size();
+        for (int i = 0; i < size; i++) {
+            if (condition(actions[i])) {
+                return i;
             }
         }
+        return -1;
+    }
 
-        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-        if (vm) {
-            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-            auto args = RE::MakeFunctionArguments(std::move(newScale));
-            auto handle = RE::SkyrimVM::GetSingleton()->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
-            vm->DispatchMethodCall2(handle, "Actor", "SetScale", args, callback);
+    std::vector<int> Node::findActions(std::function<bool(Action*)> condition) {
+        std::vector<int> ret;
+        size_t size = actions.size();
+        for (int i = 0; i < size; i++) {
+            if (condition(actions[i])) {
+                ret.push_back(i);
+            }
         }
+        return ret;
+    }
+
+    int Node::findActionForActor(int position, std::string type) {
+        return findAction([position, type](Action* action) {return action->actor == position && action->type == type;});
+    }
+
+    int Node::findAnyActionForActor(int position, std::vector<std::string> types) {
+        return findAction([position, types](Action* action) {return action->actor == position && VectorUtil::contains(types, action->type);});
+    }
+
+    int Node::findActionForTarget(int position, std::string type) {
+        return findAction([position, type](Action* action) {return action->target == position && action->type == type;});
     }
 
     void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> offsets) {
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+
         int count = std::min(actors.size(), reActors.size());
         for (int i = 0; i < count; i++) {
             // penis bending
             reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
 
+            // mouth controls
+            bool isMouthOpen = ActorUtil::isMouthOpen(reActors[i]);
+            bool shouldMouthOpen = hasActorTag(i, "openmouth") || findAnyActionForActor(i, {"blowjob", "cunnilingus"}) != -1;
+            if (shouldMouthOpen) {
+                if (!isMouthOpen) {
+                    ActorUtil::openMouth(reActors[i]);
+                }
+            } else {
+                if (isMouthOpen) {
+                    ActorUtil::closeMouth(reActors[i]);
+                }
+            }
+
             // scaling
-            float newScale = actors[i]->scale / (reActors[i]->GetScale() / (static_cast<float>(reActors[i]->GetReferenceRuntimeData().refScale) / 100.0f));
+            float newScale = actors[i]->scale / reActors[i]->GetActorBase()->GetHeight();
             if (actors[i]->feetOnGround && offsets[i] != 0) {
                 newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
             }
 
             // TODO: RE Actor::SetScale
-            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
             if (vm) {
                 RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
                 auto args = RE::MakeFunctionArguments(std::move(newScale));

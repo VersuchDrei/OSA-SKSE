@@ -39,7 +39,15 @@ namespace Graph {
         std::string sourceModule;
         std::string animClass;
 
-        void scaleActor(RE::Actor* actor, int position);
+        bool hasActorTag(int position, std::string tag);
+
+        int findAction(std::function<bool(Action*)> condition);
+        std::vector<int> findActions(std::function<bool(Action*)> condition);
+
+        int findActionForActor(int position, std::string type);
+        int findAnyActionForActor(int position, std::vector<std::string> types);
+        int findActionForTarget(int position, std::string type);
+
         void updateActors(std::vector<RE::Actor*> actors, std::vector<float> offsets);
     };
 }

@@ -108,7 +108,7 @@ namespace PapyrusMetadata {
     bool HasActorTag(RE::StaticFunctionTag*, std::string id, int position, std::string tag) {
         if (auto node = Graph::LookupTable::GetNodeById(id)) {
             if (node->actors.size() > position) {
-                return contains(node->actors[position]->tags, tag);
+                return node->hasActorTag(position, tag);
             }
         }
         return false;
