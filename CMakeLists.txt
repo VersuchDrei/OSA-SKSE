@@ -24,10 +24,19 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Core/Singleton.h
+    src/Core/Thread.cpp
+    src/Core/ThreadManager.cpp
+    src/Core/ThreadManager.h
     src/Game/LocaleManager.cpp
+	src/Game/LocaleManager.h
     src/Graph/LookupTable.cpp
     src/Graph/Node.cpp
+	src/Game/Locker.h
+	src/Game/Patch.h
+	src/PCH.h
 	src/Papyrus/Papyrus.cpp
+	src/Papyrus/Script.h
 	src/Serial/Manager.cpp
     src/Util/ActorUtil.cpp
 	src/Util.cpp
