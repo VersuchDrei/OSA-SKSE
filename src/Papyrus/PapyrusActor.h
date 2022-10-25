@@ -205,6 +205,12 @@ namespace PapyrusActor {
         }
     }
 
+    void UpdateExpression(RE::StaticFunctionTag*, std::string id, int position, RE::Actor* actor) {
+        if (auto node = Graph::LookupTable::GetNodeById(id)) {
+            node->updateFacialExpressions(position, actor);
+        }
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
@@ -222,6 +228,7 @@ namespace PapyrusActor {
         BIND(ToggleCombat);
         BIND(DetectionActive);
         BIND(UpdateForScene);
+        BIND(UpdateExpression);
 
         return true;
     }

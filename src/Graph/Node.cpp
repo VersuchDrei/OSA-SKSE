@@ -1,6 +1,7 @@
 #include "Graph/Node.h"
 
 #include "Graph/LookupTable.h"
+#include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
 #include "Util/VectorUtil.h"
 #include "SKEE.h"
@@ -52,17 +53,7 @@ namespace Graph {
             reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
 
             // mouth controls
-            bool isMouthOpen = ActorUtil::isMouthOpen(reActors[i]);
-            bool shouldMouthOpen = hasActorTag(i, "openmouth") || findAnyActionForActor(i, {"blowjob", "cunnilingus"}) != -1;
-            if (shouldMouthOpen) {
-                if (!isMouthOpen) {
-                    ActorUtil::openMouth(reActors[i]);
-                }
-            } else {
-                if (isMouthOpen) {
-                    ActorUtil::closeMouth(reActors[i]);
-                }
-            }
+            updateFacialExpressions(i, reActors[i]);
 
             // scaling
             float newScale = actors[i]->scale / reActors[i]->GetActorBase()->GetHeight();
@@ -116,5 +107,40 @@ namespace Graph {
                 }
             }
         }
+    }
+
+    void Node::updateFacialExpressions(int position, RE::Actor* actor) {
+        logger::info("update expressions called: {} {}", position, scene_id);
+        if (Trait::TraitTable::areFacialExpressionsBlocked(actor)) {
+            return;
+        }
+
+        Trait::PhonemeOverrideType phonemeOverride = Trait::PhonemeOverrideType::NoOveride;
+        if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus"}) != -1) {
+            phonemeOverride = Trait::PhonemeOverrideType::OpenMouth;
+        } else if (findActionForActor(position, "kissing") != -1 || findActionForTarget(position, "kissing") != -1) {
+            phonemeOverride = Trait::PhonemeOverrideType::Kissing;
+        }
+
+        for (auto& action : actions) {
+            if (action->target == position) {
+                if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
+                    expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), phonemeOverride);
+                    return;
+                }
+            } else if (action->actor == position) {
+                if (auto expression = Trait::TraitTable::getExpressionForActionActor(action->type)) {
+                    expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), phonemeOverride);
+                    return;
+                }
+            }
+        }
+
+        if (auto expression = Trait::TraitTable::getExpressionForEvent("default")) {
+            expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), phonemeOverride);
+            return;
+        }
+
+        Trait::TraitTable::fallbackExpression.apply(actor, 0, Trait::TraitTable::getExcitement(actor), phonemeOverride);
     }
 }

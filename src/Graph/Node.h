@@ -49,5 +49,6 @@ namespace Graph {
         int findActionForTarget(int position, std::string type);
 
         void updateActors(std::vector<RE::Actor*> actors, std::vector<float> offsets);
+        void updateFacialExpressions(int position, RE::Actor* actor);
     };
 }

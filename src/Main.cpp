@@ -2,6 +2,7 @@
 #include "Graph/LookupTable.h"
 #include "Papyrus/Papyrus.h"
 #include "Serial/Manager.h"
+#include "Trait/TraitTable.h"
 #include "SKEE.h"
 
 #include <stddef.h>
@@ -37,7 +38,10 @@ namespace {
 
     void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {
         switch (a_msg->type) {
-            case SKSE::MessagingInterface::kPostPostLoad: {
+            case SKSE::MessagingInterface::kDataLoaded:
+                Trait::TraitTable::setupForms();
+                break;
+            case SKSE::MessagingInterface::kPostPostLoad:
                 SKEE::InterfaceExchangeMessage msg;
                 auto intfc = SKSE::GetMessagingInterface();
                 intfc->Dispatch(SKEE::InterfaceExchangeMessage::kExchangeInterface, (void*)&msg, sizeof(SKEE::InterfaceExchangeMessage*), "skee");
@@ -55,7 +59,7 @@ namespace {
                 if (!Graph::LookupTable::SetNiTransfromInterface(nioInterface)) {
                     logger::info("NiTransformInterface not provided.");
                 }
-            }
+                break;
         }
     }
 }
@@ -78,6 +82,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     Patch::Install();
     Papyrus::Bind();
     Papyrus::Build();
+    Trait::TraitTable::setup();
 
     const auto serial = SKSE::GetSerializationInterface();
     serial->SetUniqueID(Serialization::kOSA);

@@ -8,13 +8,13 @@
     "license": "GPL-3.0",
     "features": {
         "plugin": {
-            "description": "Build the SKSE plugin.",
-            "dependencies": [
-                "articuno",
-                "commonlibsse-ng",
-                "pugixml",
-                "nlohmann-json"
-            ]
+          "description": "Build the SKSE plugin.",
+          "dependencies": [
+            "articuno",
+            "commonlibsse-ng",
+            "pugixml",
+            "nlohmann-json"
+          ]
         }
     },
     "default-features": [
