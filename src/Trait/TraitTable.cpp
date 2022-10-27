@@ -72,6 +72,11 @@ namespace Trait {
         }
     }
 
+    void TraitTable::setupForms() {
+        excitementFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D93, "OStim.esp");
+        noFacialExpressionsFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D92, "OStim.esp");
+    }
+
     void TraitTable::parseGender(nlohmann::json json, GenderExpression* genderExpression) {
         if (json.contains("duration")) {
             genderExpression->duration = json["duration"];
@@ -117,11 +122,6 @@ namespace Trait {
             expressions.push_back(expression);
             table->insert({key, expressions});
         }
-    }
-
-    void TraitTable::setupForms() {
-        excitementFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D93, "OStim.esp");
-        noFacialExpressionsFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D92, "OStim.esp");
     }
 
     FacialExpression* TraitTable::getExpressionForActionActor(std::string action) {

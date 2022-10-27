@@ -3,6 +3,7 @@
 #include "Graph/LookupTable.h"
 #include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
+#include "Util/MCMTable.h"
 #include "Util/VectorUtil.h"
 #include "SKEE.h"
 
@@ -56,18 +57,21 @@ namespace Graph {
             updateFacialExpressions(i, reActors[i]);
 
             // scaling
-            float newScale = actors[i]->scale / reActors[i]->GetActorBase()->GetHeight();
-            if (actors[i]->feetOnGround && offsets[i] != 0) {
-                newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
-            }
+            if (!MCM::MCMTable::isScalingDisabled()) {
+                float newScale = actors[i]->scale / reActors[i]->GetActorBase()->GetHeight();
+                if (actors[i]->feetOnGround && offsets[i] != 0) {
+                    newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
+                }
 
-            // TODO: RE Actor::SetScale
-            if (vm) {
-                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                auto args = RE::MakeFunctionArguments(std::move(newScale));
-                auto handle = RE::SkyrimVM::GetSingleton()->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(reActors[i]->FORMTYPE), reActors[i]);
-                vm->DispatchMethodCall2(handle, "Actor", "SetScale", args, callback);
+                // TODO: RE Actor::SetScale
+                if (vm) {
+                    RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                    auto args = RE::MakeFunctionArguments(std::move(newScale));
+                    auto handle = RE::SkyrimVM::GetSingleton()->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(reActors[i]->FORMTYPE), reActors[i]);
+                    vm->DispatchMethodCall2(handle, "Actor", "SetScale", args, callback);
+                }
             }
+            
 
             // heel offsets
             if (offsets[i] != 0) {

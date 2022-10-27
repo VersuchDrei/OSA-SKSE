@@ -3,6 +3,7 @@
 #include "Papyrus/Papyrus.h"
 #include "Serial/Manager.h"
 #include "Trait/TraitTable.h"
+#include "Util/MCMTable.h"
 #include "SKEE.h"
 
 #include <stddef.h>
@@ -40,6 +41,7 @@ namespace {
         switch (a_msg->type) {
             case SKSE::MessagingInterface::kDataLoaded:
                 Trait::TraitTable::setupForms();
+                MCM::MCMTable::setupForms();
                 break;
             case SKSE::MessagingInterface::kPostPostLoad:
                 SKEE::InterfaceExchangeMessage msg;

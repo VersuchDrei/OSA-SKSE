@@ -41,6 +41,7 @@ set(sources
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
     src/Util/ActorUtil.cpp
+    src/Util/MCMTable.cpp
 	src/Util.cpp
 	src/main.cpp
 
