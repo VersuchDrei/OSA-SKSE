@@ -60,4 +60,12 @@ namespace Trait {
             male.apply(actor, speed, excitement, phonemeOverrideVector);
         }
     }
+
+    float FacialExpression::getDuration(RE::Actor* actor) {
+        if (actor->GetActorBase()->GetSex() == RE::SEX::kFemale) {
+            return female.duration;
+        } else {
+            return male.duration;
+        }
+    }
 }

@@ -35,5 +35,6 @@ namespace Trait {
         GenderExpression male;
 
         void apply(RE::Actor* actor, float speed, float excitement, PhonemeOverrideType phonemeOverride);
+        float getDuration(RE::Actor* actor);
     };
 }

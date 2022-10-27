@@ -211,6 +211,13 @@ namespace PapyrusActor {
         }
     }
 
+    float PlayExpressionEvent(RE::StaticFunctionTag*, std::string id, int position, RE::Actor* actor, std::string eventName){
+        if (auto node = Graph::LookupTable::GetNodeById(id)) {
+            return node->playExpressionEvent(position, actor, eventName);
+        }
+        return -1;
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
@@ -229,6 +236,7 @@ namespace PapyrusActor {
         BIND(DetectionActive);
         BIND(UpdateForScene);
         BIND(UpdateExpression);
+        BIND(PlayExpressionEvent);
 
         return true;
     }

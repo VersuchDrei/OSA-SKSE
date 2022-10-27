@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Trait/FacialExpression.h"
+
 namespace Graph {
     struct Action {
     public:
@@ -50,5 +52,9 @@ namespace Graph {
 
         void updateActors(std::vector<RE::Actor*> actors, std::vector<float> offsets);
         void updateFacialExpressions(int position, RE::Actor* actor);
+        float playExpressionEvent(int position, RE::Actor* actor, std::string eventName);
+
+    private:
+        Trait::PhonemeOverrideType getOverrideType(int position);
     };
 }
