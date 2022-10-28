@@ -1,7 +1,9 @@
 #include "Graph/Node.h"
 
 #include "Graph/LookupTable.h"
+#include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
+#include "Util/MCMTable.h"
 #include "Util/VectorUtil.h"
 #include "SKEE.h"
 
@@ -52,31 +54,24 @@ namespace Graph {
             reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
 
             // mouth controls
-            bool isMouthOpen = ActorUtil::isMouthOpen(reActors[i]);
-            bool shouldMouthOpen = hasActorTag(i, "openmouth") || findAnyActionForActor(i, {"blowjob", "cunnilingus"}) != -1;
-            if (shouldMouthOpen) {
-                if (!isMouthOpen) {
-                    ActorUtil::openMouth(reActors[i]);
-                }
-            } else {
-                if (isMouthOpen) {
-                    ActorUtil::closeMouth(reActors[i]);
-                }
-            }
+            updateFacialExpressions(i, reActors[i]);
 
             // scaling
-            float newScale = actors[i]->scale / reActors[i]->GetActorBase()->GetHeight();
-            if (actors[i]->feetOnGround && offsets[i] != 0) {
-                newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
-            }
+            if (!MCM::MCMTable::isScalingDisabled()) {
+                float newScale = actors[i]->scale / reActors[i]->GetActorBase()->GetHeight();
+                if (actors[i]->feetOnGround && offsets[i] != 0) {
+                    newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
+                }
 
-            // TODO: RE Actor::SetScale
-            if (vm) {
-                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                auto args = RE::MakeFunctionArguments(std::move(newScale));
-                auto handle = RE::SkyrimVM::GetSingleton()->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(reActors[i]->FORMTYPE), reActors[i]);
-                vm->DispatchMethodCall2(handle, "Actor", "SetScale", args, callback);
+                // TODO: RE Actor::SetScale
+                if (vm) {
+                    RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                    auto args = RE::MakeFunctionArguments(std::move(newScale));
+                    auto handle = RE::SkyrimVM::GetSingleton()->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(reActors[i]->FORMTYPE), reActors[i]);
+                    vm->DispatchMethodCall2(handle, "Actor", "SetScale", args, callback);
+                }
             }
+            
 
             // heel offsets
             if (offsets[i] != 0) {
@@ -116,5 +111,49 @@ namespace Graph {
                 }
             }
         }
+    }
+
+    void Node::updateFacialExpressions(int position, RE::Actor* actor) {
+        if (Trait::TraitTable::areFacialExpressionsBlocked(actor)) {
+            return;
+        }
+
+        for (auto& action : actions) {
+            if (action->target == position) {
+                if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
+                    expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+                    return;
+                }
+            } else if (action->actor == position) {
+                if (auto expression = Trait::TraitTable::getExpressionForActionActor(action->type)) {
+                    expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+                    return;
+                }
+            }
+        }
+
+        if (auto expression = Trait::TraitTable::getExpressionForEvent("default")) {
+            expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+            return;
+        }
+
+        Trait::TraitTable::fallbackExpression.apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+    }
+
+    float Node::playExpressionEvent(int position, RE::Actor* actor, std::string eventName) {
+        if (auto expression = Trait::TraitTable::getExpressionForEvent(eventName)) {
+            expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+            return expression->getDuration(actor);
+        }
+        return -1;
+    }
+
+    Trait::PhonemeOverrideType Node::getOverrideType(int position) {
+        if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus"}) != -1) {
+            return Trait::PhonemeOverrideType::OpenMouth;
+        } else if (hasActorTag(position, "kissing") || findActionForActor(position, "kissing") != -1 || findActionForTarget(position, "kissing") != -1) {
+            return Trait::PhonemeOverrideType::Kissing;
+        }
+        return Trait::PhonemeOverrideType::NoOveride;
     }
 }
