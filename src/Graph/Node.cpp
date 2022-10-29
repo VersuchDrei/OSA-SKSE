@@ -63,13 +63,7 @@ namespace Graph {
                     newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
                 }
 
-                // TODO: RE Actor::SetScale
-                if (vm) {
-                    RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                    auto args = RE::MakeFunctionArguments(std::move(newScale));
-                    auto handle = RE::SkyrimVM::GetSingleton()->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(reActors[i]->FORMTYPE), reActors[i]);
-                    vm->DispatchMethodCall2(handle, "Actor", "SetScale", args, callback);
-                }
+                ActorUtil::setScale(reActors[i], newScale);
             }
             
 
