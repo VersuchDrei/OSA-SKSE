@@ -38,7 +38,12 @@ namespace Trait {
             if (pathStr.ends_with(EXPRESSION_FILE_SUFFIX)) {
                 logger::info("parsing file {}", pathStr);
                 std::ifstream ifs(pathStr);
-                json json = json::parse(ifs);
+                json json = json::parse(ifs, nullptr, false);
+
+                if (json.is_discarded()) {
+                    logger::info("expression file {} is malformed", pathStr);
+                    continue;
+                }
 
                 FacialExpression* expression = new FacialExpression();
                 if (json.contains("female")) {
