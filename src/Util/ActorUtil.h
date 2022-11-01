@@ -1,7 +1,9 @@
 #pragma once
 
 namespace ActorUtil {
-    bool isMouthOpen(RE::Actor* actor);
-    void openMouth(RE::Actor* actor);
-    void closeMouth(RE::Actor* actor);
+    inline void setScale(RE::Actor* actor, float scale) {
+        using func_t = decltype(setScale);
+        REL::Relocation<func_t> setScaleInner{RELOCATION_ID(19239, 19665)};
+        setScaleInner(actor, scale);
+    }
 }
