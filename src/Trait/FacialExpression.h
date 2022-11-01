@@ -4,7 +4,8 @@ namespace Trait {
     enum PhonemeOverrideType {
         NoOveride,
         OpenMouth,
-        Kissing
+        Kissing,
+        Licking
     };
 
     struct FaceModifier {

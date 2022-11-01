@@ -42,6 +42,7 @@ namespace Graph {
         std::string animClass;
 
         bool hasActorTag(int position, std::string tag);
+        bool hasAnyActorTag(int position, std::vector<std::string> tags);
 
         int findAction(std::function<bool(Action*)> condition);
         std::vector<int> findActions(std::function<bool(Action*)> condition);

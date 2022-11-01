@@ -22,6 +22,10 @@ namespace Trait {
         kissingPhonemes[0].type = 15;
         kissingPhonemes[0].baseValue = 100;
 
+        lickingPhonemes.push_back(*(new FaceModifier()));
+        lickingPhonemes[0].type = 0;
+        lickingPhonemes[0].baseValue = 100;
+
         std::srand((unsigned)time(NULL));
 
         fs::path rootPath{EXPRESSION_FILE_PATH};
