@@ -50,6 +50,9 @@ namespace Trait {
         case Kissing:
             phonemeOverrideVector = TraitTable::kissingPhonemes;
             break;
+        case Licking:
+            phonemeOverrideVector = TraitTable::lickingPhonemes;
+            break;
         default:
             break;
         }

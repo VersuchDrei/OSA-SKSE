@@ -9,7 +9,17 @@
 
 namespace Graph {
     bool Node::hasActorTag(int position, std::string tag) {
-        return VectorUtil::contains(actors[position]->tags, tag); }
+        return VectorUtil::contains(actors[position]->tags, tag);
+    }
+
+    bool Node::hasAnyActorTag(int position, std::vector<std::string> tags) {
+        for (auto& tag : tags) {
+            if (VectorUtil::contains(actors[position]->tags, tag)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     int Node::findAction(std::function<bool(Action*)> condition) {
         size_t size = actions.size();
@@ -151,8 +161,10 @@ namespace Graph {
     Trait::PhonemeOverrideType Node::getOverrideType(int position) {
         if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus"}) != -1) {
             return Trait::PhonemeOverrideType::OpenMouth;
-        } else if (hasActorTag(position, "kissing") || findActionForActor(position, "kissing") != -1 || findActionForTarget(position, "kissing") != -1) {
+        } else if (hasActorTag(position, "kissing") || findAnyActionForActor(position, {"kissing", "kissingfeet", "nipplesucking"}) != -1 || findActionForTarget(position, "kissing") != -1) {
             return Trait::PhonemeOverrideType::Kissing;
+        } else if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"}) != -1) {
+            return Trait::PhonemeOverrideType::Licking;
         }
         return Trait::PhonemeOverrideType::NoOveride;
     }

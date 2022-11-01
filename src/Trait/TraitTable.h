@@ -9,6 +9,7 @@ namespace Trait {
 
         inline static std::vector<FaceModifier> openMouthPhonemes;
         inline static std::vector<FaceModifier> kissingPhonemes;
+        inline static std::vector<FaceModifier> lickingPhonemes;
 
         static void setup();
         static void setupForms();
