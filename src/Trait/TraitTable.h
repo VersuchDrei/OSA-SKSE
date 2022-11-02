@@ -7,9 +7,9 @@ namespace Trait {
     public:
         inline static FacialExpression fallbackExpression{};
 
-        inline static std::vector<FaceModifier> openMouthPhonemes;
-        inline static std::vector<FaceModifier> kissingPhonemes;
-        inline static std::vector<FaceModifier> lickingPhonemes;
+        inline static std::unordered_map<int, FaceModifier> openMouthPhonemes;
+        inline static std::unordered_map<int, FaceModifier> kissingPhonemes;
+        inline static std::unordered_map<int, FaceModifier> lickingPhonemes;
 
         static void setup();
         static void setupForms();

@@ -10,7 +10,7 @@ namespace Trait {
 
     struct FaceModifier {
     public:
-        byte type;
+        int type;
         float baseValue;
         float speedMultiplier;
         float excitementMultiplier;
@@ -24,10 +24,10 @@ namespace Trait {
     public:
         float duration;
         FaceModifier expression;
-        std::vector<FaceModifier> phonemes;
-        std::vector<FaceModifier> modifiers;
+        std::unordered_map<int, FaceModifier> phonemes;
+        std::unordered_map<int, FaceModifier> modifiers;
 
-        void apply(RE::Actor* actor, float speed, float excitement, std::vector<FaceModifier> phonemeOverride);
+        void apply(RE::Actor* actor, float speed, float excitement, std::unordered_map<int, FaceModifier> phonemeOverride);
     };
 
     struct FacialExpression {

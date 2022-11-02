@@ -7,24 +7,13 @@ namespace Trait {
     const char* EXPRESSION_FILE_SUFFIX{".json"};
 
     void TraitTable::setup() {
-        openMouthPhonemes.push_back(*(new FaceModifier()));
-        openMouthPhonemes.push_back(*(new FaceModifier()));
-        openMouthPhonemes.push_back(*(new FaceModifier()));
+        openMouthPhonemes.insert({0, {.type = 0, .baseValue = 100}});
+        openMouthPhonemes.insert({1, {.type = 1, .baseValue = 40}});
+        openMouthPhonemes.insert({5, {.type = 5, .baseValue = 100}});
 
-        openMouthPhonemes[0].type = 0;
-        openMouthPhonemes[0].baseValue = 100;
-        openMouthPhonemes[1].type = 1;
-        openMouthPhonemes[1].baseValue = 40;
-        openMouthPhonemes[2].type = 5;
-        openMouthPhonemes[2].baseValue = 100;
+        kissingPhonemes.insert({15, {.type = 15, .baseValue = 100}});
 
-        kissingPhonemes.push_back(*(new FaceModifier()));
-        kissingPhonemes[0].type = 15;
-        kissingPhonemes[0].baseValue = 100;
-
-        lickingPhonemes.push_back(*(new FaceModifier()));
-        lickingPhonemes[0].type = 0;
-        lickingPhonemes[0].baseValue = 100;
+        lickingPhonemes.insert({0, {.type = 0, .baseValue = 100}});
 
         std::srand((unsigned)time(NULL));
 
@@ -95,12 +84,14 @@ namespace Trait {
         }
         if (json.contains("phonemes")) {
             for (auto& phoneme : json["phonemes"]) {
-                genderExpression->phonemes.push_back(parseModifier(phoneme));
+                auto mod = parseModifier(phoneme);
+                genderExpression->phonemes.insert({mod.type, mod});
             }
         }
         if (json.contains("modifiers")) {
             for (auto& modifier : json["modifiers"]) {
-                genderExpression->modifiers.push_back(parseModifier(modifier));
+                auto mod = parseModifier(modifier);
+                genderExpression->modifiers.insert({mod.type, mod});
             }
         }
     }
