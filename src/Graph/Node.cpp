@@ -73,7 +73,10 @@ namespace Graph {
                     newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
                 }
 
-                ActorUtil::setScale(reActors[i], newScale);
+                // setscale resets 3BA physics, so we don't do it if the actor already has the desired scale
+                if (static_cast<int>(newScale * 100) != reActors[i]->GetReferenceRuntimeData().refScale) {
+                    ActorUtil::setScale(reActors[i], newScale);
+                }
             }
             
 
