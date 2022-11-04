@@ -125,28 +125,28 @@ namespace Graph {
         for (auto& action : actions) {
             if (action->target == position) {
                 if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
-                    expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
                     return;
                 }
             } else if (action->actor == position) {
                 if (auto expression = Trait::TraitTable::getExpressionForActionActor(action->type)) {
-                    expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
                     return;
                 }
             }
         }
 
         if (auto expression = Trait::TraitTable::getExpressionForEvent("default")) {
-            expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+            expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
             return;
         }
 
-        Trait::TraitTable::fallbackExpression.apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+        Trait::TraitTable::fallbackExpression.apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
     }
 
     float Node::playExpressionEvent(int position, RE::Actor* actor, std::string eventName) {
         if (auto expression = Trait::TraitTable::getExpressionForEvent(eventName)) {
-            expression->apply(actor, 0, Trait::TraitTable::getExcitement(actor), getOverrideType(position));
+            expression->apply(actor, true, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
             return expression->getDuration(actor);
         }
         return -1;

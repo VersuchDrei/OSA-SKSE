@@ -1,6 +1,7 @@
 #include "TraitTable.h"
 
 #include "FacialExpression.h"
+#include "Util/VectorUtil.h"
 
 namespace Trait {
     const char* EXPRESSION_FILE_PATH{"Data/SKSE/Plugins/OStim/facial expressions"};
@@ -79,19 +80,28 @@ namespace Trait {
         if (json.contains("duration")) {
             genderExpression->duration = json["duration"];
         }
+
         if (json.contains("expression")) {
             genderExpression->expression = parseModifier(json["expression"]);
         }
+
+        if (json.contains("modifiers")) {
+            for (auto& modifier : json["modifiers"]) {
+                auto mod = parseModifier(modifier);
+                if (VectorUtil::contains(eyelidModifierTypes, mod.type)) {
+                    genderExpression->eyelidModifiers.insert({mod.type, mod});
+                } else if (VectorUtil::contains(eyebrowModifierTypes, mod.type)) {
+                    genderExpression->eyebrowModifiers.insert({mod.type, mod});
+                } else if (VectorUtil::contains(eyeballModifierTypes, mod.type)) {
+                    genderExpression->eyeballModifiers.insert({mod.type, mod});
+                }
+            }
+        }
+
         if (json.contains("phonemes")) {
             for (auto& phoneme : json["phonemes"]) {
                 auto mod = parseModifier(phoneme);
                 genderExpression->phonemes.insert({mod.type, mod});
-            }
-        }
-        if (json.contains("modifiers")) {
-            for (auto& modifier : json["modifiers"]) {
-                auto mod = parseModifier(modifier);
-                genderExpression->modifiers.insert({mod.type, mod});
             }
         }
     }
