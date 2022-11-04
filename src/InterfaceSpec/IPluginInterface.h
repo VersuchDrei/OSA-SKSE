@@ -18,7 +18,7 @@ public:
 	virtual IPluginInterface* RemoveInterface(const char* name) = 0;
 };
 
-struct InterfaceExchangeMessage
+struct OSAInterfaceExchangeMessage
 {
 	enum: uint32_t
 	{

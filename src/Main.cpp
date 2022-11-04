@@ -41,8 +41,8 @@ namespace {
 
     void UnspecificedSenderMessageHandler(SKSE::MessagingInterface::Message* a_msg) {        
         switch (a_msg->type) {
-            case InterfaceExchangeMessage::kMessage_ExchangeInterface: {
-                InterfaceExchangeMessage* exchangeMessage = (InterfaceExchangeMessage*)a_msg->data;
+            case OSAInterfaceExchangeMessage::kMessage_ExchangeInterface: {
+                OSAInterfaceExchangeMessage* exchangeMessage = (OSAInterfaceExchangeMessage*)a_msg->data;
                 exchangeMessage->interfaceMap = InterfaceMap::GetSingleton();
             } break;
         }
