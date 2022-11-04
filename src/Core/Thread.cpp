@@ -16,7 +16,10 @@ namespace OStim {
         m_currentNode = a_node;
         auto messaging = SKSE::GetMessagingInterface();
         Messaging::AnimationChangedMessage msg;
-        messaging->Dispatch(Messaging::kAnimationChanged, (void*)&msg, sizeof(Messaging::AnimationChangedMessage*), nullptr);
+        msg.newAnimation = a_node;        
+        logger::info("Sending animation changed event");
+        Messaging::MessagingRegistry::GetSingleton()->SendMessageToListeners(msg);
+        
     }
 
     void Thread::AddThirdActor(RE::Actor* a_actor) { m_actors.insert(std::make_pair(2, a_actor)); }
