@@ -1,30 +1,20 @@
 #include "TraitTable.h"
 
 #include "FacialExpression.h"
+#include "Util/VectorUtil.h"
 
 namespace Trait {
     const char* EXPRESSION_FILE_PATH{"Data/SKSE/Plugins/OStim/facial expressions"};
     const char* EXPRESSION_FILE_SUFFIX{".json"};
 
     void TraitTable::setup() {
-        openMouthPhonemes.push_back(*(new FaceModifier()));
-        openMouthPhonemes.push_back(*(new FaceModifier()));
-        openMouthPhonemes.push_back(*(new FaceModifier()));
+        openMouthPhonemes.insert({0, {.type = 0, .baseValue = 100}});
+        openMouthPhonemes.insert({1, {.type = 1, .baseValue = 40}});
+        openMouthPhonemes.insert({5, {.type = 5, .baseValue = 100}});
 
-        openMouthPhonemes[0].type = 0;
-        openMouthPhonemes[0].baseValue = 100;
-        openMouthPhonemes[1].type = 1;
-        openMouthPhonemes[1].baseValue = 40;
-        openMouthPhonemes[2].type = 5;
-        openMouthPhonemes[2].baseValue = 100;
+        kissingPhonemes.insert({15, {.type = 15, .baseValue = 100}});
 
-        kissingPhonemes.push_back(*(new FaceModifier()));
-        kissingPhonemes[0].type = 15;
-        kissingPhonemes[0].baseValue = 100;
-
-        lickingPhonemes.push_back(*(new FaceModifier()));
-        lickingPhonemes[0].type = 0;
-        lickingPhonemes[0].baseValue = 100;
+        lickingPhonemes.insert({0, {.type = 0, .baseValue = 100}});
 
         std::srand((unsigned)time(NULL));
 
@@ -90,17 +80,28 @@ namespace Trait {
         if (json.contains("duration")) {
             genderExpression->duration = json["duration"];
         }
+
         if (json.contains("expression")) {
             genderExpression->expression = parseModifier(json["expression"]);
         }
-        if (json.contains("phonemes")) {
-            for (auto& phoneme : json["phonemes"]) {
-                genderExpression->phonemes.push_back(parseModifier(phoneme));
-            }
-        }
+
         if (json.contains("modifiers")) {
             for (auto& modifier : json["modifiers"]) {
-                genderExpression->modifiers.push_back(parseModifier(modifier));
+                auto mod = parseModifier(modifier);
+                if (VectorUtil::contains(eyelidModifierTypes, mod.type)) {
+                    genderExpression->eyelidModifiers.insert({mod.type, mod});
+                } else if (VectorUtil::contains(eyebrowModifierTypes, mod.type)) {
+                    genderExpression->eyebrowModifiers.insert({mod.type, mod});
+                } else if (VectorUtil::contains(eyeballModifierTypes, mod.type)) {
+                    genderExpression->eyeballModifiers.insert({mod.type, mod});
+                }
+            }
+        }
+
+        if (json.contains("phonemes")) {
+            for (auto& phoneme : json["phonemes"]) {
+                auto mod = parseModifier(phoneme);
+                genderExpression->phonemes.insert({mod.type, mod});
             }
         }
     }

@@ -3,64 +3,112 @@
 #include "TraitTable.h"
 
 namespace Trait {
-    void GenderExpression::apply(RE::Actor* actor, float speed, float excitement, std::vector<FaceModifier> phonemeOverride) {
+    void GenderExpression::apply(RE::Actor* actor, bool isEvent, float speed, float excitement, std::unordered_map<int, FaceModifier> eyeballModifierOverride, std::unordered_map<int, FaceModifier> phonemeOverride) {
         const auto skyrimVM = RE::SkyrimVM::GetSingleton();
         auto vm = skyrimVM ? skyrimVM->impl : nullptr;
         if (vm) {
             RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 
             auto faceData = actor->GetFaceGenAnimationData();
-            faceData->Reset(0, true, true, true, false);
 
             // expression
             if (auto value = expression.calculate(speed, excitement)) {
                 faceData->exprOverride = false;
-                faceData->SetExpressionOverride(expression.type, value);
+                faceData->SetExpressionOverride(expression.type, static_cast<float>(value) / 100.0f);
                 faceData->exprOverride = true;
             }
             
             // modifiers
-            for (auto& modifier : modifiers) {
-                auto args = RE::MakeFunctionArguments(std::move(actor), std::move(modifier.type), std::move(modifier.calculate(speed, excitement)));
-                vm->DispatchStaticCall("MfgConsoleFunc", "SetModifier", args, callback);
+            if (!isEvent || !eyelidModifiers.empty()) {
+                for (int i : eyelidModifierTypes) {
+                    int current = faceData->modifierKeyFrame.values[i] * 100;
+                    int goal = 0;
+                    auto iter = eyelidModifiers.find(i);
+                    if (iter != eyelidModifiers.end()) {
+                        goal = iter->second.calculate(speed, excitement);
+                    }
+
+                    if (current != goal) {
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
+                        vm->DispatchStaticCall("_oGlobal", "BlendMo", args, callback);
+                    }
+                }
+            }
+
+            if (!isEvent || !eyebrowModifiers.empty()) {
+                for (int i : eyebrowModifierTypes) {
+                    int current = faceData->modifierKeyFrame.values[i] * 100;
+                    int goal = 0;
+                    auto iter = eyebrowModifiers.find(i);
+                    if (iter != eyebrowModifiers.end()) {
+                        goal = iter->second.calculate(speed, excitement);
+                    }
+
+                    if (current != goal) {
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
+                        vm->DispatchStaticCall("_oGlobal", "BlendMo", args, callback);
+                    }
+                }
+            }
+
+            auto& eyeballModifiersToUse = (isEvent && !eyeballModifiers.empty()) || eyeballModifierOverride.empty() ? eyeballModifiers : eyeballModifierOverride;
+            if (!eyeballModifiersToUse.empty()) {
+                for (int i : eyeballModifierTypes) {
+                    int current = faceData->modifierKeyFrame.values[i] * 100;
+                    int goal = 0;
+                    auto iter = eyeballModifiersToUse.find(i);
+                    if (iter != eyeballModifiersToUse.end()) {
+                        goal = iter->second.calculate(speed, excitement);
+                    }
+
+                    if (current != goal) {
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
+                        vm->DispatchStaticCall("_oGlobal", "BlendMo", args, callback);
+                    }
+                }
             }
 
             // phonemes
-            if (phonemeOverride.empty()) {
-                for (auto& phoneme : phonemes) {
-                    auto args = RE::MakeFunctionArguments(std::move(actor), std::move(phoneme.type), std::move(phoneme.calculate(speed, excitement)));
-                    vm->DispatchStaticCall("MfgConsoleFunc", "SetPhoneme", args, callback);
-                }
-            } else {
-                for (auto& phoneme : phonemeOverride) {
-                    auto args = RE::MakeFunctionArguments(std::move(actor), std::move(phoneme.type), std::move(phoneme.calculate(speed, excitement)));
-                    vm->DispatchStaticCall("MfgConsoleFunc", "SetPhoneme", args, callback);
+            auto& phonemesToUse = phonemeOverride.empty() ? phonemes : phonemeOverride;
+            if (!isEvent || !phonemesToUse.empty()) {
+                for (int i = 0; i < 14; i++) {
+                    int current = faceData->phenomeKeyFrame.values[i] * 100;
+                    int goal = 0;
+                    auto iter = phonemesToUse.find(i);
+                    if (iter != phonemesToUse.end()) {
+                        goal = iter->second.calculate(speed, excitement);
+                    }
+
+                    if (current != goal) {
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current),
+                                                              std::move(i), std::move(3));
+                        vm->DispatchStaticCall("_oGlobal", "BlendPh", args, callback);
+                    }
                 }
             }
-            
         }
     }
 
-    void FacialExpression::apply(RE::Actor* actor, float speed, float excitement, PhonemeOverrideType phonemeOverride) {
-        std::vector<FaceModifier> phonemeOverrideVector;
+    void FacialExpression::apply(RE::Actor* actor, bool isEvent, float speed, float excitement, std::unordered_map<int, FaceModifier> eyeballModifierOverride, PhonemeOverrideType phonemeOverride) {
+        std::unordered_map<int, FaceModifier> phonemeOverrideMap;
         switch (phonemeOverride) {
         case OpenMouth:
-            phonemeOverrideVector = TraitTable::openMouthPhonemes;
+            phonemeOverrideMap = TraitTable::openMouthPhonemes;
             break;
         case Kissing:
-            phonemeOverrideVector = TraitTable::kissingPhonemes;
+            phonemeOverrideMap = TraitTable::kissingPhonemes;
             break;
         case Licking:
-            phonemeOverrideVector = TraitTable::lickingPhonemes;
+            phonemeOverrideMap = TraitTable::lickingPhonemes;
             break;
         default:
             break;
         }
 
         if (actor->GetActorBase()->GetSex() == RE::SEX::kFemale) {
-            female.apply(actor, speed, excitement, phonemeOverrideVector);
+            female.apply(actor, isEvent, speed, excitement, eyeballModifierOverride, phonemeOverrideMap);
         } else {
-            male.apply(actor, speed, excitement, phonemeOverrideVector);
+            male.apply(actor, isEvent, speed, excitement, eyeballModifierOverride, phonemeOverrideMap);
         }
     }
 
