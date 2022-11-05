@@ -18,6 +18,7 @@ namespace Graph {
         float scale = 1.0;
         float scaleHeight = 120.748;
         bool feetOnGround;
+        std::unordered_map<int, Trait::FaceModifier> eyeballModifierOverride;
         std::vector<std::string> tags;
     };
 
@@ -57,5 +58,6 @@ namespace Graph {
 
     private:
         Trait::PhonemeOverrideType getOverrideType(int position);
+        std::unordered_map<int, Trait::FaceModifier> getEyeballModifierOverride(int position);
     };
 }

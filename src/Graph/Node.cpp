@@ -132,23 +132,23 @@ namespace Graph {
         for (auto& action : actions) {
             if (action->target == position) {
                 if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
-                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
+                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
                     return;
                 }
             } else if (action->actor == position) {
                 if (auto expression = Trait::TraitTable::getExpressionForActionActor(action->type)) {
-                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
+                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
                     return;
                 }
             }
         }
 
         if (auto expression = Trait::TraitTable::getExpressionForEvent("default")) {
-            expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
+            expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
             return;
         }
 
-        Trait::TraitTable::fallbackExpression.apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
+        Trait::TraitTable::fallbackExpression.apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
     }
 
     float Node::playExpressionEvent(int position, RE::Actor* actor, std::string eventName) {
@@ -168,5 +168,12 @@ namespace Graph {
             return Trait::PhonemeOverrideType::Licking;
         }
         return Trait::PhonemeOverrideType::NoOveride;
+    }
+
+    std::unordered_map<int, Trait::FaceModifier> Node::getEyeballModifierOverride(int position) {
+        if (actors.size() > position) {
+            return actors[position]->eyeballModifierOverride;
+        }
+        return {};
     }
 }
