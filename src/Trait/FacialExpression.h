@@ -2,7 +2,7 @@
 
 namespace Trait {
     static const std::vector<int> eyelidModifierTypes = {0, 1, 12, 13};
-    static const std::vector<int> eyebrowModifierTypes = {4, 5, 6, 7};
+    static const std::vector<int> eyebrowModifierTypes = {2, 3, 4, 5, 6, 7};
     static const std::vector<int> eyeballModifierTypes = {8, 9, 10, 11};
 
     enum PhonemeOverrideType {
@@ -20,7 +20,7 @@ namespace Trait {
         float excitementMultiplier;
 
         inline int calculate(float speed, float excitement) {
-            return baseValue + (int)(speedMultiplier * speed + excitementMultiplier * excitement);
+            return (int)(baseValue + speedMultiplier * speed + excitementMultiplier * excitement);
         }
     };
 

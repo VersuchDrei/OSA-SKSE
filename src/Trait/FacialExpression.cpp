@@ -52,7 +52,7 @@ namespace Trait {
             }
 
             auto& eyeballModifiersToUse = (isEvent && !eyeballModifiers.empty()) || eyeballModifierOverride.empty() ? eyeballModifiers : eyeballModifierOverride;
-            if (!eyeballModifiersToUse.empty()) {
+            if (!isEvent || !eyeballModifiersToUse.empty()) {
                 for (int i : eyeballModifierTypes) {
                     int current = faceData->modifierKeyFrame.values[i] * 100;
                     int goal = 0;
@@ -80,8 +80,7 @@ namespace Trait {
                     }
 
                     if (current != goal) {
-                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current),
-                                                              std::move(i), std::move(3));
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
                         vm->DispatchStaticCall("_oGlobal", "BlendPh", args, callback);
                     }
                 }
