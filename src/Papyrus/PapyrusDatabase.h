@@ -174,6 +174,26 @@ namespace PapyrusDatabase {
                                 node->actors[pos]->feetOnGround = feetOnGround.as_bool();
                             }
 
+                            if (auto lookUp = actor.attribute("lookUp")) {
+                                float value = lookUp.as_float();
+                                int type = 11;
+                                if (value < 0) {
+                                    value *= -1;
+                                    type = 8;
+                                }
+                                node->actors[pos]->eyeballModifierOverride.insert({type, {.type = type, .baseValue = value}});
+                            }
+
+                            if (auto lookLeft = actor.attribute("lookLeft")) {
+                                float value = lookLeft.as_float();
+                                int type = 9;
+                                if (value < 0) {
+                                    value *= -1;
+                                    type = 10;
+                                }
+                                node->actors[pos]->eyeballModifierOverride.insert({type, {.type = type, .baseValue = value}});
+                            }
+
                             if (auto tags = actor.attribute("tags")) {
                                 char delimiter = ',';
                                 std::string tagStr = tags.as_string();
