@@ -61,7 +61,9 @@ namespace Graph {
         int count = std::min(actors.size(), reActors.size());
         for (int i = 0; i < count; i++) {
             // penis bending
-            reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
+            if (!MCM::MCMTable::isSchlongAnglingDisabled()) {
+                reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
+            }
 
             // mouth controls
             updateFacialExpressions(i, reActors[i]);
