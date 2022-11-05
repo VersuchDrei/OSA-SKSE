@@ -45,7 +45,7 @@ namespace PapyrusObject {
 
         const auto originPos = a_centerRef->GetPosition();
         std::vector<RE::TESObjectREFR*> vec;
-        util::iterate_attached_cells(originPos, a_radius * a_radius, [&](RE::TESObjectREFR& a_ref) {
+        util::iterate_attached_cells(originPos, a_radius, [&](RE::TESObjectREFR& a_ref) {
             bool isType = a_ref.GetBaseObject()->Is(RE::FormType::Furniture);
             if (isType) {
                 const auto refPos = a_ref.GetPosition();
