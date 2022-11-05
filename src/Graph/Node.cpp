@@ -63,8 +63,10 @@ namespace Graph {
             // penis bending
             reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
 
-            // mouth controls
-            updateFacialExpressions(i, reActors[i]);
+            // expressions
+            if (!Trait::TraitTable::areFacialExpressionsBlocked(reActors[i])) {
+                updateFacialExpressions(i, reActors[i]);
+            }
 
             // scaling
             if (!MCM::MCMTable::isScalingDisabled()) {
