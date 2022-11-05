@@ -6,8 +6,10 @@ namespace MCM {
         static void setupForms();
 
         static bool isScalingDisabled();
+        static bool isSchlongBendingDisabled();
 
     private:
         inline static RE::TESGlobal* disableScalingSetting;
+        inline static RE::TESGlobal* disableSchlongBendingSetting;
     };
 }
