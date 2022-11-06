@@ -34,6 +34,8 @@ set(sources
     src/Graph/Node.cpp
 	src/Game/Locker.h
 	src/Game/Patch.h
+    src/InterfaceSpec/PluginInterface.cpp
+    src/Messaging/MessagingRegistry.cpp
 	src/PCH.h
 	src/Papyrus/Papyrus.cpp
 	src/Papyrus/Script.h
