@@ -1,5 +1,6 @@
 #pragma once
 #include "Graph/LookupTable.h"
+#include "Util/StringUtil.h"
 
 namespace PapyrusDatabase {
     using VM = RE::BSScript::IVirtualMachine;
@@ -18,6 +19,7 @@ namespace PapyrusDatabase {
                 auto id_val = id.value();
                 j_obj["sceneid"] = id_val;
                 node->scene_id = id_val;
+                StringUtil::toLower(&node->scene_id);
                 split_id = stl::string_split(id_val, '|');
             }
 
@@ -137,7 +139,7 @@ namespace PapyrusDatabase {
                 if (auto tags = metadata.attribute("tags")) {
                     char delimiter = ',';
                     std::string tagStr = tags.as_string();
-                    std::transform(tagStr.begin(), tagStr.end(), tagStr.begin(), ::tolower);
+                    StringUtil::toLower(&tagStr);
 
                     auto tag_split = stl::string_split(tagStr, delimiter);
                     for (std::string tag : tag_split) {
@@ -197,7 +199,7 @@ namespace PapyrusDatabase {
                             if (auto tags = actor.attribute("tags")) {
                                 char delimiter = ',';
                                 std::string tagStr = tags.as_string();
-                                std::transform(tagStr.begin(), tagStr.end(), tagStr.begin(), ::tolower);
+                                StringUtil::toLower(&tagStr);
 
                                 auto tag_split = stl::string_split(tagStr, delimiter);
                                 for (std::string tag : tag_split) {
@@ -219,7 +221,9 @@ namespace PapyrusDatabase {
 
                     auto actionObj = new Graph::Action();
 
-                    actionObj->type = type.as_string();
+                    std::string typeStr = type.as_string();
+                    StringUtil::toLower(&typeStr);
+                    actionObj->type = typeStr;
                     actionObj->actor = actor.as_int();
 
                     if (auto target = action.attribute("target")) {
@@ -261,7 +265,7 @@ namespace PapyrusDatabase {
         node->animClass = anim_class;
         j_obj["positiondata"] = split_id[1];
 
-        Graph::LookupTable::AddNode(node);
+        Graph::LookupTable::addNode(node);
 
         return j_obj;
     }

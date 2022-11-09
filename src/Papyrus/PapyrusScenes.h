@@ -20,7 +20,7 @@ namespace PapyrusScenes {
         auto log = RE::ConsoleLog::GetSingleton();
         auto thread = tm->GetThread(a_id);
         if (thread) {
-            auto node = Graph::LookupTable::GetNodeById(a_nodeName);
+            auto node = Graph::LookupTable::getNodeById(a_nodeName);
             if (node) {
                 thread->ChangeNode(node);
                 log->Print(("Changing Animation on thread: " + std::to_string(a_id) + " to " + a_nodeName).c_str());

@@ -90,7 +90,7 @@ namespace Graph {
                 // so for SE we have to invoke Papyrus here :^(
                 if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
                     bool isFemale = reActors[i]->GetActorBase()->GetSex() == RE::SEX::kFemale;
-                    auto nioInterface = Graph::LookupTable::GetNiTransformInterface();
+                    auto nioInterface = Graph::LookupTable::getNiTransformInterface();
                     bool hasOffset = nioInterface->HasNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal");
                     if (actors[i]->feetOnGround) {
                         if (hasOffset) {

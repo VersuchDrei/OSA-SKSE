@@ -200,19 +200,19 @@ namespace PapyrusActor {
     }
 
     void UpdateForScene(RE::StaticFunctionTag*, std::string id, std::vector<RE::Actor*> actors, std::vector<float> offsets) {
-        if (auto node = Graph::LookupTable::GetNodeById(id)) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
             node->updateActors(actors, offsets);
         }
     }
 
     void UpdateExpression(RE::StaticFunctionTag*, std::string id, int position, RE::Actor* actor) {
-        if (auto node = Graph::LookupTable::GetNodeById(id)) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
             node->updateFacialExpressions(position, actor);
         }
     }
 
     float PlayExpressionEvent(RE::StaticFunctionTag*, std::string id, int position, RE::Actor* actor, std::string eventName){
-        if (auto node = Graph::LookupTable::GetNodeById(id)) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
             return node->playExpressionEvent(position, actor, eventName);
         }
         return -1;

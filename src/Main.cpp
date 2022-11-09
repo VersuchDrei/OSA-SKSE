@@ -77,7 +77,7 @@ namespace {
                 }
 
                 logger::info("NiTransform version {}", nioInterface->GetVersion());
-                if (!Graph::LookupTable::SetNiTransfromInterface(nioInterface)) {
+                if (!Graph::LookupTable::setNiTransfromInterface(nioInterface)) {
                     logger::info("NiTransformInterface not provided.");
                 }
             } break;
