@@ -137,12 +137,7 @@ namespace PapyrusDatabase {
 
             if (auto metadata = scene.child("metadata")) {
                 if (auto tags = metadata.attribute("tags")) {
-                    char delimiter = ',';
-                    std::string tagStr = tags.as_string();
-                    StringUtil::toLower(&tagStr);
-
-                    auto tag_split = stl::string_split(tagStr, delimiter);
-                    for (std::string tag : tag_split) {
+                    for (std::string tag : StringUtil::toTagVector(tags.as_string())) {
                         node->tags.push_back(tag);
                     }
                 }
@@ -197,12 +192,7 @@ namespace PapyrusDatabase {
                             }
 
                             if (auto tags = actor.attribute("tags")) {
-                                char delimiter = ',';
-                                std::string tagStr = tags.as_string();
-                                StringUtil::toLower(&tagStr);
-
-                                auto tag_split = stl::string_split(tagStr, delimiter);
-                                for (std::string tag : tag_split) {
+                                for (std::string tag : StringUtil::toTagVector(tags.as_string())) {
                                     node->actors[pos]->tags.push_back(tag);
                                 }
                             }

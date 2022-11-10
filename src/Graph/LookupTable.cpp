@@ -31,6 +31,7 @@ namespace Graph {
     }
 
     Node* LookupTable::getRandomNode(std::function<bool(Node)> condition) {
+        // the copy is to prevent race conditions, if several scripts try to call this at once
         auto copy = nodeList;
         std::shuffle(std::begin(copy), std::end(copy), rng);
 

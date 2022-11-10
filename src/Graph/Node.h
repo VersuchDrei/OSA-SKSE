@@ -6,9 +6,9 @@ namespace Graph {
     struct Action {
     public:
         std::string type;
-        uint32_t actor;
-        uint32_t target;
-        uint32_t performer;
+        int actor;
+        int target;
+        int performer;
     };
 
     struct Actor {
