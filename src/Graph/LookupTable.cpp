@@ -1,9 +1,14 @@
 #include "Graph/LookupTable.h"
 
 #include "Graph/Node.h"
+#include "Util/JsonFileLoader.h"
 #include "SKEE.h"
 
+
 namespace Graph {
+
+    const char* ACTION_FILE_PATH{ "Data/SKSE/Plugins/OStim/actions" };
+
     void LookupTable::AddNode(Node* node) {
         nodes.insert({node->scene_id, node});
         for (std::string anim : node->anim_ids) {
@@ -33,5 +38,64 @@ namespace Graph {
 
     SKEE::INiTransformInterface* LookupTable::GetNiTransformInterface() {
         return niTransformInterface;
+    }
+
+    void parseActor(json& json, ActionActor& actor) {
+        if (json.contains("stimulation")) {
+            actor.stimulation = json["stimulation"];
+        }
+        else {
+            actor.stimulation = 0.0;
+        }
+        if (json.contains("requirements")) {
+            for (auto& req : json["requirements"]) {
+                actor.requirements.push_back(req.get<std::string>());
+            }
+        }
+        if (json.contains("strippingSlots")) {
+            for (auto& slot : json["strippingSlots"]) {
+                actor.strippingSlots.push_back(slot.get<int>());
+            }
+        }
+    };
+
+    void parsePerformer(json& json, ActionPerformer& performer) {
+        if (json.contains("floats")) {
+            auto& floats = json["floats"];
+            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
+                performer.floats.insert(std::make_pair(it.key(), it.value().get<float>()));
+            }
+        }
+    }
+
+    void LookupTable::SetupActions(){        
+    
+        Util::JsonFileLoader::LoadFilesInFolder(ACTION_FILE_PATH, [&](std::string filename, json json) {
+            Graph::ActionAttributes attr;
+            if(json.contains("actor")){
+                Graph::ActionActor actor;
+                parseActor(json["actor"], actor);
+                attr.actor = actor;
+            }
+            if (json.contains("target")) {
+                Graph::ActionActor target;
+                parseActor(json["target"], target);
+                attr.target = target;
+            }
+            if(json.contains("performer")){
+            }
+            actions.insert(std::make_pair(filename, attr));
+        });
+    }
+
+    ActionAttributes* LookupTable::GetActionAttributesByType(std::string type)
+    {
+        if (auto it = actions.find(type); it != actions.end()) {
+            return &actions.at(type);
+        }
+        else {
+            logger::warn("No action found for {} using default", type);
+            return &actions.at("default");
+        }
     }
 }

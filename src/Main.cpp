@@ -103,6 +103,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
 
     Patch::Install();
     Papyrus::Bind();
+    Graph::LookupTable::SetupActions();
     Papyrus::Build();
     Trait::TraitTable::setup();
 

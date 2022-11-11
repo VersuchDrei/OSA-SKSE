@@ -12,9 +12,13 @@ namespace Graph{
 
         static bool SetNiTransfromInterface(SKEE::INiTransformInterface* nioInterface);
         static SKEE::INiTransformInterface* GetNiTransformInterface();
+
+        static void SetupActions();
+        static ActionAttributes* GetActionAttributesByType(std::string type);
     private:
         inline static std::unordered_map<std::string, Node*> nodes;
         inline static std::unordered_map<std::string, Node*> animationNodeTable;
+        inline static std::unordered_map<std::string, ActionAttributes> actions;
         
         inline static SKEE::INiTransformInterface* niTransformInterface;
     };
