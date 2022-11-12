@@ -141,6 +141,10 @@ namespace PapyrusDatabase {
                         node->tags.push_back(tag);
                     }
                 }
+
+                if (auto furnitureType = metadata.attribute("furnitureType")) {
+                    node->furnitureType = Graph::LookupTable::getFurnitureType(furnitureType.as_string());
+                }
             }
 
             for (int i = 0; i < actorCount; i++) {
@@ -169,6 +173,10 @@ namespace PapyrusDatabase {
 
                             if (auto feetOnGround = actor.attribute("feetOnGround")) {
                                 node->actors[pos]->feetOnGround = feetOnGround.as_bool();
+                            }
+
+                            if (auto expressionAction = actor.attribute("expressionAction")) {
+                                node->actors[pos]->expressionAction = expressionAction.as_int();
                             }
 
                             if (auto lookUp = actor.attribute("lookUp")) {

@@ -1,6 +1,7 @@
 #include "Graph/Node.h"
 
 #include "Graph/LookupTable.h"
+#include "Trait/Condition.h"
 #include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
 #include "Util/MCMTable.h"
@@ -8,17 +9,40 @@
 #include "SKEE.h"
 
 namespace Graph {
+    bool Node::fulfilledBy(std::vector<Trait::ActorConditions> conditions) {
+        int size = actors.size();
+        if (size != conditions.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (!conditions[i].fulfills(actors[i]->conditions)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     bool Node::hasActorTag(int position, std::string tag) {
+        if (position >= actors.size()) {
+            return false;
+        }
         return VectorUtil::contains(actors[position]->tags, tag);
     }
 
     bool Node::hasAnyActorTag(int position, std::vector<std::string> tags) {
-        for (auto& tag : tags) {
-            if (VectorUtil::contains(actors[position]->tags, tag)) {
-                return true;
-            }
+        if (position >= actors.size()) {
+            return false;
         }
-        return false;
+        return VectorUtil::containsAny(actors[position]->tags, tags);
+    }
+
+    bool Node::hasAllActorTags(int position, std::vector<std::string> tags) {
+        if (position >= actors.size()) {
+            return false;
+        }
+        return VectorUtil::containsAll(actors[position]->tags, tags);
     }
 
     int Node::findAction(std::function<bool(Action*)> condition) {
@@ -42,6 +66,14 @@ namespace Graph {
         return ret;
     }
 
+    int Node::findAction(std::string type) {
+        return findAction([type](Action* action) { return action->type == type; });
+    }
+
+    int Node::findAnyAction(std::vector<std::string> types) {
+        return findAction([types](Action* action) { return VectorUtil::contains(types, action->type); });
+    }
+
     int Node::findActionForActor(int position, std::string type) {
         return findAction([position, type](Action* action) {return action->actor == position && action->type == type;});
     }
@@ -52,6 +84,12 @@ namespace Graph {
 
     int Node::findActionForTarget(int position, std::string type) {
         return findAction([position, type](Action* action) {return action->target == position && action->type == type;});
+    }
+
+    int Node::findAnyActionForTarget(int position, std::vector<std::string> types) {
+        return findAction([position, types](Action* action) {
+            return action->target == position && VectorUtil::contains(types, action->type);
+        });
     }
 
     void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> offsets) {
@@ -129,6 +167,15 @@ namespace Graph {
             return;
         }
 
+        if (position > actors.size()) {
+            if (actors[position]->expressionAction != -1 && actors[position]->expressionAction < actions.size()) {
+                if (auto expression = Trait::TraitTable::getExpressionForActionActor(actions[actors[position]->expressionAction]->type)) {
+                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
+                    return;
+                }
+            }
+        }
+
         for (auto& action : actions) {
             if (action->target == position) {
                 if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
@@ -162,8 +209,6 @@ namespace Graph {
     Trait::PhonemeOverrideType Node::getOverrideType(int position) {
         if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus"}) != -1) {
             return Trait::PhonemeOverrideType::OpenMouth;
-        } else if (hasActorTag(position, "kissing") || findAnyActionForActor(position, {"kissing", "kissingfeet", "nipplesucking"}) != -1 || findActionForTarget(position, "kissing") != -1) {
-            return Trait::PhonemeOverrideType::Kissing;
         } else if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"}) != -1) {
             return Trait::PhonemeOverrideType::Licking;
         }

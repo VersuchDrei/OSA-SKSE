@@ -17,4 +17,13 @@ namespace StringUtil {
         toLower(&string);
         return stl::string_split(string, ',');
     }
+
+    std::vector<std::vector<std::string>> toTagMatrix(std::string string) {
+        std::vector<std::vector<std::string>> ret;
+        auto lists = stl::string_split(string, ';');
+        for (auto &list : lists) {
+            ret.push_back(toTagVector(list));
+        }
+        return ret;
+    }
 }

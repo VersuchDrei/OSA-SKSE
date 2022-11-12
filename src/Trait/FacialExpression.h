@@ -8,7 +8,6 @@ namespace Trait {
     enum PhonemeOverrideType {
         NoOveride,
         OpenMouth,
-        Kissing,
         Licking
     };
 

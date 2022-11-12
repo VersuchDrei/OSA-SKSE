@@ -3,10 +3,6 @@
 #include "Util.h"
 
 namespace VectorUtil {
-    inline bool contains(std::vector<int> haystack, int needle) {
-        return std::find(haystack.begin(), haystack.end(), needle) != haystack.end();
-    }
-
 	template<class T>
     bool contains(std::vector<T> haystack, T needle) {
         return std::find(haystack.begin(), haystack.end(), needle) != haystack.end();
@@ -32,14 +28,8 @@ namespace VectorUtil {
         return true;
     }
 
-    inline std::vector<int> stoiv(std::string string) {
-        std::vector<int> ret;
-        for (std::string part : stl::string_split(string, ',')) {
-            try {
-                ret.push_back(std::stoi(part));
-            } catch (auto ex) {
-            }
-        }
-        return ret;
-    }
+    bool contains(std::vector<int> haystack, int needle);
+    std::vector<int> stoiv(std::string string);
+    std::vector<std::vector<int>> stoim(std::string string);
+    std::vector<int> getElementOrEmpty(std::vector<std::vector<int>> matrix, int index);
 }
