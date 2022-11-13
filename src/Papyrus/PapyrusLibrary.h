@@ -243,24 +243,122 @@ namespace PapyrusLibrary {
         return GetRandomFurnitureSceneWithMultiActorTagForAll(sft, actors, furnitureType, StringUtil::toTagVector(tags));
     }
 
-    std::string GetRandomFurnitureSceneWithAnyMultiActorTagForAnyCSV(RE::StaticFunctionTag*, std::vector < RE::Actor*> actors, std::string furnitureType, std::string tags) {
+    std::string GetRandomFurnitureSceneWithAnyMultiActorTagForAnyCSV(RE::StaticFunctionTag*, std::vector <RE::Actor*> actors, std::string furnitureType, std::string tags) {
         auto matrix = StringUtil::toTagMatrix(tags);
         return randomScene(actors, furnitureType, [matrix](Graph::Node* node) { return forAnyLoop(matrix.size(), [node, matrix](int i) {return node->hasAnyActorTag(i, matrix[i]);}); });
     }
 
-    std::string GetRandomFurnitureSceneWithAnyMultiActorTagForAllCSV(RE::StaticFunctionTag*, std::vector < RE::Actor*> actors, std::string furnitureType, std::string tags) {
+    std::string GetRandomFurnitureSceneWithAnyMultiActorTagForAllCSV(RE::StaticFunctionTag*, std::vector <RE::Actor*> actors, std::string furnitureType, std::string tags) {
         auto matrix = StringUtil::toTagMatrix(tags);
         return randomScene(actors, furnitureType, [matrix](Graph::Node* node) { return forAllLoop(matrix.size(), [node, matrix](int i) {return node->hasAnyActorTag(i, matrix[i]);}); });
     }
 
-    std::string GetRandomFurnitureSceneWithAllMultiActorTagsForAnyCSV(RE::StaticFunctionTag*, std::vector < RE::Actor*> actors, std::string furnitureType, std::string tags) {
+    std::string GetRandomFurnitureSceneWithAllMultiActorTagsForAnyCSV(RE::StaticFunctionTag*, std::vector <RE::Actor*> actors, std::string furnitureType, std::string tags) {
         auto matrix = StringUtil::toTagMatrix(tags);
         return randomScene(actors, furnitureType, [matrix](Graph::Node* node) { return forAnyLoop(matrix.size(), [node, matrix](int i) {return node->hasAllActorTags(i, matrix[i]);}); });
     }
 
-    std::string GetRandomFurnitureSceneWithAllMultiActorTagsForAllCSV(RE::StaticFunctionTag*, std::vector < RE::Actor*> actors, std::string furnitureType, std::string tags) {
+    std::string GetRandomFurnitureSceneWithAllMultiActorTagsForAllCSV(RE::StaticFunctionTag*, std::vector <RE::Actor*> actors, std::string furnitureType, std::string tags) {
         auto matrix = StringUtil::toTagMatrix(tags);
         return randomScene(actors, furnitureType, [matrix](Graph::Node* node) { return forAllLoop(matrix.size(), [node, matrix](int i) {return node->hasAllActorTags(i, matrix[i]);}); });
+    }
+
+
+    std::string GetRandomSceneWithAnySceneTagAndAnyMultiActorTagForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomSceneWithAllSceneTagsAndAnyMultiActorTagForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomSceneWithAnySceneTagAndAnyMultiActorTagForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomSceneWithAllSceneTagsAndAnyMultiActorTagForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomSceneWithAnySceneTagAndAllMultiActorTagsForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomSceneWithAllSceneTagsAndAllMultiActorTagsForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomSceneWithAnySceneTagAndAllMultiActorTagsForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomSceneWithAllSceneTagsAndAllMultiActorTagsForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
+    }
+
+
+    std::string GetRandomFurnitureSceneWithAnySceneTagAndAnyMultiActorTagForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAllSceneTagsAndAnyMultiActorTagForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAnySceneTagAndAnyMultiActorTagForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAllSceneTagsAndAnyMultiActorTagForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAnyActorTag(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAnySceneTagAndAllMultiActorTagsForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAllSceneTagsAndAllMultiActorTagsForAnyCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAnyLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAnySceneTagAndAllMultiActorTagsForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAny(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAllSceneTagsAndAllMultiActorTagsForAllCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string sceneTags, std::string actorTags) {
+        auto sceneVector = StringUtil::toTagVector(sceneTags);
+        auto actorMatrix = StringUtil::toTagMatrix(actorTags);
+        return randomScene(actors, furnitureType, [sceneVector, actorMatrix](Graph::Node* node) { return VectorUtil::containsAll(node->tags, sceneVector) && forAllLoop(actorMatrix.size(), [node, actorMatrix](int i){return node->hasAllActorTags(i, actorMatrix[i]);}); });
     }
 
 
@@ -494,6 +592,24 @@ namespace PapyrusLibrary {
         BIND(GetRandomFurnitureSceneWithAnyMultiActorTagForAllCSV);
         BIND(GetRandomFurnitureSceneWithAllMultiActorTagsForAnyCSV);
         BIND(GetRandomFurnitureSceneWithAllMultiActorTagsForAllCSV);
+
+        BIND(GetRandomSceneWithAnySceneTagAndAnyMultiActorTagForAnyCSV);
+        BIND(GetRandomSceneWithAllSceneTagsAndAnyMultiActorTagForAnyCSV);
+        BIND(GetRandomSceneWithAnySceneTagAndAnyMultiActorTagForAllCSV);
+        BIND(GetRandomSceneWithAllSceneTagsAndAnyMultiActorTagForAllCSV);
+        BIND(GetRandomSceneWithAnySceneTagAndAllMultiActorTagsForAnyCSV);
+        BIND(GetRandomSceneWithAllSceneTagsAndAllMultiActorTagsForAnyCSV);
+        BIND(GetRandomSceneWithAnySceneTagAndAllMultiActorTagsForAllCSV);
+        BIND(GetRandomSceneWithAllSceneTagsAndAllMultiActorTagsForAllCSV);
+
+        BIND(GetRandomFurnitureSceneWithAnySceneTagAndAnyMultiActorTagForAnyCSV);
+        BIND(GetRandomFurnitureSceneWithAllSceneTagsAndAnyMultiActorTagForAnyCSV);
+        BIND(GetRandomFurnitureSceneWithAnySceneTagAndAnyMultiActorTagForAllCSV);
+        BIND(GetRandomFurnitureSceneWithAllSceneTagsAndAnyMultiActorTagForAllCSV);
+        BIND(GetRandomFurnitureSceneWithAnySceneTagAndAllMultiActorTagsForAnyCSV);
+        BIND(GetRandomFurnitureSceneWithAllSceneTagsAndAllMultiActorTagsForAnyCSV);
+        BIND(GetRandomFurnitureSceneWithAnySceneTagAndAllMultiActorTagsForAllCSV);
+        BIND(GetRandomFurnitureSceneWithAllSceneTagsAndAllMultiActorTagsForAllCSV);
 
         BIND(GetRandomSceneWithAction);
         BIND(GetRandomSceneWithAnyAction);
