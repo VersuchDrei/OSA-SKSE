@@ -1,11 +1,13 @@
 #pragma once
 
+#include "Action.h"
 #include "Trait/FacialExpression.h"
 
 namespace Graph {
     struct Action {
     public:
         std::string type;
+        ActionAttributes* attributes;
         uint32_t actor;
         uint32_t target;
         uint32_t performer;
