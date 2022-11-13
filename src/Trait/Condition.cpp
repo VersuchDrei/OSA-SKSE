@@ -2,6 +2,7 @@
 
 namespace Trait {
     ActorConditions ActorConditions::create(RE::Actor* actor) {
+        // TODO: when actually implementing this make a nullptr meet all conditions, it's important for Migals stuff!
         ActorConditions ret;
         return ret;
     }

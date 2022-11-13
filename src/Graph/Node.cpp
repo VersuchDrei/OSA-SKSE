@@ -200,7 +200,7 @@ namespace Graph {
 
     float Node::playExpressionEvent(int position, RE::Actor* actor, std::string eventName) {
         if (auto expression = Trait::TraitTable::getExpressionForEvent(eventName)) {
-            expression->apply(actor, true, 0, Trait::TraitTable::getExcitement(actor), {}, getOverrideType(position));
+            expression->apply(actor, true, 0, Trait::TraitTable::getExcitement(actor), {}, Trait::PhonemeOverrideType::NoOveride);
             return expression->getDuration(actor);
         }
         return -1;

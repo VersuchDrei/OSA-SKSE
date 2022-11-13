@@ -8,8 +8,9 @@ namespace Graph {
         NONE,
         CHAIR,
         BENCH,
-        BOOKSHELF,
-        CRAFTING_TABLE
+        SHELF,
+        CRAFTING_TABLE,
+        COOKING_POT
     };
 
     struct Action {

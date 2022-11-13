@@ -22,8 +22,9 @@ namespace Graph{
             {"", FurnitureType::NONE},
             {"chair", FurnitureType::CHAIR},
             {"bench", FurnitureType::BENCH},
-            {"bookshelf", FurnitureType::BOOKSHELF},
-            {"craftingtable", FurnitureType::CRAFTING_TABLE}
+            {"shelf", FurnitureType::SHELF},
+            {"craftingtable", FurnitureType::CRAFTING_TABLE},
+            {"cookingpot", FurnitureType::COOKING_POT}
         };
 
         inline static std::unordered_map<std::string, Node*> nodes;
