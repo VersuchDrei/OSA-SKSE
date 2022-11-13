@@ -531,6 +531,8 @@ namespace PapyrusLibrary {
         BIND(GetRandomFurnitureSceneWithAllActionsForTarget);
         BIND(GetRandomFurnitureSceneWithAllActionsForTargetCSV);
 
+        BIND(GetRandomSceneSuperloadCSV);
+
         return true;
     }
 }
