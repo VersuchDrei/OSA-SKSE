@@ -419,6 +419,42 @@ namespace PapyrusMetadata {
         return FindAllActionsForMatesAny(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
     }
 
+    int FindActionForMatesAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::string type) {
+        StringUtil::toLower(&type);
+        return findAction(id, [positions, type](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target}) && action.type == type; });
+    }
+
+    int FindActionForMatesAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string type) {
+        return FindActionForMatesAll(sft, id, VectorUtil::stoiv(positions), type);
+    }
+
+    int FindAnyActionForMatesAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findAction(id, [positions, types](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target}) && VectorUtil::contains(types, action.type); });
+    }
+
+    int FindAnyActionForMatesAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
+        return FindAnyActionForMatesAll(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
+    }
+
+    std::vector<int> FindActionsForMatesAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::string type) {
+        StringUtil::toLower(&type);
+        return findActions(id, [positions, type](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target}) && action.type == type; });
+    }
+
+    std::vector<int> FindActionsForMatesAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string type) {
+        return FindActionsForMatesAll(sft, id, VectorUtil::stoiv(positions), type);
+    }
+
+    std::vector<int> FindAllActionsForMatesAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findActions(id, [positions, types](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target}) && VectorUtil::contains(types, action.type); });
+    }
+
+    std::vector<int> FindAllActionsForMatesAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
+        return FindAllActionsForMatesAll(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
+    }
+
 
     int FindActionForParticipant(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         StringUtil::toLower(&type);
@@ -482,6 +518,42 @@ namespace PapyrusMetadata {
 
     std::vector<int> FindAllActionsForParticipantsAnyCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
         return FindAllActionsForParticipantsAny(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
+    }
+
+    int FindActionForParticipantsAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::string type) {
+        StringUtil::toLower(&type);
+        return findAction(id, [positions, type](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target, action.performer}) && action.type == type; });
+    }
+
+    int FindActionForParticipantsAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string type) {
+        return FindActionForParticipantsAll(sft, id, VectorUtil::stoiv(positions), type);
+    }
+
+    int FindAnyActionForParticipantsAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findAction(id, [positions, types](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target, action.performer}) && VectorUtil::contains(types, action.type); });
+    }
+
+    int FindAnyActionForParticipantsAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
+        return FindAnyActionForParticipantsAll(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
+    }
+
+    std::vector<int> FindActionsForParticipantsAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::string type) {
+        StringUtil::toLower(&type);
+        return findActions(id, [positions, type](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target, action.performer}) && action.type == type; });
+    }
+
+    std::vector<int> FindActionsForParticipantsAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string type) {
+        return FindActionsForParticipantsAll(sft, id, VectorUtil::stoiv(positions), type);
+    }
+
+    std::vector<int> FindAllActionsForParticipantsAll(RE::StaticFunctionTag*, std::string id, std::vector<int> positions, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findActions(id, [positions, types](Graph::Action action) { return VectorUtil::containsAll(positions, {action.actor, action.target, action.performer}) && VectorUtil::contains(types, action.type); });
+    }
+
+    std::vector<int> FindAllActionsForParticipantsAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
+        return FindAllActionsForParticipantsAll(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
     }
 
 
@@ -690,6 +762,14 @@ namespace PapyrusMetadata {
         BIND(FindActionsForMatesAnyCSV);
         BIND(FindAllActionsForMatesAny);
         BIND(FindAllActionsForMatesAnyCSV);
+        BIND(FindActionForMatesAll);
+        BIND(FindActionForMatesAllCSV);
+        BIND(FindAnyActionForMatesAll);
+        BIND(FindAnyActionForMatesAllCSV);
+        BIND(FindActionsForMatesAll);
+        BIND(FindActionsForMatesAllCSV);
+        BIND(FindAllActionsForMatesAll);
+        BIND(FindAllActionsForMatesAllCSV);
 
         BIND(FindActionForParticipant);
         BIND(FindAnyActionForParticipant);
@@ -705,6 +785,14 @@ namespace PapyrusMetadata {
         BIND(FindActionsForParticipantsAnyCSV);
         BIND(FindAllActionsForParticipantsAny);
         BIND(FindAllActionsForParticipantsAnyCSV);
+        BIND(FindActionForParticipantsAll);
+        BIND(FindActionForParticipantsAllCSV);
+        BIND(FindAnyActionForParticipantsAll);
+        BIND(FindAnyActionForParticipantsAllCSV);
+        BIND(FindActionsForParticipantsAll);
+        BIND(FindActionsForParticipantsAllCSV);
+        BIND(FindAllActionsForParticipantsAll);
+        BIND(FindAllActionsForParticipantsAllCSV);
 
         BIND(FindActionSuperloadCSV);
         BIND(FindActionsSuperloadCSV);
