@@ -6,16 +6,15 @@ namespace Graph {
 		float stimulation;
 		std::vector<std::string> requirements;
 		std::vector<int> strippingSlots;
-	};
-	struct ActionPerformer {
-	public:
+		std::unordered_map<std::string, int> ints;
 		std::unordered_map<std::string, float> floats;
+		std::unordered_map<std::string, std::string> strings;
 	};
 
 	struct ActionAttributes {
 	public:
 		ActionActor actor;
 		ActionActor target;
-		ActionPerformer performer;
+		ActionActor performer;
 	};
 }

@@ -57,16 +57,27 @@ namespace Graph {
                 actor.strippingSlots.push_back(slot.get<int>());
             }
         }
-    };
-
-    void parsePerformer(json& json, ActionPerformer& performer) {
         if (json.contains("floats")) {
             auto& floats = json["floats"];
             for (json::iterator it = floats.begin(); it != floats.end(); it++) {
-                performer.floats.insert(std::make_pair(it.key(), it.value().get<float>()));
+                actor.floats.insert(std::make_pair(it.key(), it.value().get<float>()));
             }
         }
-    }
+
+        if (json.contains("ints")) {
+            auto& floats = json["ints"];
+            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
+                actor.ints.insert(std::make_pair(it.key(), it.value().get<int>()));
+            }
+        }
+
+        if (json.contains("strings")) {
+            auto& floats = json["strings"];
+            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
+                actor.strings.insert(std::make_pair(it.key(), it.value().get<std::string>()));
+            }
+        }
+    };
 
     void LookupTable::SetupActions(){        
     
@@ -83,6 +94,9 @@ namespace Graph {
                 attr.target = target;
             }
             if(json.contains("performer")){
+                Graph::ActionActor performer;
+                parseActor(json["performer"], performer);
+                attr.performer = performer;
             }
             actions.insert(std::make_pair(filename, attr));
         });
