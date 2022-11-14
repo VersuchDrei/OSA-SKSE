@@ -77,7 +77,7 @@ namespace Graph {
         std::shuffle(std::begin(copy), std::end(copy), rng);
 
         for (auto& node : copy) {
-            if (node->fulfilledBy(actorConditions) && nodeCondition(node)) {
+            if (!node->isTransition && node->fulfilledBy(actorConditions) && nodeCondition(node)) {
                 return node;
             }
         }

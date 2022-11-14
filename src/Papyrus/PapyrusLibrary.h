@@ -506,6 +506,54 @@ namespace PapyrusLibrary {
     }
 
 
+    std::string GetRandomSceneWithActionForActorAndTarget(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, int actorPosition, int targetPosition, std::string type) {
+        StringUtil::toLower(&type);
+        return randomScene(actors, [actorPosition, targetPosition, type](Graph::Node* node) { return node->findActionForActorAndTarget(actorPosition, targetPosition, type) != -1; });
+    }
+
+    std::string GetRandomSceneWithAnyActionForActorAndTarget(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, int actorPosition, int targetPosition, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return randomScene(actors, [actorPosition, targetPosition, types](Graph::Node* node) { return node->findAnyActionForActorAndTarget(actorPosition, targetPosition, types) != -1; });
+    }
+
+    std::string GetRandomSceneWithAnyActionForActorAndTargetCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, int actorPosition, int targetPosition, std::string types) {
+        return GetRandomSceneWithAnyActionForActorAndTarget(sft, actors, actorPosition, targetPosition, StringUtil::toTagVector(types));
+    }
+
+    std::string GetRandomSceneWithAllActionsForActorAndTarget(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, int actorPosition, int targetPosition, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return randomScene(actors, [actorPosition, targetPosition, types](Graph::Node* node) { return forAllLoop(types.size(), [node, actorPosition, targetPosition, types](int i){return node->findActionForActorAndTarget(actorPosition, targetPosition, types[i]) != -1;}); });
+    }
+
+    std::string GetRandomSceneWithAllActionsForActorAndTargetCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, int actorPosition, int targetPosition, std::string tags) {
+        return GetRandomSceneWithAllActionsForActorAndTarget(sft, actors, actorPosition, targetPosition, StringUtil::toTagVector(tags));
+    }
+
+
+    std::string GetRandomFurnitureSceneWithActionForActorAndTarget(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, int actorPosition, int targetPosition, std::string type) {
+        StringUtil::toLower(&type);
+        return randomScene(actors, furnitureType, [actorPosition, targetPosition, type](Graph::Node* node) { return node->findActionForActorAndTarget(actorPosition, targetPosition, type) != -1; });
+    }
+
+    std::string GetRandomFurnitureSceneWithAnyActionForActorAndTarget(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, int actorPosition, int targetPosition, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return randomScene(actors, furnitureType, [actorPosition, targetPosition, types](Graph::Node* node) { return node->findAnyActionForActorAndTarget(actorPosition, targetPosition, types) != -1; });
+    }
+
+    std::string GetRandomFurnitureSceneWithAnyActionForActorAndTargetCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string furnitureType, int actorPosition, int targetPosition, std::string types) {
+        return GetRandomFurnitureSceneWithAnyActionForActorAndTarget(sft, actors, furnitureType, actorPosition, targetPosition, StringUtil::toTagVector(types));
+    }
+
+    std::string GetRandomFurnitureSceneWithAllActionsForActorAndTarget(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, int actorPosition, int targetPosition, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return randomScene(actors, furnitureType, [actorPosition, targetPosition, types](Graph::Node* node) { return forAllLoop(types.size(), [node, actorPosition, targetPosition, types](int i){return node->findActionForActorAndTarget(actorPosition, targetPosition, types[i]) != -1;}); });
+    }
+
+    std::string GetRandomFurnitureSceneWithAllActionsForActorAndTargetCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string furnitureType, int actorPosition, int targetPosition, std::string tags) {
+        return GetRandomFurnitureSceneWithAllActionsForActorAndTarget(sft, actors, furnitureType, actorPosition, targetPosition, StringUtil::toTagVector(tags));
+    }
+
+
     std::string GetRandomSceneSuperloadCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string anySceneTag, std::string allSceneTags, std::string anyActorTagForAny, std::string anyActorTagForAll, std::string allActorTagsForAny, std::string allActorTagsForAll, std::string anyActionType, std::string anyActionActor, std::string anyActionTarget, std::string anyActionPerformer, std::string anyActionMateAny, std::string anyActionMateAll, std::string anyActionParticipantAny, std::string anyActionParticipantAll, std::string allActionTypes, std::string allActionActors, std::string allActionTargets, std::string allActionPerformers, std::string allActionMatesAny, std::string allActionMatesAll, std::string allActionParticipantsAny, std::string allActionParticipantsAll) {
         std::vector<std::string> anySceneTagVector = StringUtil::toTagVector(anySceneTag);
         std::vector<std::string> allSceneTagsVector = StringUtil::toTagVector(allSceneTags);
@@ -646,6 +694,18 @@ namespace PapyrusLibrary {
         BIND(GetRandomFurnitureSceneWithAnyActionForTargetCSV);
         BIND(GetRandomFurnitureSceneWithAllActionsForTarget);
         BIND(GetRandomFurnitureSceneWithAllActionsForTargetCSV);
+
+        BIND(GetRandomSceneWithActionForActorAndTarget);
+        BIND(GetRandomSceneWithAnyActionForActorAndTarget);
+        BIND(GetRandomSceneWithAnyActionForActorAndTargetCSV);
+        BIND(GetRandomSceneWithAllActionsForActorAndTarget);
+        BIND(GetRandomSceneWithAllActionsForActorAndTargetCSV);
+
+        BIND(GetRandomFurnitureSceneWithActionForActorAndTarget);
+        BIND(GetRandomFurnitureSceneWithAnyActionForActorAndTarget);
+        BIND(GetRandomFurnitureSceneWithAnyActionForActorAndTargetCSV);
+        BIND(GetRandomFurnitureSceneWithAllActionsForActorAndTarget);
+        BIND(GetRandomFurnitureSceneWithAllActionsForActorAndTargetCSV);
 
         BIND(GetRandomSceneSuperloadCSV);
 

@@ -92,6 +92,14 @@ namespace Graph {
         });
     }
 
+    int Node::findActionForActorAndTarget(int actorPosition, int targetPosition, std::string type) {
+        return findAction([actorPosition, targetPosition, type](Action* action) {return action->actor == actorPosition && action->target == targetPosition && action->type == type;});
+    }
+
+    int Node::findAnyActionForActorAndTarget(int actorPosition, int targetPosition, std::vector<std::string> types) {
+        return findAction([actorPosition, targetPosition, types](Action* action) {return action->actor == actorPosition && action->target == targetPosition && VectorUtil::contains(types, action->type);});
+    }
+
     void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> offsets) {
         const auto skyrimVM = RE::SkyrimVM::GetSingleton();
         auto vm = skyrimVM ? skyrimVM->impl : nullptr;

@@ -125,6 +125,7 @@ namespace PapyrusMetadata {
         return HasAllActorTags(sft, id, position, StringUtil::toTagVector(tags));
     }
 
+
     bool HasActions(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return !node->actions.empty();
@@ -159,6 +160,7 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsCSV(RE::StaticFunctionTag* sft, std::string id, std::string types) {
         return FindAllActions(sft, id, StringUtil::toTagVector(types));
     }
+
 
     int FindActionForActor(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         StringUtil::toLower(&type);
@@ -352,6 +354,71 @@ namespace PapyrusMetadata {
 
     std::vector<int> FindAllActionsForPerformersCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
         return FindAllActionsForPerformers(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
+    }
+    
+
+    int FindActionForActorAndTarget(RE::StaticFunctionTag*, std::string id, int actorPosition, int targetPosition, std::string type) {
+        StringUtil::toLower(&type);
+        return findAction(id, [actorPosition, targetPosition, type](Graph::Action action) { return action.actor == actorPosition && action.target == targetPosition && action.type == type; });
+    }
+
+    int FindAnyActionForActorAndTarget(RE::StaticFunctionTag*, std::string id, int actorPosition, int targetPosition, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findAction(id, [actorPosition, targetPosition, types](Graph::Action action) { return action.actor == actorPosition && action.target == targetPosition && VectorUtil::contains(types, action.type); });
+    }
+
+    int FindAnyActionForActorAndTargetCSV(RE::StaticFunctionTag* sft, std::string id, int actorPosition, int targetPosition, std::string types) {
+        return FindAnyActionForActorAndTarget(sft, id, actorPosition, targetPosition, StringUtil::toTagVector(types));
+    }
+
+    std::vector<int> FindActionsForActorAndTarget(RE::StaticFunctionTag*, std::string id, int actorPosition, int targetPosition, std::string type) {
+        StringUtil::toLower(&type);
+        return findActions(id, [actorPosition, targetPosition, type](Graph::Action action) { return action.actor == actorPosition && action.target == targetPosition && action.type == type; });
+    }
+
+    std::vector<int> FindAllActionsForActorAndTarget(RE::StaticFunctionTag*, std::string id, int actorPosition, int targetPosition, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findActions(id, [actorPosition, targetPosition, types](Graph::Action action) { return action.actor == actorPosition && action.target == targetPosition && VectorUtil::contains(types, action.type); });
+    }
+
+    std::vector<int> FindAllActionsForActorAndTargetCSV(RE::StaticFunctionTag* sft, std::string id, int actorPosition, int targetPosition, std::string types) {
+        return FindAllActionsForActorAndTarget(sft, id, actorPosition, targetPosition, StringUtil::toTagVector(types));
+    }
+
+    int FindActionForActorsAndTargets(RE::StaticFunctionTag*, std::string id, std::vector<int> actorPositions, std::vector<int> targetPositions, std::string type) {
+        StringUtil::toLower(&type);
+        return findAction(id, [actorPositions, targetPositions, type](Graph::Action action) { return VectorUtil::contains(actorPositions, action.actor) && VectorUtil::contains(targetPositions, action.target) && action.type == type; });
+    }
+
+    int FindActionForActorsAndTargetsCSV(RE::StaticFunctionTag* sft, std::string id, std::string actorPositions, std::string targetPositions, std::string type) {
+        return FindActionForActorsAndTargets(sft, id, VectorUtil::stoiv(actorPositions), VectorUtil::stoiv(targetPositions), type);
+    }
+
+    int FindAnyActionForActorsAndTargets(RE::StaticFunctionTag*, std::string id, std::vector<int> actorPositions, std::vector<int> targetPositions, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findAction(id, [actorPositions, targetPositions, types](Graph::Action action) { return VectorUtil::contains(actorPositions, action.actor) && VectorUtil::contains(targetPositions, action.target) && VectorUtil::contains(types, action.type); });
+    }
+
+    int FindAnyActionForActorsAndTargetsCSV(RE::StaticFunctionTag* sft, std::string id, std::string actorPositions, std::string targetPositions, std::string types) {
+        return FindAnyActionForActorsAndTargets(sft, id, VectorUtil::stoiv(actorPositions), VectorUtil::stoiv(targetPositions), StringUtil::toTagVector(types));
+    }
+
+    std::vector<int> FindActionsForActorsAndTargets(RE::StaticFunctionTag*, std::string id, std::vector<int> actorPositions, std::vector<int> targetPositions, std::string type) {
+        StringUtil::toLower(&type);
+        return findActions(id, [actorPositions, targetPositions, type](Graph::Action action) { return VectorUtil::contains(actorPositions, action.actor) && VectorUtil::contains(targetPositions, action.target) && action.type == type; });
+    }
+
+    std::vector<int> FindActionsForActorsAndTargetsCSV(RE::StaticFunctionTag* sft, std::string id, std::string actorPositions, std::string targetPositions, std::string type) {
+        return FindActionsForActorsAndTargets(sft, id, VectorUtil::stoiv(actorPositions), VectorUtil::stoiv(targetPositions), type);
+    }
+
+    std::vector<int> FindAllActionsForActorsAndTargets(RE::StaticFunctionTag*, std::string id, std::vector<int> actorPositions, std::vector<int> targetPositions, std::vector<std::string> types) {
+        StringUtil::toLower(&types);
+        return findActions(id, [actorPositions, targetPositions, types](Graph::Action action) { return VectorUtil::contains(actorPositions, action.actor) && VectorUtil::contains(targetPositions, action.target) && VectorUtil::contains(types, action.type); });
+    }
+
+    std::vector<int> FindAllActionsForActorsAndTargetsCSV(RE::StaticFunctionTag* sft, std::string id, std::string actorPositions, std::string targetPositions, std::string types) {
+        return FindAllActionsForActorsAndTargets(sft, id, VectorUtil::stoiv(actorPositions), VectorUtil::stoiv(targetPositions), StringUtil::toTagVector(types));
     }
 
 
@@ -747,6 +814,21 @@ namespace PapyrusMetadata {
         BIND(FindActionsForPerformersCSV);
         BIND(FindAllActionsForPerformers);
         BIND(FindAllActionsForPerformersCSV);
+
+        BIND(FindActionForActorAndTarget);
+        BIND(FindAnyActionForActorAndTarget);
+        BIND(FindAnyActionForActorAndTargetCSV);
+        BIND(FindActionsForActorAndTarget);
+        BIND(FindAllActionsForActorAndTarget);
+        BIND(FindAllActionsForActorAndTargetCSV);
+        BIND(FindActionForActorsAndTargets);
+        BIND(FindActionForActorsAndTargetsCSV);
+        BIND(FindAnyActionForActorsAndTargets);
+        BIND(FindAnyActionForActorsAndTargetsCSV);
+        BIND(FindActionsForActorsAndTargets);
+        BIND(FindActionsForActorsAndTargetsCSV);
+        BIND(FindAllActionsForActorsAndTargets);
+        BIND(FindAllActionsForActorsAndTargetsCSV);
 
         BIND(FindActionForMate);
         BIND(FindAnyActionForMate);

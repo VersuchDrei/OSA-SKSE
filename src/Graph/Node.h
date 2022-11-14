@@ -6,6 +6,7 @@
 namespace Graph {
     enum FurnitureType {
         NONE,
+        BED,
         CHAIR,
         BENCH,
         SHELF,
@@ -74,6 +75,8 @@ namespace Graph {
         int findAnyActionForActor(int position, std::vector<std::string> types);
         int findActionForTarget(int position, std::string type);
         int findAnyActionForTarget(int position, std::vector<std::string> types);
+        int findActionForActorAndTarget(int actorPosition, int targetPosition, std::string type);
+        int findAnyActionForActorAndTarget(int actorPosition, int targetPosition, std::vector<std::string> types);
 
     private:
         Trait::PhonemeOverrideType getOverrideType(int position);
