@@ -50,9 +50,13 @@ namespace OStim {
         //TODO: Can remove this when we start scenes in c++ with a starting node
         if (!m_currentNode) return;
 
-        for (auto& actorIt : m_actors) {            
-            //TODO: Clamping
-            actorIt.second.excitement += actorIt.second.nodeExcitementTick;
+        for (auto& actorIt : m_actors) {
+            auto speedMod = (m_currentNodeSpeed - ceil((((m_currentNode->maxspeed - m_currentNode->minspeed) + 1) / 2))) * 0.2;
+            auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
+            if (excitementInc > 0) {
+                logger::info("Adding {} base {} speed {}", excitementInc, actorIt.second.nodeExcitementTick, speedMod);
+                actorIt.second.excitement += excitementInc;
+            }
             logger::info("{} excitement {}", actorIt.second.getActor()->GetDisplayFullName(), actorIt.second.excitement);
         }
     }

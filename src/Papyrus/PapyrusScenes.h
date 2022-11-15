@@ -44,6 +44,11 @@ namespace PapyrusScenes {
         tm->GetThread(a_threadId)->RemoveThirdActor();
     }
 
+    void UpdateSpeed(RE::StaticFunctionTag*, int64_t a_threadId, int a_speed){
+        auto tm = OStim::ThreadManager::GetSingleton();
+        tm->GetThread(a_threadId)->SetSpeed(a_speed);
+    }
+
     OStim::ThreadActor* GetActor(int64_t a_threadId, RE::Actor* a_actor) {
         auto thread = OStim::ThreadManager::GetSingleton()->GetThread(a_threadId);
         if (thread) {
@@ -54,7 +59,7 @@ namespace PapyrusScenes {
         }
         logger::error("Actor {} not found in scene", a_actor->GetDisplayFullName(), a_threadId);
         return nullptr;
-    }
+    }    
 
     float GetActorExcitement(RE::StaticFunctionTag*, int64_t a_threadId, RE::Actor* a_actor) {
         auto actor = GetActor(a_threadId, a_actor);
@@ -80,6 +85,7 @@ namespace PapyrusScenes {
         BIND(ChangeAnimation);
         BIND(AddThirdActor);
         BIND(RemoveThirdActor);
+        BIND(UpdateSpeed);
         BIND(GetActorExcitement);
         BIND(SetActorExcitement);
 

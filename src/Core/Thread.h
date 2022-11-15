@@ -20,11 +20,14 @@ namespace OStim {
 
         ThreadActor* GetActor(RE::Actor* a_actor);
 
+        void SetSpeed(int speed) { m_currentNodeSpeed = speed; }
+
     private:
         ThreadId m_threadId;        
         std::map<int32_t, ThreadActor> m_actors;
         std::shared_mutex nodeLock;
         Graph::Node* m_currentNode = nullptr;
+        int m_currentNodeSpeed = 0;
         std::thread m_excitementThread;
     };
 
