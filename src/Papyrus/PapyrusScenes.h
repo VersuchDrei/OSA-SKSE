@@ -44,6 +44,34 @@ namespace PapyrusScenes {
         tm->GetThread(a_threadId)->RemoveThirdActor();
     }
 
+    OStim::ThreadActor* GetActor(int64_t a_threadId, RE::Actor* a_actor) {
+        auto thread = OStim::ThreadManager::GetSingleton()->GetThread(a_threadId);
+        if (thread) {
+            auto actor = thread->GetActor(a_actor);
+            if (actor) {
+                return actor;
+            }
+        }
+        logger::error("Actor {} not found in scene", a_actor->GetDisplayFullName(), a_threadId);
+        return nullptr;
+    }
+
+    float GetActorExcitement(RE::StaticFunctionTag*, int64_t a_threadId, RE::Actor* a_actor) {
+        auto actor = GetActor(a_threadId, a_actor);
+        if (actor) {
+            return actor->excitement;
+        }
+        
+        return 0;
+    }
+
+    void SetActorExcitement(RE::StaticFunctionTag*, int64_t a_threadId, RE::Actor* a_actor, float a_excitement) {
+        auto actor = GetActor(a_threadId, a_actor);
+        if (actor) {
+            actor->excitement = a_excitement;
+        }
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
@@ -52,6 +80,8 @@ namespace PapyrusScenes {
         BIND(ChangeAnimation);
         BIND(AddThirdActor);
         BIND(RemoveThirdActor);
+        BIND(GetActorExcitement);
+        BIND(SetActorExcitement);
 
         return true;
     }

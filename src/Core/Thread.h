@@ -1,5 +1,7 @@
 #pragma once
 #include "Graph/Node.h"
+#include "ThreadActor.h"
+#include <shared_mutex>
 
 namespace OStim {
 
@@ -7,17 +9,23 @@ namespace OStim {
     class Thread {
     public:
         Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors);
-
+        
         void ChangeNode(Graph::Node* a_node);
 
         void AddThirdActor(RE::Actor* a_actor);
 
         void RemoveThirdActor();
 
+        void CalculateExcitement();
+
+        ThreadActor* GetActor(RE::Actor* a_actor);
+
     private:
-        ThreadId m_threadId;
-        std::map<int32_t, RE::Actor*> m_actors;
-        Graph::Node* m_currentNode;
+        ThreadId m_threadId;        
+        std::map<int32_t, ThreadActor> m_actors;
+        std::shared_mutex nodeLock;
+        Graph::Node* m_currentNode = nullptr;
+        std::thread m_excitementThread;
     };
 
 }  // namespace OStim
