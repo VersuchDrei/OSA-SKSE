@@ -38,6 +38,7 @@ namespace Graph {
     struct Node {
     public:
         std::string scene_id;
+        std::string lowercase_id;
         uint32_t numActors;
         std::string scene_name;
         std::vector<std::string> anim_ids;  // this probably needs to be reworked to contain speed info
@@ -65,6 +66,7 @@ namespace Graph {
         bool hasActorTag(int position, std::string tag);
         bool hasAnyActorTag(int position, std::vector<std::string> tags);
         bool hasAllActorTags(int position, std::vector<std::string> tags);
+        bool hasOnlyListedActorTags(int position, std::vector<std::string> tags);
 
         int findAction(std::function<bool(Action*)> condition);
         std::vector<int> findActions(std::function<bool(Action*)> condition);

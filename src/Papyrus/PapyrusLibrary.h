@@ -12,6 +12,7 @@ namespace PapyrusLibrary {
         if (Graph::Node* node = Graph::LookupTable::getRandomNode(Graph::LookupTable::getFurnitureType(furnitureType), Trait::ActorConditions::create(actors), condition)) {
             return node->scene_id;
         }
+        
         return "";
     }
 
@@ -74,6 +75,50 @@ namespace PapyrusLibrary {
             }
         }
 
+        return true;
+    }
+
+    bool isActionListed(Graph::Action* action, std::vector<std::string> types, std::vector<std::vector<int>> actors, std::vector<std::vector<int>> targets, std::vector<std::vector<int>> performers, std::vector<std::vector<int>> matesAny, std::vector<std::vector<int>> matesAll, std::vector<std::vector<int>> participantsAny, std::vector<std::vector<int>> participantsAll) {
+        for (int i = 0; i < types.size(); i++) {
+            if (action->type == types[i]) {
+                std::vector<int> actorsList = VectorUtil::getElementOrEmpty(actors, i);
+                std::vector<int> targetsList = VectorUtil::getElementOrEmpty(targets, i);
+                std::vector<int> performersList = VectorUtil::getElementOrEmpty(performers, i);
+                std::vector<int> matesAnyList = VectorUtil::getElementOrEmpty(matesAny, i);
+                std::vector<int> matesAllList = VectorUtil::getElementOrEmpty(matesAll, i);
+                std::vector<int> participantsAnyList = VectorUtil::getElementOrEmpty(participantsAny, i);
+                std::vector<int> participantsAllList = VectorUtil::getElementOrEmpty(participantsAll, i);
+
+                if ((actorsList.empty() || VectorUtil::contains(actorsList, action->actor)) &&
+                    (targetsList.empty() || VectorUtil::contains(targetsList, action->target)) &&
+                    (performersList.empty() || VectorUtil::contains(performersList, action->performer)) &&
+                    (matesAnyList.empty() || VectorUtil::containsAny(matesAnyList, {action->actor, action->target})) &&
+                    (matesAllList.empty() || VectorUtil::containsAll(matesAllList, {action->actor, action->target})) &&
+                    (participantsAnyList.empty() || VectorUtil::containsAny(participantsAnyList, {action->actor, action->target, action->performer})) &&
+                    (participantsAllList.empty() || VectorUtil::containsAll(participantsAllList, {action->actor, action->target, action->performer}))) {
+                    return true;
+                }
+                
+            }
+        }
+        return false;
+    }
+
+    bool hasOnlyListedActions(Graph::Node* node, std::vector<std::string> types, std::vector<std::vector<int>> actors, std::vector<std::vector<int>> targets, std::vector<std::vector<int>> performers, std::vector<std::vector<int>> matesAny, std::vector<std::vector<int>> matesAll, std::vector<std::vector<int>> participantsAny, std::vector<std::vector<int>> participantsAll) {
+        for (Graph::Action* action : node->actions) {
+            if (!isActionListed(action, types, actors, targets, performers, matesAny, matesAll, participantsAny, participantsAll)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool checkConditions(std::vector<std::function<bool(Graph::Node*)>>* conditions, Graph::Node* node) {
+        for (std::function<bool(Graph::Node*)> condition : *conditions) {
+            if (!condition(node)) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -554,43 +599,130 @@ namespace PapyrusLibrary {
     }
 
 
-    std::string GetRandomSceneSuperloadCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string anySceneTag, std::string allSceneTags, std::string anyActorTagForAny, std::string anyActorTagForAll, std::string allActorTagsForAny, std::string allActorTagsForAll, std::string anyActionType, std::string anyActionActor, std::string anyActionTarget, std::string anyActionPerformer, std::string anyActionMateAny, std::string anyActionMateAll, std::string anyActionParticipantAny, std::string anyActionParticipantAll, std::string allActionTypes, std::string allActionActors, std::string allActionTargets, std::string allActionPerformers, std::string allActionMatesAny, std::string allActionMatesAll, std::string allActionParticipantsAny, std::string allActionParticipantsAll) {
-        std::vector<std::string> anySceneTagVector = StringUtil::toTagVector(anySceneTag);
-        std::vector<std::string> allSceneTagsVector = StringUtil::toTagVector(allSceneTags);
+    std::string GetRandomSceneSuperloadCSV(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string anySceneTag, std::string allSceneTags, std::string sceneTagWhitelist, std::string sceneTagBlacklist, std::string anyActorTagForAny, std::string anyActorTagForAll, std::string allActorTagsForAny, std::string allActorTagsForAll, std::string actorWhitelistForAny, std::string actorWhitelistForAll, std::string actorBlacklistForAny, std::string actorBlacklistForAll, std::string anyActionType, std::string anyActionActor, std::string anyActionTarget, std::string anyActionPerformer, std::string anyActionMateAny, std::string anyActionMateAll, std::string anyActionParticipantAny, std::string anyActionParticipantAll, std::string allActionTypes, std::string allActionActors, std::string allActionTargets, std::string allActionPerformers, std::string allActionMatesAny, std::string allActionMatesAll, std::string allActionParticipantsAny, std::string allActionParticipantsAll, std::string actionWhitelistTypes, std::string actionWhitelistActors, std::string actionWhitelistTargets, std::string actionWhitelistPerformers, std::string actionWhitelistMatesAny, std::string actionWhitelistMatesAll, std::string actionWhitelistParticipantsAny, std::string actionWhitelistParticipantsAll, std::string actionBlacklistTypes, std::string actionBlacklistActors, std::string actionBlacklistTargets, std::string actionBlacklistPerformers, std::string actionBlacklistMatesAny, std::string actionBlacklistMatesAll, std::string actionBlacklistParticipantsAny, std::string actionBlacklistParticipantsAll) {
+        std::vector<std::function<bool(Graph::Node*)>>* conditions = new std::vector <std::function<bool(Graph::Node*)>>();
         
-        std::vector<std::vector<std::string>> anyActorTagForAnyMatrix = StringUtil::toTagMatrix(anyActorTagForAny);
-        std::vector<std::vector<std::string>> anyActorTagForAllMatrix = StringUtil::toTagMatrix(anyActorTagForAll);
-        std::vector<std::vector<std::string>> allActorTagsForAnyMatrix = StringUtil::toTagMatrix(allActorTagsForAny);
-        std::vector<std::vector<std::string>> allActorTagsForAllMatrix = StringUtil::toTagMatrix(allActorTagsForAll);
 
-        std::vector<std::string> anyActionTypeVector = StringUtil::toTagVector(anyActionType);
-        std::vector<std::vector<int>> anyActionActorMatrix = VectorUtil::stoim(anyActionActor);
-        std::vector<std::vector<int>> anyActionTargetMatrix = VectorUtil::stoim(anyActionTarget);
-        std::vector<std::vector<int>> anyActionPerformerMatrix = VectorUtil::stoim(anyActionPerformer);
-        std::vector<std::vector<int>> anyActionMateAnyMatrix = VectorUtil::stoim(anyActionMateAny);
-        std::vector<std::vector<int>> anyActionMateAllMatrix = VectorUtil::stoim(anyActionMateAll);
-        std::vector<std::vector<int>> anyActionParticipantAnyMatrix = VectorUtil::stoim(anyActionParticipantAny);
-        std::vector<std::vector<int>> anyActionParticipantAllMatrix = VectorUtil::stoim(anyActionParticipantAll);
+        if (!anySceneTag.empty()) {
+            std::vector<std::string> anySceneTagVector = StringUtil::toTagVector(anySceneTag);
+            conditions->push_back([anySceneTagVector](Graph::Node* node){return VectorUtil::containsAny(node->tags, anySceneTagVector);});
+        }
 
-        std::vector<std::string> allActionTypesVector = StringUtil::toTagVector(allActionTypes);
-        std::vector<std::vector<int>> allActionActorsMatrix = VectorUtil::stoim(allActionActors);
-        std::vector<std::vector<int>> allActionTargetsMatrix = VectorUtil::stoim(allActionTargets);
-        std::vector<std::vector<int>> allActionPerformersMatrix = VectorUtil::stoim(allActionPerformers);
-        std::vector<std::vector<int>> allActionMatesAnyMatrix = VectorUtil::stoim(allActionMatesAny);
-        std::vector<std::vector<int>> allActionMatesAllMatrix = VectorUtil::stoim(allActionMatesAll);
-        std::vector<std::vector<int>> allActionParticipantsAnyMatrix = VectorUtil::stoim(allActionParticipantsAny);
-        std::vector<std::vector<int>> allActionParticipantsAllMatrix = VectorUtil::stoim(allActionParticipantsAll);
+        if (!allSceneTags.empty()) {
+            std::vector<std::string> allSceneTagsVector = StringUtil::toTagVector(allSceneTags);
+            conditions->push_back([allSceneTagsVector](Graph::Node* node){return VectorUtil::containsAll(node->tags, allSceneTagsVector);});
+        }
 
-        return randomScene(actors, furnitureType, [anySceneTagVector, allSceneTagsVector, anyActorTagForAnyMatrix, anyActorTagForAllMatrix, allActorTagsForAnyMatrix, allActorTagsForAllMatrix, anyActionTypeVector, anyActionActorMatrix, anyActionTargetMatrix, anyActionPerformerMatrix, anyActionMateAnyMatrix, anyActionMateAllMatrix, anyActionParticipantAnyMatrix, anyActionParticipantAllMatrix, allActionTypesVector, allActionActorsMatrix, allActionTargetsMatrix, allActionPerformersMatrix, allActionMatesAnyMatrix, allActionMatesAllMatrix, allActionParticipantsAnyMatrix, allActionParticipantsAllMatrix](Graph::Node* node) {
-                return (anySceneTagVector.empty() || VectorUtil::containsAny(node->tags, anySceneTagVector)) &&
-                    (allSceneTagsVector.empty() || VectorUtil::containsAll(node->tags, allSceneTagsVector)) &&
-                    (anyActorTagForAnyMatrix.empty() || forAnyLoop(anyActorTagForAnyMatrix.size(), [node, anyActorTagForAnyMatrix](int i){return node->hasAnyActorTag(i, anyActorTagForAnyMatrix[i]);})) &&
-                    (anyActorTagForAllMatrix.empty() || forAllLoop(anyActorTagForAllMatrix.size(), [node, anyActorTagForAllMatrix](int i){return node->hasAnyActorTag(i, anyActorTagForAllMatrix[i]);})) &&
-                    (allActorTagsForAnyMatrix.empty() || forAnyLoop(allActorTagsForAnyMatrix.size(), [node, allActorTagsForAnyMatrix](int i){return node->hasAllActorTags(i, allActorTagsForAnyMatrix[i]);})) &&
-                    (allActorTagsForAllMatrix.empty() || forAllLoop(allActorTagsForAllMatrix.size(), [node, allActorTagsForAllMatrix](int i){return node->hasAllActorTags(i, allActorTagsForAllMatrix[i]);})) &&
-                    (anyActionTypeVector.empty() || hasAnyAction(node, anyActionTypeVector, anyActionActorMatrix, anyActionTargetMatrix, anyActionPerformerMatrix, anyActionMateAnyMatrix, anyActionMateAllMatrix, anyActionParticipantAnyMatrix, anyActionParticipantAllMatrix)) &&
-                    (allActionTypesVector.empty() || hasAllActions(node, allActionTypesVector, allActionActorsMatrix, allActionTargetsMatrix, allActionPerformersMatrix, allActionMatesAnyMatrix, allActionMatesAllMatrix, allActionParticipantsAnyMatrix, allActionParticipantsAllMatrix));
-            });
+        if (!sceneTagWhitelist.empty()) {
+            std::vector<std::string> sceneTagWhitelistVector = StringUtil::toTagVector(sceneTagWhitelist);
+            conditions->push_back([sceneTagWhitelistVector](Graph::Node* node){return VectorUtil::containsAll(sceneTagWhitelistVector, node->tags);});
+        }
+
+        if (!sceneTagBlacklist.empty()) {
+            std::vector<std::string> sceneTagBlacklistVector = StringUtil::toTagVector(sceneTagBlacklist);
+            conditions->push_back([sceneTagBlacklistVector](Graph::Node* node){return !VectorUtil::containsAny(sceneTagBlacklistVector, node->tags);});
+        }
+
+
+        if (!anyActorTagForAny.empty()) {
+            std::vector<std::vector<std::string>> anyActorTagForAnyMatrix = StringUtil::toTagMatrix(anyActorTagForAny);
+            conditions->push_back([anyActorTagForAnyMatrix](Graph::Node* node){return forAnyLoop(anyActorTagForAnyMatrix.size(), [node, anyActorTagForAnyMatrix](int i){return node->hasAnyActorTag(i, anyActorTagForAnyMatrix[i]);});});
+        }
+
+        if (!anyActorTagForAll.empty()) {
+            std::vector<std::vector<std::string>> anyActorTagForAllMatrix = StringUtil::toTagMatrix(anyActorTagForAll);
+            conditions->push_back([anyActorTagForAllMatrix](Graph::Node* node){return forAllLoop(anyActorTagForAllMatrix.size(), [node, anyActorTagForAllMatrix](int i){return node->hasAnyActorTag(i, anyActorTagForAllMatrix[i]);});});
+        }
+
+        if (!allActorTagsForAny.empty()) {
+            std::vector<std::vector<std::string>> allActorTagsForAnyMatrix = StringUtil::toTagMatrix(allActorTagsForAny);
+            conditions->push_back([allActorTagsForAnyMatrix](Graph::Node* node){return forAnyLoop(allActorTagsForAnyMatrix.size(), [node, allActorTagsForAnyMatrix](int i){return node->hasAllActorTags(i, allActorTagsForAnyMatrix[i]);});});
+        }
+
+        if (!allActorTagsForAll.empty()) {
+            std::vector<std::vector<std::string>> allActorTagsForAllMatrix = StringUtil::toTagMatrix(allActorTagsForAll);
+            conditions->push_back([allActorTagsForAllMatrix](Graph::Node* node){return forAllLoop(allActorTagsForAllMatrix.size(), [node, allActorTagsForAllMatrix](int i){return node->hasAllActorTags(i, allActorTagsForAllMatrix[i]);});});
+        }
+
+        if (!actorWhitelistForAny.empty()) {
+            std::vector<std::vector<std::string>> actorWhitelistForAnyMatrix = StringUtil::toTagMatrix(actorWhitelistForAny);
+            conditions->push_back([actorWhitelistForAnyMatrix](Graph::Node* node){return forAnyLoop(actorWhitelistForAnyMatrix.size(), [node, actorWhitelistForAnyMatrix](int i){return node->hasOnlyListedActorTags(i, actorWhitelistForAnyMatrix[i]);});});
+        }
+
+        if (!actorWhitelistForAll.empty()) {
+            std::vector<std::vector<std::string>> actorWhitelistForAllMatrix = StringUtil::toTagMatrix(actorWhitelistForAll);
+            conditions->push_back([actorWhitelistForAllMatrix](Graph::Node* node){return forAllLoop(actorWhitelistForAllMatrix.size(), [node, actorWhitelistForAllMatrix](int i){return node->hasOnlyListedActorTags(i, actorWhitelistForAllMatrix[i]);});});
+        }
+
+        if (!actorBlacklistForAny.empty()) {
+            std::vector<std::vector<std::string>> actorBlacklistForAnyMatrix = StringUtil::toTagMatrix(actorBlacklistForAny);
+            conditions->push_back([actorBlacklistForAnyMatrix](Graph::Node* node){return forAnyLoop(actorBlacklistForAnyMatrix.size(), [node, actorBlacklistForAnyMatrix](int i){return !node->hasAnyActorTag(i, actorBlacklistForAnyMatrix[i]);});});
+        }
+
+        if (!actorBlacklistForAll.empty()) {
+            std::vector<std::vector<std::string>> actorBlacklistForAllMatrix = StringUtil::toTagMatrix(actorBlacklistForAll);
+            conditions->push_back([actorBlacklistForAllMatrix](Graph::Node* node){return forAllLoop(actorBlacklistForAllMatrix.size(), [node, actorBlacklistForAllMatrix](int i){return !node->hasAnyActorTag(i, actorBlacklistForAllMatrix[i]);});});
+        }
+
+
+        if (!anyActionType.empty()) {
+            std::vector<std::string> anyActionTypeVector = StringUtil::toTagVector(anyActionType);
+            std::vector<std::vector<int>> anyActionActorMatrix = VectorUtil::stoim(anyActionActor);
+            std::vector<std::vector<int>> anyActionTargetMatrix = VectorUtil::stoim(anyActionTarget);
+            std::vector<std::vector<int>> anyActionPerformerMatrix = VectorUtil::stoim(anyActionPerformer);
+            std::vector<std::vector<int>> anyActionMateAnyMatrix = VectorUtil::stoim(anyActionMateAny);
+            std::vector<std::vector<int>> anyActionMateAllMatrix = VectorUtil::stoim(anyActionMateAll);
+            std::vector<std::vector<int>> anyActionParticipantAnyMatrix = VectorUtil::stoim(anyActionParticipantAny);
+            std::vector<std::vector<int>> anyActionParticipantAllMatrix = VectorUtil::stoim(anyActionParticipantAll);
+            conditions->push_back([anyActionTypeVector, anyActionActorMatrix, anyActionTargetMatrix, anyActionPerformerMatrix, anyActionMateAnyMatrix, anyActionMateAllMatrix, anyActionParticipantAnyMatrix, anyActionParticipantAllMatrix](Graph::Node* node){
+                    return hasAnyAction(node, anyActionTypeVector, anyActionActorMatrix, anyActionTargetMatrix, anyActionPerformerMatrix, anyActionMateAnyMatrix, anyActionMateAllMatrix, anyActionParticipantAnyMatrix, anyActionParticipantAllMatrix);
+                });
+        }
+        
+        if (!allActionTypes.empty()) {
+            std::vector<std::string> allActionTypesVector = StringUtil::toTagVector(allActionTypes);
+            std::vector<std::vector<int>> allActionActorsMatrix = VectorUtil::stoim(allActionActors);
+            std::vector<std::vector<int>> allActionTargetsMatrix = VectorUtil::stoim(allActionTargets);
+            std::vector<std::vector<int>> allActionPerformersMatrix = VectorUtil::stoim(allActionPerformers);
+            std::vector<std::vector<int>> allActionMatesAnyMatrix = VectorUtil::stoim(allActionMatesAny);
+            std::vector<std::vector<int>> allActionMatesAllMatrix = VectorUtil::stoim(allActionMatesAll);
+            std::vector<std::vector<int>> allActionParticipantsAnyMatrix = VectorUtil::stoim(allActionParticipantsAny);
+            std::vector<std::vector<int>> allActionParticipantsAllMatrix = VectorUtil::stoim(allActionParticipantsAll);
+            conditions->push_back([allActionTypesVector, allActionActorsMatrix, allActionTargetsMatrix, allActionPerformersMatrix, allActionMatesAnyMatrix, allActionMatesAllMatrix, allActionParticipantsAnyMatrix, allActionParticipantsAllMatrix](Graph::Node* node){
+                    return hasAllActions(node, allActionTypesVector, allActionActorsMatrix, allActionTargetsMatrix, allActionPerformersMatrix, allActionMatesAnyMatrix, allActionMatesAllMatrix, allActionParticipantsAnyMatrix, allActionParticipantsAllMatrix);
+                });
+        }
+
+        if (!actionWhitelistTypes.empty()) {
+            std::vector<std::string> actionWhitelistTypesVector = StringUtil::toTagVector(actionWhitelistTypes);
+            std::vector<std::vector<int>> actionWhitelistActorsMatrix = VectorUtil::stoim(actionWhitelistActors);
+            std::vector<std::vector<int>> actionWhitelistTargetsMatrix = VectorUtil::stoim(actionWhitelistTargets);
+            std::vector<std::vector<int>> actionWhitelistPerformersMatrix = VectorUtil::stoim(actionWhitelistPerformers);
+            std::vector<std::vector<int>> actionWhitelistMatesAnyMatrix = VectorUtil::stoim(actionWhitelistMatesAny);
+            std::vector<std::vector<int>> actionWhitelistMatesAllMatrix = VectorUtil::stoim(actionWhitelistMatesAll);
+            std::vector<std::vector<int>> actionWhitelistParticipantsAnyMatrix = VectorUtil::stoim(actionWhitelistParticipantsAny);
+            std::vector<std::vector<int>> actionWhitelistParticipantsAllMatrix = VectorUtil::stoim(actionWhitelistParticipantsAll);
+            conditions->push_back([actionWhitelistTypesVector, actionWhitelistActorsMatrix, actionWhitelistTargetsMatrix, actionWhitelistPerformersMatrix, actionWhitelistMatesAnyMatrix, actionWhitelistMatesAllMatrix, actionWhitelistParticipantsAnyMatrix, actionWhitelistParticipantsAllMatrix](Graph::Node* node){
+                    return hasOnlyListedActions(node, actionWhitelistTypesVector, actionWhitelistActorsMatrix, actionWhitelistTargetsMatrix, actionWhitelistPerformersMatrix, actionWhitelistMatesAnyMatrix, actionWhitelistMatesAllMatrix, actionWhitelistParticipantsAnyMatrix, actionWhitelistParticipantsAllMatrix);
+                });
+        }
+
+        if (!actionBlacklistTypes.empty()) {
+            std::vector<std::string> actionBlacklistTypesVector = StringUtil::toTagVector(actionBlacklistTypes);
+            std::vector<std::vector<int>> actionBlacklistActorsMatrix = VectorUtil::stoim(actionBlacklistActors);
+            std::vector<std::vector<int>> actionBlacklistTargetsMatrix = VectorUtil::stoim(actionBlacklistTargets);
+            std::vector<std::vector<int>> actionBlacklistPerformersMatrix = VectorUtil::stoim(actionBlacklistPerformers);
+            std::vector<std::vector<int>> actionBlacklistMatesAnyMatrix = VectorUtil::stoim(actionBlacklistMatesAny);
+            std::vector<std::vector<int>> actionBlacklistMatesAllMatrix = VectorUtil::stoim(actionBlacklistMatesAll);
+            std::vector<std::vector<int>> actionBlacklistParticipantsAnyMatrix = VectorUtil::stoim(actionBlacklistParticipantsAny);
+            std::vector<std::vector<int>> actionBlacklistParticipantsAllMatrix = VectorUtil::stoim(actionBlacklistParticipantsAll);
+            conditions->push_back([actionBlacklistTypesVector, actionBlacklistActorsMatrix, actionBlacklistTargetsMatrix, actionBlacklistPerformersMatrix, actionBlacklistMatesAnyMatrix, actionBlacklistMatesAllMatrix, actionBlacklistParticipantsAnyMatrix, actionBlacklistParticipantsAllMatrix](Graph::Node* node){
+                    return !hasAnyAction(node, actionBlacklistTypesVector, actionBlacklistActorsMatrix, actionBlacklistTargetsMatrix, actionBlacklistPerformersMatrix, actionBlacklistMatesAnyMatrix, actionBlacklistMatesAllMatrix, actionBlacklistParticipantsAnyMatrix, actionBlacklistParticipantsAllMatrix);
+                });
+        }
+
+
+        return randomScene(actors, furnitureType, [conditions](Graph::Node* node) {return checkConditions(conditions, node);});
     }
 
     bool Bind(VM* a_vm) {

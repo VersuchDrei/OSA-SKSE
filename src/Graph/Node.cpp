@@ -45,6 +45,13 @@ namespace Graph {
         return VectorUtil::containsAll(actors[position]->tags, tags);
     }
 
+    bool Node::hasOnlyListedActorTags(int position, std::vector<std::string> tags) {
+        if (position >= actors.size()) {
+            return true;
+        }
+        return VectorUtil::containsAll(tags, actors[position]->tags);
+    }
+
     int Node::findAction(std::function<bool(Action*)> condition) {
         size_t size = actions.size();
         for (int i = 0; i < size; i++) {

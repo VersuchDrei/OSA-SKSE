@@ -16,7 +16,7 @@ namespace Graph {
     }
 
     void LookupTable::addNode(Node* node) {
-        nodes.insert({node->scene_id, node});
+        nodes.insert({node->lowercase_id, node});
         for (std::string anim : node->anim_ids) {
             animationNodeTable.insert({anim, node});
         }
@@ -66,7 +66,7 @@ namespace Graph {
             return nullptr;
         }
         auto innerMap = iter->second;
-
+        
         auto iter2 = innerMap->find(actorConditions.size());
         if (iter2 == innerMap->end()) {
             return nullptr;
@@ -81,7 +81,7 @@ namespace Graph {
                 return node;
             }
         }
-
+        
         return nullptr;
     }
 

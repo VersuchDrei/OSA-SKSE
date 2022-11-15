@@ -19,7 +19,8 @@ namespace PapyrusDatabase {
                 auto id_val = id.value();
                 j_obj["sceneid"] = id_val;
                 node->scene_id = id_val;
-                StringUtil::toLower(&node->scene_id);
+                node->lowercase_id = id_val;
+                StringUtil::toLower(&node->lowercase_id);
                 split_id = stl::string_split(id_val, '|');
             }
 

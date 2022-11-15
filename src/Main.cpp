@@ -9,6 +9,7 @@
 #include "SKEE.h"
 #include "Serial/Manager.h"
 #include "Trait/TraitTable.h"
+#include "Util/FormTable.h"
 #include "Util/MCMTable.h"
 
 using namespace RE::BSScript;
@@ -59,6 +60,7 @@ namespace {
             case SKSE::MessagingInterface::kDataLoaded: {
                 Trait::TraitTable::setupForms();
                 MCM::MCMTable::setupForms();
+                Vanilla::FormTable::setupForms();
             } break;
             case SKSE::MessagingInterface::kPostPostLoad: {
                 SKEE::InterfaceExchangeMessage msg;
