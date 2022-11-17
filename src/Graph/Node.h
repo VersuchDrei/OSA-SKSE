@@ -1,19 +1,10 @@
 #pragma once
 
+#include "Furniture/Furniture.h"
 #include "Trait/Condition.h"
 #include "Trait/FacialExpression.h"
 
 namespace Graph {
-    enum FurnitureType {
-        NONE,
-        BED,
-        CHAIR,
-        BENCH,
-        SHELF,
-        CRAFTING_TABLE,
-        COOKING_POT
-    };
-
     struct Action {
     public:
         std::string type;
@@ -48,7 +39,7 @@ namespace Graph {
         uint32_t minspeed;
         uint32_t maxspeed;
         bool hasIdleSpeed;
-        FurnitureType furnitureType = FurnitureType::NONE;
+        Furniture::FurnitureType furnitureType = Furniture::FurnitureType::NONE;
         std::vector<std::string> tags;
         std::vector<Actor*> actors;
         std::vector<Action*> actions;

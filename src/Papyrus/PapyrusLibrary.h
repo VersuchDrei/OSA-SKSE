@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Furniture/FurnitureTable.h"
 #include "Graph/LookupTable.h"
 #include "Trait/Condition.h"
 #include "Util/StringUtil.h"
@@ -9,7 +10,7 @@ namespace PapyrusLibrary {
     using VM = RE::BSScript::IVirtualMachine;
 
     std::string randomScene(std::vector<RE::Actor*> actors, std::string furnitureType, std::function<bool(Graph::Node*)> condition) {
-        if (Graph::Node* node = Graph::LookupTable::getRandomNode(Graph::LookupTable::getFurnitureType(furnitureType), Trait::ActorConditions::create(actors), condition)) {
+        if (Graph::Node* node = Graph::LookupTable::getRandomNode(Furniture::FurnitureTable::getFurnitureType(furnitureType), Trait::ActorConditions::create(actors), condition)) {
             return node->scene_id;
         }
         

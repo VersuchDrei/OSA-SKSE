@@ -6,15 +6,6 @@
 #include "SKEE.h"
 
 namespace Graph {
-    FurnitureType LookupTable::getFurnitureType(std::string type) {
-        auto iter = furnitures.find(type);
-        if (iter != furnitures.end()) {
-            return iter->second;
-        }
-
-        return FurnitureType::NONE;
-    }
-
     void LookupTable::addNode(Node* node) {
         nodes.insert({node->lowercase_id, node});
         for (std::string anim : node->anim_ids) {
@@ -60,7 +51,17 @@ namespace Graph {
         return nullptr;
     }
 
-    Node* LookupTable::getRandomNode(FurnitureType furnitureType, std::vector<Trait::ActorConditions> actorConditions, std::function<bool(Node*)> nodeCondition) {
+    bool LookupTable::hasNodes(Furniture::FurnitureType furnitureType, int actorCount) {
+        auto iter = nodeList.find(furnitureType);
+        if (iter == nodeList.end()) {
+            return false;
+        }
+
+        auto iter2 = iter->second->find(actorCount);
+        return iter2 != iter->second->end();
+    }
+
+    Node* LookupTable::getRandomNode(Furniture::FurnitureType furnitureType, std::vector<Trait::ActorConditions> actorConditions, std::function<bool(Node*)> nodeCondition) {
         auto iter = nodeList.find(furnitureType);
         if (iter == nodeList.end()) {
             return nullptr;

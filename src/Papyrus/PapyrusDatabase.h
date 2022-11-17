@@ -1,4 +1,6 @@
 #pragma once
+
+#include "Furniture/FurnitureTable.h"
 #include "Graph/LookupTable.h"
 #include "Util/StringUtil.h"
 
@@ -144,7 +146,7 @@ namespace PapyrusDatabase {
                 }
 
                 if (auto furnitureType = metadata.attribute("furnitureType")) {
-                    node->furnitureType = Graph::LookupTable::getFurnitureType(furnitureType.as_string());
+                    node->furnitureType = Furniture::FurnitureTable::getFurnitureType(furnitureType.as_string());
                 }
             }
 

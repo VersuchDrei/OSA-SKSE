@@ -28,6 +28,8 @@ set(sources
     src/Core/Thread.cpp
     src/Core/ThreadManager.cpp
     src/Core/ThreadManager.h
+    src/Furniture/Furniture.cpp
+    src/Furniture/FurnitureTable.cpp
     src/Game/LocaleManager.cpp
 	src/Game/LocaleManager.h
     src/Graph/LookupTable.cpp
@@ -44,7 +46,6 @@ set(sources
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
     src/Util/ActorUtil.cpp
-    src/Util/FormTable.cpp
     src/Util/MCMTable.cpp
     src/Util/StringUtil.cpp
     src/Util/VectorUtil.cpp

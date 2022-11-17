@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+#include "Furniture/FurnitureTable.h"
 #include "Game/Patch.h"
 #include "Graph/LookupTable.h"
 #include "InterfaceSpec/IPluginInterface.h"
@@ -9,7 +10,6 @@
 #include "SKEE.h"
 #include "Serial/Manager.h"
 #include "Trait/TraitTable.h"
-#include "Util/FormTable.h"
 #include "Util/MCMTable.h"
 
 using namespace RE::BSScript;
@@ -60,7 +60,7 @@ namespace {
             case SKSE::MessagingInterface::kDataLoaded: {
                 Trait::TraitTable::setupForms();
                 MCM::MCMTable::setupForms();
-                Vanilla::FormTable::setupForms();
+                Furniture::FurnitureTable::setupForms();
             } break;
             case SKSE::MessagingInterface::kPostPostLoad: {
                 SKEE::InterfaceExchangeMessage msg;

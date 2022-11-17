@@ -5,7 +5,7 @@ namespace PapyrusObject {
 
     bool IsBed(RE::TESObjectREFR* a_ref) {
         using TYPES = RE::BSFurnitureMarker::AnimationType;
-
+        
         if (!a_ref) return false;
 
         std::string objectName = a_ref->GetDisplayFullName();
