@@ -10,6 +10,7 @@ namespace PapyrusLibrary {
     using VM = RE::BSScript::IVirtualMachine;
 
     std::string randomScene(std::vector<RE::Actor*> actors, std::string furnitureType, std::function<bool(Graph::Node*)> condition) {
+        StringUtil::toLower(&furnitureType);
         if (Graph::Node* node = Graph::LookupTable::getRandomNode(Furniture::FurnitureTable::getFurnitureType(furnitureType), Trait::ActorConditions::create(actors), condition)) {
             return node->scene_id;
         }
@@ -136,51 +137,51 @@ namespace PapyrusLibrary {
     }
 
 
-    std::string GetRandomSceneWithTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string tag) {
+    std::string GetRandomSceneWithSceneTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string tag) {
         StringUtil::toLower(&tag);
         return randomScene(actors, [tag](Graph::Node* node) { return VectorUtil::contains(node->tags, tag); });
     }
 
-    std::string GetRandomSceneWithAnyTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::vector<std::string> tags) {
+    std::string GetRandomSceneWithAnySceneTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
         return randomScene(actors, [tags](Graph::Node* node) { return VectorUtil::containsAny(node->tags, tags); });
     }
 
-    std::string GetRandomSceneWithAnyTagCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string tags) {
-        return GetRandomSceneWithAnyTag(sft, actors, StringUtil::toTagVector(tags));
+    std::string GetRandomSceneWithAnySceneTagCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string tags) {
+        return GetRandomSceneWithAnySceneTag(sft, actors, StringUtil::toTagVector(tags));
     }
 
-    std::string GetRandomSceneWithAllTags(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::vector<std::string> tags) {
+    std::string GetRandomSceneWithAllSceneTags(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
         return randomScene(actors, [tags](Graph::Node* node) { return VectorUtil::containsAll(node->tags, tags); });
     }
 
-    std::string GetRandomSceneWithAllTagsCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string tags) {
-        return GetRandomSceneWithAllTags(sft, actors, StringUtil::toTagVector(tags));
+    std::string GetRandomSceneWithAllSceneTagsCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string tags) {
+        return GetRandomSceneWithAllSceneTags(sft, actors, StringUtil::toTagVector(tags));
     }
 
 
-    std::string GetRandomFurnitureSceneWithTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string tag) {
+    std::string GetRandomFurnitureSceneWithSceneTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::string tag) {
         StringUtil::toLower(&tag);
         return randomScene(actors, furnitureType, [tag](Graph::Node* node) { return VectorUtil::contains(node->tags, tag); });
     }
 
-    std::string GetRandomFurnitureSceneWithAnyTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::vector<std::string> tags) {
+    std::string GetRandomFurnitureSceneWithAnySceneTag(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
         return randomScene(actors, furnitureType, [tags](Graph::Node* node) { return VectorUtil::containsAny(node->tags, tags); });
     }
 
-    std::string GetRandomFurnitureSceneWithAnyTagCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string furnitureType, std::string tags) {
-        return GetRandomFurnitureSceneWithAnyTag(sft, actors, furnitureType, StringUtil::toTagVector(tags));
+    std::string GetRandomFurnitureSceneWithAnySceneTagCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string furnitureType, std::string tags) {
+        return GetRandomFurnitureSceneWithAnySceneTag(sft, actors, furnitureType, StringUtil::toTagVector(tags));
     }
 
-    std::string GetRandomFurnitureSceneWithAllTags(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::vector<std::string> tags) {
+    std::string GetRandomFurnitureSceneWithAllSceneTags(RE::StaticFunctionTag*, std::vector<RE::Actor*> actors, std::string furnitureType, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
         return randomScene(actors, furnitureType, [tags](Graph::Node* node) { return VectorUtil::containsAll(node->tags, tags); });
     }
 
-    std::string GetRandomFurnitureSceneWithAllTagsCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string furnitureType, std::string tags) {
-        return GetRandomFurnitureSceneWithAllTags(sft, actors, furnitureType, StringUtil::toTagVector(tags));
+    std::string GetRandomFurnitureSceneWithAllSceneTagsCSV(RE::StaticFunctionTag* sft, std::vector<RE::Actor*> actors, std::string furnitureType, std::string tags) {
+        return GetRandomFurnitureSceneWithAllSceneTags(sft, actors, furnitureType, StringUtil::toTagVector(tags));
     }
     
 
@@ -732,17 +733,17 @@ namespace PapyrusLibrary {
         BIND(GetRandomScene);
         BIND(GetRandomFurnitureScene);
 
-        BIND(GetRandomSceneWithTag);
-        BIND(GetRandomSceneWithAnyTag);
-        BIND(GetRandomSceneWithAnyTagCSV);
-        BIND(GetRandomSceneWithAllTags);
-        BIND(GetRandomSceneWithAllTagsCSV);
+        BIND(GetRandomSceneWithSceneTag);
+        BIND(GetRandomSceneWithAnySceneTag);
+        BIND(GetRandomSceneWithAnySceneTagCSV);
+        BIND(GetRandomSceneWithAllSceneTags);
+        BIND(GetRandomSceneWithAllSceneTagsCSV);
 
-        BIND(GetRandomFurnitureSceneWithTag);
-        BIND(GetRandomFurnitureSceneWithAnyTag);
-        BIND(GetRandomFurnitureSceneWithAnyTagCSV);
-        BIND(GetRandomFurnitureSceneWithAllTags);
-        BIND(GetRandomFurnitureSceneWithAllTagsCSV);
+        BIND(GetRandomFurnitureSceneWithSceneTag);
+        BIND(GetRandomFurnitureSceneWithAnySceneTag);
+        BIND(GetRandomFurnitureSceneWithAnySceneTagCSV);
+        BIND(GetRandomFurnitureSceneWithAllSceneTags);
+        BIND(GetRandomFurnitureSceneWithAllSceneTagsCSV);
 
         BIND(GetRandomSceneWithSingleActorTag);
         BIND(GetRandomSceneWithAnySingleActorTag);
