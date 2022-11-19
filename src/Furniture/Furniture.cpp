@@ -6,12 +6,14 @@
 
 namespace Furniture {
     FurnitureType getFurnitureType(RE::TESObjectREFR* object) {
-        if (!object) {
+        if (!object || object->IsDisabled()) {
             return FurnitureType::NONE;
         }
 
         if (object->GetBaseObject()->Is(RE::FormType::Furniture)) {
-            // TODO: RE IsFurnitureInUse
+            if (isFurnitureInUse(object, false)) {
+                return FurnitureType::NONE;
+            }
 
             if (object->HasKeyword(FurnitureTable::WICraftingAlchemy) || object->HasKeyword(FurnitureTable::WICraftingEnchanting) || object->HasKeyword(FurnitureTable::isLeanTable)) {
                 return FurnitureType::TABLE;
@@ -65,6 +67,9 @@ namespace Furniture {
                 return FurnitureType::BENCH;
             }
         } else {
+            if (FurnitureTable::OStimShelfList->HasForm(object->GetBaseObject()->formID)) {
+                return FurnitureType::SHELF;
+            }
             // TODO: check formlists
         }
 
@@ -100,5 +105,9 @@ namespace Furniture {
         });
 
         return ret;
+    }
+
+    bool Furniture::isFurnitureInUse(RE::TESObjectREFR* object, bool ignoreReserved) {
+        return IsFurnitureInUse(nullptr, 0, object, ignoreReserved);
     }
 }

@@ -13,6 +13,8 @@ namespace Furniture {
         WICraftingEnchanting = handler->LookupForm<RE::BGSKeyword>(0x0004f6dd, "Skyrim.esm");
 
         WallLeanMarker = handler->LookupForm<RE::TESFurniture>(0x00052ff5, "Skyrim.esm");
+
+        OStimShelfList = handler->LookupForm<RE::BGSListForm>(0x00000da0, "OStim.esp");
     }
 
     FurnitureType FurnitureTable::getFurnitureType(std::string type) {

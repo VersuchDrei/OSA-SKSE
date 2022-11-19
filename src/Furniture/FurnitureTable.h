@@ -15,6 +15,7 @@ namespace Furniture {
         inline static RE::BGSKeyword* WICraftingEnchanting;
 
         inline static RE::TESFurniture* WallLeanMarker;
+        inline static RE::BGSListForm* OStimShelfList;
 
         static void setupForms();
         static FurnitureType getFurnitureType(std::string type);
@@ -23,10 +24,11 @@ namespace Furniture {
         inline static std::unordered_map<std::string, FurnitureType> furnitures{
             {"", FurnitureType::NONE},
             {"bed", FurnitureType::BED},
-            {"chair", FurnitureType::CHAIR},
             {"bench", FurnitureType::BENCH},
-            {"shelf", FurnitureType::SHELF},
+            {"chair", FurnitureType::CHAIR},
             {"table", FurnitureType::TABLE},
+            {"shelf", FurnitureType::SHELF},
+            {"wall", FurnitureType::WALL},
             {"cookingpot", FurnitureType::COOKING_POT}};
     };
 }

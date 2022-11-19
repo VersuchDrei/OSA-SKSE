@@ -145,7 +145,7 @@ namespace PapyrusDatabase {
                     }
                 }
 
-                if (auto furnitureType = metadata.attribute("furnitureType")) {
+                if (auto furnitureType = metadata.attribute("furniture")) {
                     node->furnitureType = Furniture::FurnitureTable::getFurnitureType(furnitureType.as_string());
                 }
             }
