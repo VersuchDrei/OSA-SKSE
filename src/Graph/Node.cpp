@@ -184,9 +184,17 @@ namespace Graph {
 
         if (position > actors.size()) {
             if (actors[position]->expressionAction != -1 && actors[position]->expressionAction < actions.size()) {
-                if (auto expression = Trait::TraitTable::getExpressionForActionActor(actions[actors[position]->expressionAction]->type)) {
-                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
-                    return;
+                auto& action = actions[actors[position]->expressionAction];
+                if (action->target == position) {
+                    if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
+                        expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
+                        return;
+                    }
+                } else if (action->actor == position) {
+                    if (auto expression = Trait::TraitTable::getExpressionForActionActor(action->type)) {
+                        expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
+                        return;
+                    }
                 }
             }
         }
