@@ -17,11 +17,15 @@ namespace Graph{
 
         static bool setNiTransfromInterface(SKEE::INiTransformInterface* nioInterface);
         static SKEE::INiTransformInterface* getNiTransformInterface();
+
+        static void SetupActions();
+        static ActionAttributes* GetActionAttributesByType(std::string type);
     private:
 
         inline static std::unordered_map<std::string, Node*> nodes;
         inline static std::unordered_map<std::string, Node*> animationNodeTable;
         inline static std::unordered_map<Furniture::FurnitureType, std::unordered_map<int, std::vector<Node*>*>*> nodeList;
+        inline static std::unordered_map<std::string, ActionAttributes> actions;
         
         inline static auto rng = std::default_random_engine{};
 

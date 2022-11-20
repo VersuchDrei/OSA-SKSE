@@ -2,12 +2,14 @@
 
 #include "Furniture/Furniture.h"
 #include "Trait/Condition.h"
+#include "Action.h"
 #include "Trait/FacialExpression.h"
 
 namespace Graph {
     struct Action {
     public:
         std::string type;
+        ActionAttributes* attributes;
         int actor;
         int target;
         int performer;
@@ -32,12 +34,12 @@ namespace Graph {
         std::string lowercase_id;
         uint32_t numActors;
         std::string scene_name;
-        std::vector<std::string> anim_ids;  // this probably needs to be reworked to contain speed info
+        std::vector<std::string> anim_ids;  // this probably needs to be reworked to contain speed info        
         bool isTransition;
         bool isHub;
         bool isAggresive;
-        uint32_t minspeed;
-        uint32_t maxspeed;
+        uint32_t minspeed = 0;
+        uint32_t maxspeed = 0;
         bool hasIdleSpeed;
         Furniture::FurnitureType furnitureType = Furniture::FurnitureType::NONE;
         std::vector<std::string> tags;

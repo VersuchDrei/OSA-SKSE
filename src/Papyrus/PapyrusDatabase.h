@@ -238,7 +238,7 @@ namespace PapyrusDatabase {
                     } else {
                         actionObj->performer = actor.as_int();
                     }
-
+                    actionObj->attributes = Graph::LookupTable::GetActionAttributesByType(actionObj->type);
                     node->actions.push_back(actionObj);
                 }
             }
