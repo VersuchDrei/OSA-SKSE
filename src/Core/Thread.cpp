@@ -1,6 +1,7 @@
 #include <Core/Thread.h>
 #include <Graph/Node.h>
 #include <Messaging/IMessages.h>
+#include <Util/MCMTable.h>
 
 namespace OStim {
     Thread::Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
@@ -14,7 +15,6 @@ namespace OStim {
     {
         std::unique_lock<std::shared_mutex> writeLock;
         m_currentNode = a_node;
-
         for (auto& actorIt : m_actors) {
             float excitementInc = 0;
             for (auto& action : m_currentNode->actions) {
@@ -27,6 +27,12 @@ namespace OStim {
                 if (action->performer == actorIt.first) {
                     excitementInc += action->attributes->performer.stimulation;
                 }
+            }
+            if (actorIt.second.getActor()->GetActorBase()->GetSex() == RE::SEX::kMale) {
+                actorIt.second.baseExcitementMultiplier = MCM::MCMTable::getMaleSexExcitementMult();
+            }
+            else {
+                actorIt.second.baseExcitementMultiplier = MCM::MCMTable::getFemaleSexExcitementMult();
             }
             actorIt.second.nodeExcitementTick = excitementInc;
         }
@@ -55,7 +61,7 @@ namespace OStim {
             auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
             if (excitementInc > 0) {
                 logger::info("Adding {} base {} speed {}", excitementInc, actorIt.second.nodeExcitementTick, speedMod);
-                actorIt.second.excitement += excitementInc;
+                actorIt.second.excitement += actorIt.second.baseExcitementMultiplier * excitementInc;
             }
             logger::info("{} excitement {}", actorIt.second.getActor()->GetDisplayFullName(), actorIt.second.excitement);
         }

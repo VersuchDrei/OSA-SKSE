@@ -27,7 +27,7 @@ namespace OStim {
         std::map<int32_t, ThreadActor> m_actors;
         std::shared_mutex nodeLock;
         Graph::Node* m_currentNode = nullptr;
-        int m_currentNodeSpeed = 0;
+        int m_currentNodeSpeed = 0;        
         std::thread m_excitementThread;
     };
 
