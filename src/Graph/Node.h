@@ -29,12 +29,12 @@ namespace Graph {
         std::string scene_id;
         uint32_t numActors;
         std::string scene_name;
-        std::vector<std::string> anim_ids;  // this probably needs to be reworked to contain speed info
+        std::vector<std::string> anim_ids;  // this probably needs to be reworked to contain speed info        
         bool isTransition;
         bool isHub;
         bool isAggresive;
-        uint32_t minspeed;
-        uint32_t maxspeed;
+        uint32_t minspeed = 0;
+        uint32_t maxspeed = 0;
         bool hasIdleSpeed;
         std::vector<std::string> tags;
         std::vector<Actor*> actors;

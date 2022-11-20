@@ -26,6 +26,7 @@ set(headers
 set(sources
     src/Core/Singleton.h
     src/Core/Thread.cpp
+    src/Core/ThreadActor.cpp
     src/Core/ThreadManager.cpp
     src/Core/ThreadManager.h
     src/Game/LocaleManager.cpp
