@@ -12,8 +12,6 @@ namespace Trait {
         openMouthPhonemes.insert({1, {.type = 1, .baseValue = 40}});
         openMouthPhonemes.insert({5, {.type = 5, .baseValue = 100}});
 
-        kissingPhonemes.insert({15, {.type = 15, .baseValue = 100}});
-
         lickingPhonemes.insert({0, {.type = 0, .baseValue = 100}});
 
         std::srand((unsigned)time(NULL));

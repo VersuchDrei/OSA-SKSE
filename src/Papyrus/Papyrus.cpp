@@ -11,6 +11,8 @@
 #include "Papyrus/PapyrusControl.h"
 #include "Papyrus/PapyrusDatabase.h"
 #include "Papyrus/PapyrusFace.h"
+#include "Papyrus/PapyrusFurniture.h"
+#include "Papyrus/PapyrusLibrary.h"
 #include "Papyrus/PapyrusMetadata.h"
 #include "Papyrus/PapyrusObject.h"
 #include "Papyrus/PapyrusScenes.h"
@@ -26,6 +28,8 @@ namespace Papyrus {
             papyrus->Register(PapyrusControl::Bind);
             papyrus->Register(PapyrusDatabase::Bind);
             papyrus->Register(PapyrusFace::Bind);
+            papyrus->Register(PapyrusFurniture::Bind);
+            papyrus->Register(PapyrusLibrary::Bind);
             papyrus->Register(PapyrusMetadata::Bind);
             papyrus->Register(PapyrusObject::Bind);
             papyrus->Register(PapyrusScenes::Bind);

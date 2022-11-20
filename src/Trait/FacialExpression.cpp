@@ -94,9 +94,6 @@ namespace Trait {
         case OpenMouth:
             phonemeOverrideMap = TraitTable::openMouthPhonemes;
             break;
-        case Kissing:
-            phonemeOverrideMap = TraitTable::kissingPhonemes;
-            break;
         case Licking:
             phonemeOverrideMap = TraitTable::lickingPhonemes;
             break;

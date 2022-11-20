@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+#include "Furniture/FurnitureTable.h"
 #include "Game/Patch.h"
 #include "Graph/LookupTable.h"
 #include "InterfaceSpec/IPluginInterface.h"
@@ -59,6 +60,7 @@ namespace {
             case SKSE::MessagingInterface::kDataLoaded: {
                 Trait::TraitTable::setupForms();
                 MCM::MCMTable::setupForms();
+                Furniture::FurnitureTable::setupForms();
             } break;
             case SKSE::MessagingInterface::kPostPostLoad: {
                 SKEE::InterfaceExchangeMessage msg;
@@ -77,7 +79,7 @@ namespace {
                 }
 
                 logger::info("NiTransform version {}", nioInterface->GetVersion());
-                if (!Graph::LookupTable::SetNiTransfromInterface(nioInterface)) {
+                if (!Graph::LookupTable::setNiTransfromInterface(nioInterface)) {
                     logger::info("NiTransformInterface not provided.");
                 }
             } break;
