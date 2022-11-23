@@ -17,17 +17,23 @@ namespace OStim {
         m_currentNode = a_node;
         for (auto& actorIt : m_actors) {
             float excitementInc = 0;
+            std::vector<float> excitementVals;
             for (auto& action : m_currentNode->actions) {
                 if (action->actor == actorIt.first) {
-                    excitementInc += action->attributes->actor.stimulation;
+                    excitementVals.push_back(action->attributes->actor.stimulation);                    
                 }
                 if (action->target == actorIt.first) {
-                    excitementInc += action->attributes->target.stimulation;
+                    excitementVals.push_back(action->attributes->target.stimulation);                    
                 }
                 if (action->performer == actorIt.first) {
-                    excitementInc += action->attributes->performer.stimulation;
+                    excitementVals.push_back(action->attributes->performer.stimulation);                    
                 }
             }
+            std::sort(excitementVals.begin(), excitementVals.end(), std::greater<float>());
+            for (int i = 0; i < 4 || i < excitementVals.size(); i++) {
+                excitementInc += ((5 - i) * 0.2 * excitementVals[i]);
+            }
+
             if (actorIt.second.getActor()->GetActorBase()->GetSex() == RE::SEX::kMale) {
                 actorIt.second.baseExcitementMultiplier = MCM::MCMTable::getMaleSexExcitementMult();
             }
