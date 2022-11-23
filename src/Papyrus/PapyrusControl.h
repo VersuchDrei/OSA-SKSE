@@ -44,9 +44,11 @@ namespace PapyrusControl {
         auto menu = GetMenu();
         if (menu) {
             auto ui = GetControlUIRoot(menu, a_glyph);
-            auto direction = GetControlString(a_direction);
-            if (direction != "") {
-                ui.Invoke(direction.c_str());
+            if (ui.IsObject()) {
+                auto direction = GetControlString(a_direction);
+                if (direction != "") {
+                    ui.Invoke(direction.c_str());
+                }
             }
         }
     }
