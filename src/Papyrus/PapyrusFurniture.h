@@ -18,12 +18,17 @@ namespace PapyrusFurniture {
         return Furniture::findFurniture(actorCount, centerRef, radius, sameFloor);
     }
 
+    std::vector<float> GetOffset(RE::StaticFunctionTag*, RE::TESObjectREFR* furnitureRef) {
+        return Furniture::getOffset(furnitureRef);
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OFurniture"sv;
 
         BIND(GetFurnitureType);
         BIND(ToFurnitureTypeInt);
         BIND(FindFurniture);
+        BIND(GetOffset);
 
         return true;
     }

@@ -14,6 +14,8 @@ namespace Furniture {
 
     FurnitureType getFurnitureType(RE::TESObjectREFR* object);
     std::vector<RE::TESObjectREFR*> findFurniture(int actorCount, RE::TESObjectREFR* centerRef, float radius, float sameFloor);
+    std::vector<float> getOffset(RE::TESObjectREFR* object);
+    RE::BSTArray<RE::BSFurnitureMarker> getMarkers(RE::TESObjectREFR* object);
     bool isFurnitureInUse(RE::TESObjectREFR* object, bool ignoreReserved);
 
     inline bool IsFurnitureInUse(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* self, bool ignoreReserved) {

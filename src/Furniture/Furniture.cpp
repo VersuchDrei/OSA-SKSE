@@ -32,31 +32,18 @@ namespace Furniture {
                 return FurnitureType::WALL;
             }
 
-            auto root = object->Get3D();
-            if (!root) {
-                return FurnitureType::NONE;
-            }
+            auto markers = getMarkers(object);
 
-            auto extra = root->GetExtraData("FRN");
-            if (!extra) {
-                return FurnitureType::NONE;
-            }
-
-            auto node = netimmerse_cast<RE::BSFurnitureMarkerNode*>(extra);
-            if (!node) {
-                return FurnitureType::NONE;
-            }
-
-            if (node->markers.empty()) {
+            if (markers.empty()) {
                 return FurnitureType::NONE;
             }
 
             int chairMarkers = 0;
 
-            for (auto& marker : node->markers) {
+            for (auto& marker : markers) {
                 if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSleep)) {
                     return FurnitureType::BED;
-                } else if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSit)) {
+                } else if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSit) && std::abs(marker.offset.z - 34) < 1) {
                     chairMarkers++;
                 }
             }
@@ -105,6 +92,66 @@ namespace Furniture {
         });
 
         return ret;
+    }
+
+    std::vector<float> getOffset(RE::TESObjectREFR* object) {
+        std::vector<float> ret = {0,0,0,0};
+
+        if (!object) {
+            return ret;
+        }
+
+        if (object->GetBaseObject()->Is(RE::FormType::Furniture)) {
+            auto markers = getMarkers(object);
+
+            if (markers.empty()) {
+                return ret;
+            }
+
+            ret[0] = markers[0].offset.x;
+            ret[1] = markers[0].offset.y;
+            ret[2] = markers[0].offset.z;
+            ret[3] = markers[0].heading;
+
+            switch (getFurnitureType(object)) {
+                case BED:
+                    if (!object->HasKeyword(FurnitureTable::FurnitureBedRoll)) {
+                        ret[1] += 50;
+                        ret[2] += 8;
+                    }
+                    ret[0] = 0;
+                    ret[3] += 2 * std::acos(0); // this is pi
+                    break;
+                case BENCH:
+                    ret[0] = 0;
+                case CHAIR:
+                    ret[2] = 0;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return ret;
+    }
+
+    RE::BSTArray<RE::BSFurnitureMarker> Furniture::getMarkers(RE::TESObjectREFR* object) {
+        auto root = object->Get3D();
+        if (!root) {
+            return {};
+        }
+
+        auto extra = root->GetExtraData("FRN");
+        if (!extra) {
+            return {};
+        }
+
+        auto node = netimmerse_cast<RE::BSFurnitureMarkerNode*>(extra);
+        if (!node) {
+            return {};
+        }
+
+        return node->markers;
     }
 
     bool Furniture::isFurnitureInUse(RE::TESObjectREFR* object, bool ignoreReserved) {

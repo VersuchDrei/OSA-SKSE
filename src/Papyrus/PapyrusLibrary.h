@@ -723,8 +723,9 @@ namespace PapyrusLibrary {
                 });
         }
 
-
-        return randomScene(actors, furnitureType, [conditions](Graph::Node* node) {return checkConditions(conditions, node);});
+        std::string scene = randomScene(actors, furnitureType, [conditions](Graph::Node* node) {return checkConditions(conditions, node);});
+        delete conditions;
+        return scene;
     }
 
     bool Bind(VM* a_vm) {

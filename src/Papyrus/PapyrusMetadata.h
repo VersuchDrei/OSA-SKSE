@@ -625,14 +625,14 @@ namespace PapyrusMetadata {
 
 
     int FindActionSuperloadCSV(RE::StaticFunctionTag*, std::string id, std::string actorPositions, std::string targetPositions, std::string performerPositions, std::string matePositionsAny, std::string matePositionsAll, std::string participantPositionsAny, std::string participantPositionsAll, std::string types) {
-        std::vector<int> actorPos = actorPositions.empty() ? VectorUtil::stoiv(actorPositions) : *(new std::vector<int>());
-        std::vector<int> targetPos = targetPositions.empty() ? VectorUtil::stoiv(targetPositions) : *(new std::vector<int>());
-        std::vector<int> performerPos = performerPositions.empty() ? VectorUtil::stoiv(performerPositions) : *(new std::vector<int>());
+        std::vector<int> actorPos = VectorUtil::stoiv(actorPositions);
+        std::vector<int> targetPos = VectorUtil::stoiv(targetPositions);
+        std::vector<int> performerPos = VectorUtil::stoiv(performerPositions);
         std::vector<int> matePosAny = VectorUtil::stoiv(matePositionsAny);
         std::vector<int> matePosAll = VectorUtil::stoiv(matePositionsAll);
         std::vector<int> participantPosAny = VectorUtil::stoiv(participantPositionsAny);
         std::vector<int> participantPosAll = VectorUtil::stoiv(participantPositionsAll);
-        std::vector<std::string> typeVector = types.empty() ? StringUtil::toTagVector(types) : *(new std::vector<std::string>());
+        std::vector<std::string> typeVector = StringUtil::toTagVector(types);
 
         return findAction(id, [actorPos, targetPos, performerPos, matePosAny, matePosAll, participantPosAny, participantPosAll, typeVector](Graph::Action action) {
                 return (actorPos.empty() || VectorUtil::contains(actorPos, action.actor)) &&

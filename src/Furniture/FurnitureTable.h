@@ -7,6 +7,7 @@ namespace Furniture {
     public:
         inline static RE::BGSKeyword* CraftingCookPot;
         inline static RE::BGSKeyword* FurnitureCounterLeanMarker;
+        inline static RE::BGSKeyword* FurnitureBedRoll;
         inline static RE::BGSKeyword* isLeanTable;
         inline static RE::BGSKeyword* IsTable;
         inline static RE::BGSKeyword* isWritingChair;
