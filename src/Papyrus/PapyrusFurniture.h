@@ -22,6 +22,10 @@ namespace PapyrusFurniture {
         return Furniture::getOffset(furnitureRef);
     }
 
+    void ResetClutter(RE::StaticFunctionTag*, RE::TESObjectREFR* centerRef, float radius) {
+        Furniture::resetClutter(centerRef, radius);
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OFurniture"sv;
 
@@ -29,6 +33,7 @@ namespace PapyrusFurniture {
         BIND(ToFurnitureTypeInt);
         BIND(FindFurniture);
         BIND(GetOffset);
+        BIND(ResetClutter);
 
         return true;
     }

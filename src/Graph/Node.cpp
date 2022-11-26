@@ -108,9 +108,6 @@ namespace Graph {
     }
 
     void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> offsets) {
-        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-
         int count = std::min(actors.size(), reActors.size());
         for (int i = 0; i < count; i++) {
             // penis bending
@@ -166,6 +163,8 @@ namespace Graph {
                         }
                     }
                 } else {
+                    const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+                    auto vm = skyrimVM ? skyrimVM->impl : nullptr;
                     if (vm) {
                         RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
                         float height = actors[i]->scaleHeight;

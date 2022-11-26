@@ -2,6 +2,8 @@
 
 #include "FurnitureTable.h"
 #include "Graph/LookupTable.h"
+#include "Util/ObjectRefUtil.h"
+#include "Util/StringUtil.h"
 #include "Util.h"
 
 namespace Furniture {
@@ -49,7 +51,13 @@ namespace Furniture {
             }
 
             if (chairMarkers == 1) {
-                return FurnitureType::CHAIR;
+                std::string id = object->GetBaseObject()->GetFormEditorID();
+                StringUtil::toLower(&id);
+                if (id.find("bench") != std::string::npos) {
+                    return FurnitureType::BENCH;
+                } else {
+                    return FurnitureType::CHAIR;
+                }
             } else if (chairMarkers > 1) {
                 return FurnitureType::BENCH;
             }
@@ -73,8 +81,6 @@ namespace Furniture {
 
         util::iterate_attached_cells(centerPos, radius, [&](RE::TESObjectREFR& ref) {
             auto refPos = ref.GetPosition();
-
-
 
             if (sameFloor == 0.0 || std::fabs(centerPos.z - refPos.z) <= sameFloor) {
                 FurnitureType type = getFurnitureType(&ref);
@@ -120,12 +126,25 @@ namespace Furniture {
                         ret[2] += 8;
                     }
                     ret[0] = 0;
-                    ret[3] += 2 * std::acos(0); // this is pi
+                    ret[3] += 2 * std::acos(0); // basically += math.pi
                     break;
                 case BENCH:
                     ret[0] = 0;
                 case CHAIR:
+                    // all sit markers on benches and chairs have a z offset of ~34, but animations are centered on the ground
                     ret[2] = 0;
+                    break;
+                case TABLE:
+                    if (object->HasKeyword(FurnitureTable::isLeanTable)) {
+                        // temporary solution until I implement scaling on a per furniture basis
+                        ret[2] -= 3.5;
+
+                        // specific offsets for the BBLS railings
+                        if (ObjectRefUtil::isInBBLS(object)) {
+                            ret[1] -= 7.5;
+                            ret[2] -= 3;
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -156,5 +175,35 @@ namespace Furniture {
 
     bool Furniture::isFurnitureInUse(RE::TESObjectREFR* object, bool ignoreReserved) {
         return IsFurnitureInUse(nullptr, 0, object, ignoreReserved);
+    }
+
+    void Furniture::resetClutter(RE::TESObjectREFR* centerRef, float radius) {
+        if (auto TES = RE::TES::GetSingleton(); TES) {
+            TES->ForEachReferenceInRange(centerRef, radius, [&](RE::TESObjectREFR& ref) {
+                logger::info("looking at {}", ref.GetBaseObject()->GetFormEditorID());
+                if (!ref.Is3DLoaded() || ref.IsDynamicForm() || ObjectRefUtil::getMotionType(&ref) == 4) {
+                    logger::info("skipping it");
+                    return RE::BSContainer::ForEachResult::kContinue;
+                }
+
+                auto base = ref.GetBaseObject();
+                for (auto type : FurnitureTable::clutterForms) {
+                    if (ref.Is(type) || base->Is(type)) {
+                        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+                        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+                        if (vm) {
+                            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                            auto args = RE::MakeFunctionArguments();
+                            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(ref.FORMTYPE), &ref);
+                            vm->DispatchMethodCall2(handle, "ObjectReference", "MoveToMyEditorLocation", args, callback);
+                        }
+                        logger::info("resetting it");
+                        return RE::BSContainer::ForEachResult::kContinue;
+                    }
+                }
+                logger::info("not in type list");
+                return RE::BSContainer::ForEachResult::kContinue;
+                });
+        }
     }
 }

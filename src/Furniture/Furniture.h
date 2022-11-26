@@ -18,6 +18,8 @@ namespace Furniture {
     RE::BSTArray<RE::BSFurnitureMarker> getMarkers(RE::TESObjectREFR* object);
     bool isFurnitureInUse(RE::TESObjectREFR* object, bool ignoreReserved);
 
+    void resetClutter(RE::TESObjectREFR* centerRef, float radius);
+
     inline bool IsFurnitureInUse(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* self, bool ignoreReserved) {
         using func_t = decltype(IsFurnitureInUse);
         REL::Relocation<func_t> funct{RELOCATION_ID(55661, 56192)};
