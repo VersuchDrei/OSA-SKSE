@@ -7,13 +7,13 @@
 #include "Util.h"
 
 namespace Furniture {
-    FurnitureType getFurnitureType(RE::TESObjectREFR* object) {
+    FurnitureType getFurnitureType(RE::TESObjectREFR* object, bool inUseCheck) {
         if (!object || object->IsDisabled()) {
             return FurnitureType::NONE;
         }
 
         if (object->GetBaseObject()->Is(RE::FormType::Furniture)) {
-            if (isFurnitureInUse(object, false)) {
+            if (inUseCheck && isFurnitureInUse(object, false)) {
                 return FurnitureType::NONE;
             }
 
@@ -83,7 +83,7 @@ namespace Furniture {
             auto refPos = ref.GetPosition();
 
             if (sameFloor == 0.0 || std::fabs(centerPos.z - refPos.z) <= sameFloor) {
-                FurnitureType type = getFurnitureType(&ref);
+                FurnitureType type = getFurnitureType(&ref, true);
                 if (type == FurnitureType::NONE || type != FurnitureType::BED && !Graph::LookupTable::hasNodes(type, actorCount)) {
                     return RE::BSContainer::ForEachResult::kContinue;
                 }
@@ -119,7 +119,7 @@ namespace Furniture {
             ret[2] = markers[0].offset.z;
             ret[3] = markers[0].heading;
 
-            switch (getFurnitureType(object)) {
+            switch (getFurnitureType(object, false)) {
                 case BED:
                     if (!object->HasKeyword(FurnitureTable::FurnitureBedRoll)) {
                         ret[1] += 50;
@@ -180,9 +180,7 @@ namespace Furniture {
     void Furniture::resetClutter(RE::TESObjectREFR* centerRef, float radius) {
         if (auto TES = RE::TES::GetSingleton(); TES) {
             TES->ForEachReferenceInRange(centerRef, radius, [&](RE::TESObjectREFR& ref) {
-                logger::info("looking at {}", ref.GetBaseObject()->GetFormEditorID());
                 if (!ref.Is3DLoaded() || ref.IsDynamicForm() || ObjectRefUtil::getMotionType(&ref) == 4) {
-                    logger::info("skipping it");
                     return RE::BSContainer::ForEachResult::kContinue;
                 }
 
@@ -197,11 +195,10 @@ namespace Furniture {
                             auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(ref.FORMTYPE), &ref);
                             vm->DispatchMethodCall2(handle, "ObjectReference", "MoveToMyEditorLocation", args, callback);
                         }
-                        logger::info("resetting it");
                         return RE::BSContainer::ForEachResult::kContinue;
                     }
                 }
-                logger::info("not in type list");
+                
                 return RE::BSContainer::ForEachResult::kContinue;
                 });
         }

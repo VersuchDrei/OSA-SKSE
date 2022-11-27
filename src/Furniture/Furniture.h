@@ -12,7 +12,7 @@ namespace Furniture {
         COOKING_POT = 7,
     };
 
-    FurnitureType getFurnitureType(RE::TESObjectREFR* object);
+    FurnitureType getFurnitureType(RE::TESObjectREFR* object, bool inUseCheck);
     std::vector<RE::TESObjectREFR*> findFurniture(int actorCount, RE::TESObjectREFR* centerRef, float radius, float sameFloor);
     std::vector<float> getOffset(RE::TESObjectREFR* object);
     RE::BSTArray<RE::BSFurnitureMarker> getMarkers(RE::TESObjectREFR* object);

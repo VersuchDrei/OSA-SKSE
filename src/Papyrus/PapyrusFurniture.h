@@ -7,7 +7,7 @@ namespace PapyrusFurniture {
     using VM = RE::BSScript::IVirtualMachine;
 
     int GetFurnitureType(RE::StaticFunctionTag*, RE::TESObjectREFR* furnitureRef) {
-        return Furniture::getFurnitureType(furnitureRef);
+        return Furniture::getFurnitureType(furnitureRef, false);
     }
 
     int ToFurnitureTypeInt(RE::StaticFunctionTag*, std::string furnitureType) {
