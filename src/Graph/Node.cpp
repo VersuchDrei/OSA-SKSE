@@ -107,7 +107,7 @@ namespace Graph {
         return findAction([actorPosition, targetPosition, types](Action* action) {return action->actor == actorPosition && action->target == targetPosition && VectorUtil::contains(types, action->type);});
     }
 
-    void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> offsets) {
+    void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> rmheights, std::vector<float> offsets) {
         int count = std::min(actors.size(), reActors.size());
         for (int i = 0; i < count; i++) {
             // penis bending
@@ -122,7 +122,7 @@ namespace Graph {
 
             // scaling
             if (!MCM::MCMTable::isScalingDisabled()) {
-                float newScale = actors[i]->scale / reActors[i]->GetActorBase()->GetHeight();
+                float newScale = actors[i]->scale / (reActors[i]->GetActorBase()->GetHeight() * rmheights[i]);
                 if (actors[i]->feetOnGround && offsets[i] != 0) {
                     newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
                 }

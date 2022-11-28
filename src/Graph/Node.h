@@ -52,7 +52,7 @@ namespace Graph {
 
         bool fulfilledBy(std::vector<Trait::ActorConditions> conditions);
 
-        void updateActors(std::vector<RE::Actor*> actors, std::vector<float> offsets);
+        void updateActors(std::vector<RE::Actor*> actors, std::vector<float> rmheights, std::vector<float> offsets);
         void updateFacialExpressions(int position, RE::Actor* actor);
         float playExpressionEvent(int position, RE::Actor* actor, std::string eventName);
 
