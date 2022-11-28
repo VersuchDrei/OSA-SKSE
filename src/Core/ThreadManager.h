@@ -12,6 +12,7 @@ namespace OStim {
         void TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors);
         Thread* GetThread(ThreadId a_id);
         void UnTrackThread(ThreadId a_id);
+        bool AnySceneRunning();
 
     private:
         using ThreadMap = std::unordered_map<ThreadId, Thread*>;
