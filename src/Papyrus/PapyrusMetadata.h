@@ -39,14 +39,14 @@ namespace PapyrusMetadata {
     // start of papyrus bound functions
     // *********************************************************
 
-    std::vector<std::string> GetTags(RE::StaticFunctionTag*, std::string id) {
+    std::vector<std::string> GetSceneTags(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return node->tags;
         }
         return std::vector<std::string>();
     }
 
-    bool HasTag(RE::StaticFunctionTag*, std::string id, std::string tag) {
+    bool HasSceneTag(RE::StaticFunctionTag*, std::string id, std::string tag) {
         StringUtil::toLower(&tag);
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return VectorUtil::contains(node->tags, tag);
@@ -54,7 +54,7 @@ namespace PapyrusMetadata {
         return false;
     }
 
-    bool HasAnyTag(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
+    bool HasAnySceneTag(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return VectorUtil::containsAny(node->tags, tags);
@@ -62,11 +62,11 @@ namespace PapyrusMetadata {
         return false;
     }
 
-    bool HasAnyTagCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
-        return HasAnyTag(sft, id, StringUtil::toTagVector(tags));
+    bool HasAnySceneTagCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return HasAnySceneTag(sft, id, StringUtil::toTagVector(tags));
     }
 
-    bool HasAllTags(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
+    bool HasAllSceneTags(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return VectorUtil::containsAll(node->tags, tags);
@@ -74,9 +74,29 @@ namespace PapyrusMetadata {
         return false;
     }
 
-    bool HasAllTagsCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
-        return HasAllTags(sft, id, StringUtil::toTagVector(tags));
+    bool HasAllSceneTagsCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return HasAllSceneTags(sft, id, StringUtil::toTagVector(tags));
     }
+
+    std::vector<std::string> GetSceneTagOverlap(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        std::vector<std::string> ret;
+
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (auto& tag : node->tags) {
+                if (VectorUtil::contains(tags, tag)) {
+                    ret.push_back(tag);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    std::string GetSceneTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return StringUtil::toTagCSV(GetSceneTagOverlap(sft, id, StringUtil::toTagVector(tags)));
+    }
+
 
     std::vector<std::string> GetActorTags(RE::StaticFunctionTag*, std::string id, int position) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
@@ -123,6 +143,28 @@ namespace PapyrusMetadata {
 
     bool HasAllActorTagsCSV(RE::StaticFunctionTag* sft, std::string id, int position, std::string tags) {
         return HasAllActorTags(sft, id, position, StringUtil::toTagVector(tags));
+    }
+
+    std::vector<std::string> GetActorTagOverlap(RE::StaticFunctionTag*, std::string id, int position, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        std::vector<std::string> ret;
+
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (node->actors.size() > position) {
+                for (auto& tag : node->actors[position]->tags) {
+                    if (VectorUtil::contains(tags, tag)) {
+                        ret.push_back(tag);
+                    }
+                }
+            }
+            
+        }
+
+        return ret;
+    }
+
+    std::string GetActorTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, int position, std::string tags) {
+        return StringUtil::toTagCSV(GetActorTagOverlap(sft, id, position, StringUtil::toTagVector(tags)));
     }
 
 
@@ -749,18 +791,23 @@ namespace PapyrusMetadata {
 	bool Bind(VM* a_vm) {
         const auto obj = "OMetadata"sv;
 
-        BIND(GetTags);
-        BIND(HasTag);
-        BIND(HasAnyTag);
-        BIND(HasAnyTagCSV);
-        BIND(HasAllTags);
-        BIND(HasAllTagsCSV);
+        BIND(GetSceneTags);
+        BIND(HasSceneTag);
+        BIND(HasAnySceneTag);
+        BIND(HasAnySceneTagCSV);
+        BIND(HasAllSceneTags);
+        BIND(HasAllSceneTagsCSV);
+        BIND(GetSceneTagOverlap);
+        BIND(GetSceneTagOverlapCSV);
+
         BIND(GetActorTags);
         BIND(HasActorTag);
         BIND(HasAnyActorTag);
         BIND(HasAnyActorTagCSV);
         BIND(HasAllActorTags);
         BIND(HasAllActorTagsCSV);
+        BIND(GetActorTagOverlap);
+        BIND(GetActorTagOverlapCSV);
 
         BIND(HasActions);
         BIND(FindAction);

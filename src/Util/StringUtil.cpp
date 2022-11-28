@@ -26,4 +26,11 @@ namespace StringUtil {
         }
         return ret;
     }
+
+    std::string toTagCSV(std::vector<std::string> vector) {
+        if (vector.empty()) {
+            return "";
+        }
+        return std::accumulate(std::next(vector.begin()), vector.end(), vector[0], [](std::string a, std::string b) { return a + "," + b; });
+    }
 }

@@ -56,6 +56,10 @@ namespace Graph {
     }
 
     bool LookupTable::hasNodes(Furniture::FurnitureType furnitureType, int actorCount) {
+        if (furnitureType == Furniture::FurnitureType::BED) {
+            furnitureType = Furniture::FurnitureType::NONE;
+        }
+
         auto iter = nodeList.find(furnitureType);
         if (iter == nodeList.end()) {
             return false;
@@ -66,6 +70,10 @@ namespace Graph {
     }
 
     Node* LookupTable::getRandomNode(Furniture::FurnitureType furnitureType, std::vector<Trait::ActorConditions> actorConditions, std::function<bool(Node*)> nodeCondition) {
+        if (furnitureType == Furniture::FurnitureType::BED) {
+            furnitureType = Furniture::FurnitureType::NONE;
+        }
+
         auto iter = nodeList.find(furnitureType);
         if (iter == nodeList.end()) {
             return nullptr;

@@ -1,5 +1,7 @@
 #include "FurnitureTable.h"
 
+#include "Util/StringUtil.h"
+
 namespace Furniture {
     void FurnitureTable::setupForms() {
         auto handler = RE::TESDataHandler::GetSingleton();
@@ -19,6 +21,8 @@ namespace Furniture {
     }
 
     FurnitureType FurnitureTable::getFurnitureType(std::string type) {
+        StringUtil::toLower(&type);
+
         auto iter = furnitures.find(type);
         if (iter != furnitures.end()) {
             return iter->second;
