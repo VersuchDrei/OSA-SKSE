@@ -52,4 +52,8 @@ namespace OStim {
             }
         }
     }
+
+    bool ThreadManager::AnySceneRunning() {
+        return m_threadMap.size() > 0;
+    }
 }  // namespace OStim
