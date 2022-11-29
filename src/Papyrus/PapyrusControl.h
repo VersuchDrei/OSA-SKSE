@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/ThreadManager.h"
+
 namespace PapyrusControl {
     using VM = RE::BSScript::IVirtualMachine;
 
@@ -41,6 +43,9 @@ namespace PapyrusControl {
     }
 
     void Control(RE::StaticFunctionTag*, Controls a_direction, int64_t a_glyph) {
+        if (!OStim::ThreadManager::GetSingleton()->AnySceneRunning()) {
+            return;
+        }
         auto menu = GetMenu();
         if (menu) {
             auto ui = GetControlUIRoot(menu, a_glyph);
