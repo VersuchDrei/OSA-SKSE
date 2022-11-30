@@ -34,7 +34,7 @@ namespace OStim {
                     }
                 }
                 if (action->performer == actorIt.first) {
-                    excitementVals.push_back(action->attributes->performer.stimulation);                    
+                    excitementVals.push_back(action->attributes->performer.stimulation);
                 }
             }
 
@@ -87,21 +87,18 @@ namespace OStim {
             auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
             auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc;
             if (finalExcitementInc > 0) {
-                if (actorRef.excitement > actorRef.maxExcitement) { //Decay from previous scene with higher max
+                if (actorRef.excitement > actorRef.maxExcitement) {  // Decay from previous scene with higher max
                     auto excitementDecay = 0.5;
                     if (actorRef.excitement - excitementDecay < actorRef.maxExcitement) {
                         actorRef.excitement = actorRef.maxExcitement;
-                    }
-                    else {
+                    } else {
                         actorRef.excitement -= excitementDecay;
                     }
-                    
-                }
-                else {
-                    if (finalExcitementInc + actorRef.excitement > actorRef.maxExcitement) { //clamp current excitement to max of scene
+
+                } else { // increase excitement
+                    if (finalExcitementInc + actorRef.excitement > actorRef.maxExcitement) {                          
                         actorRef.excitement = actorRef.maxExcitement;
-                    }
-                    else {
+                    } else {
                         actorRef.excitement += finalExcitementInc;
                     }
                 }
