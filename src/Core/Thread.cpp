@@ -87,9 +87,8 @@ namespace OStim {
             auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
             auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc;
             if (finalExcitementInc > 0) {
-                logger::info("Adding {} base {} speed {} max {}", excitementInc, finalExcitementInc, speedMod, actorRef.maxExcitement);
                 if (actorRef.excitement > actorRef.maxExcitement) { //Decay from previous scene with higher max
-                    auto excitementDecay = (2 - (finalExcitementInc * 0.5));
+                    auto excitementDecay = 0.5;
                     if (actorRef.excitement - excitementDecay < actorRef.maxExcitement) {
                         actorRef.excitement = actorRef.maxExcitement;
                     }
@@ -107,8 +106,6 @@ namespace OStim {
                     }
                 }
             }
-            logger::info("{} excitement {}", actorIt.second.getActor()->GetDisplayFullName(),
-                         actorIt.second.excitement);
         }
     }
 
