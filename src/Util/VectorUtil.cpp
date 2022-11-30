@@ -29,6 +29,6 @@ namespace VectorUtil {
             return matrix[index];
         }
 
-        return *(new std::vector<int>());
+        return {};
     }
 }

@@ -48,6 +48,7 @@ set(sources
     src/Trait/TraitTable.cpp
     src/Util/ActorUtil.cpp
     src/Util/MCMTable.cpp
+    src/Util/ObjectRefUtil.cpp
     src/Util/StringUtil.cpp
     src/Util/VectorUtil.cpp
 	src/Util.cpp

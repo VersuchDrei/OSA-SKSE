@@ -2,16 +2,18 @@
 
 #include "FurnitureTable.h"
 #include "Graph/LookupTable.h"
+#include "Util/ObjectRefUtil.h"
+#include "Util/StringUtil.h"
 #include "Util.h"
 
 namespace Furniture {
-    FurnitureType getFurnitureType(RE::TESObjectREFR* object) {
+    FurnitureType getFurnitureType(RE::TESObjectREFR* object, bool inUseCheck) {
         if (!object || object->IsDisabled()) {
             return FurnitureType::NONE;
         }
 
         if (object->GetBaseObject()->Is(RE::FormType::Furniture)) {
-            if (isFurnitureInUse(object, false)) {
+            if (inUseCheck && isFurnitureInUse(object, false)) {
                 return FurnitureType::NONE;
             }
 
@@ -32,37 +34,30 @@ namespace Furniture {
                 return FurnitureType::WALL;
             }
 
-            auto root = object->Get3D();
-            if (!root) {
-                return FurnitureType::NONE;
-            }
+            auto markers = getMarkers(object);
 
-            auto extra = root->GetExtraData("FRN");
-            if (!extra) {
-                return FurnitureType::NONE;
-            }
-
-            auto node = netimmerse_cast<RE::BSFurnitureMarkerNode*>(extra);
-            if (!node) {
-                return FurnitureType::NONE;
-            }
-
-            if (node->markers.empty()) {
+            if (markers.empty()) {
                 return FurnitureType::NONE;
             }
 
             int chairMarkers = 0;
 
-            for (auto& marker : node->markers) {
+            for (auto& marker : markers) {
                 if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSleep)) {
                     return FurnitureType::BED;
-                } else if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSit)) {
+                } else if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSit) && std::abs(marker.offset.z - 34) < 1) {
                     chairMarkers++;
                 }
             }
 
             if (chairMarkers == 1) {
-                return FurnitureType::CHAIR;
+                std::string id = object->GetBaseObject()->GetFormEditorID();
+                StringUtil::toLower(&id);
+                if (id.find("bench") != std::string::npos) {
+                    return FurnitureType::BENCH;
+                } else {
+                    return FurnitureType::CHAIR;
+                }
             } else if (chairMarkers > 1) {
                 return FurnitureType::BENCH;
             }
@@ -87,10 +82,8 @@ namespace Furniture {
         util::iterate_attached_cells(centerPos, radius, [&](RE::TESObjectREFR& ref) {
             auto refPos = ref.GetPosition();
 
-
-
             if (sameFloor == 0.0 || std::fabs(centerPos.z - refPos.z) <= sameFloor) {
-                FurnitureType type = getFurnitureType(&ref);
+                FurnitureType type = getFurnitureType(&ref, true);
                 if (type == FurnitureType::NONE || type != FurnitureType::BED && !Graph::LookupTable::hasNodes(type, actorCount)) {
                     return RE::BSContainer::ForEachResult::kContinue;
                 }
@@ -107,7 +100,107 @@ namespace Furniture {
         return ret;
     }
 
+    std::vector<float> getOffset(RE::TESObjectREFR* object) {
+        std::vector<float> ret = {0,0,0,0};
+
+        if (!object) {
+            return ret;
+        }
+
+        if (object->GetBaseObject()->Is(RE::FormType::Furniture)) {
+            auto markers = getMarkers(object);
+
+            if (markers.empty()) {
+                return ret;
+            }
+
+            ret[0] = markers[0].offset.x;
+            ret[1] = markers[0].offset.y;
+            ret[2] = markers[0].offset.z;
+            ret[3] = markers[0].heading;
+
+            switch (getFurnitureType(object, false)) {
+                case BED:
+                    if (!object->HasKeyword(FurnitureTable::FurnitureBedRoll)) {
+                        ret[1] += 50;
+                        ret[2] += 8;
+                    }
+                    ret[0] = 0;
+                    ret[3] += 2 * std::acos(0); // basically += math.pi
+                    break;
+                case BENCH:
+                    ret[0] = 0;
+                case CHAIR:
+                    // all sit markers on benches and chairs have a z offset of ~34, but animations are centered on the ground
+                    ret[2] = 0;
+                    break;
+                case TABLE:
+                    if (object->HasKeyword(FurnitureTable::isLeanTable)) {
+                        // temporary solution until I implement scaling on a per furniture basis
+                        ret[2] -= 3.5;
+
+                        // specific offsets for the BBLS railings
+                        if (ObjectRefUtil::isInBBLS(object)) {
+                            ret[1] -= 7.5;
+                            ret[2] -= 3;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return ret;
+    }
+
+    RE::BSTArray<RE::BSFurnitureMarker> Furniture::getMarkers(RE::TESObjectREFR* object) {
+        auto root = object->Get3D();
+        if (!root) {
+            return {};
+        }
+
+        auto extra = root->GetExtraData("FRN");
+        if (!extra) {
+            return {};
+        }
+
+        auto node = netimmerse_cast<RE::BSFurnitureMarkerNode*>(extra);
+        if (!node) {
+            return {};
+        }
+
+        return node->markers;
+    }
+
     bool Furniture::isFurnitureInUse(RE::TESObjectREFR* object, bool ignoreReserved) {
         return IsFurnitureInUse(nullptr, 0, object, ignoreReserved);
+    }
+
+    void Furniture::resetClutter(RE::TESObjectREFR* centerRef, float radius) {
+        if (auto TES = RE::TES::GetSingleton(); TES) {
+            TES->ForEachReferenceInRange(centerRef, radius, [&](RE::TESObjectREFR& ref) {
+                if (!ref.Is3DLoaded() || ref.IsDynamicForm() || ObjectRefUtil::getMotionType(&ref) == 4) {
+                    return RE::BSContainer::ForEachResult::kContinue;
+                }
+
+                auto base = ref.GetBaseObject();
+                for (auto type : FurnitureTable::clutterForms) {
+                    if (ref.Is(type) || base->Is(type)) {
+                        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+                        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+                        if (vm) {
+                            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                            auto args = RE::MakeFunctionArguments();
+                            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(ref.FORMTYPE), &ref);
+                            vm->DispatchMethodCall2(handle, "ObjectReference", "MoveToMyEditorLocation", args, callback);
+                        }
+                        return RE::BSContainer::ForEachResult::kContinue;
+                    }
+                }
+                
+                return RE::BSContainer::ForEachResult::kContinue;
+                });
+        }
     }
 }

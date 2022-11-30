@@ -199,9 +199,9 @@ namespace PapyrusActor {
         return result;
     }
 
-    void UpdateForScene(RE::StaticFunctionTag*, std::string id, std::vector<RE::Actor*> actors, std::vector<float> offsets) {
+    void UpdateForScene(RE::StaticFunctionTag*, std::string id, std::vector<RE::Actor*> actors, std::vector<float> rmheights, std::vector<float> offsets) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
-            node->updateActors(actors, offsets);
+            node->updateActors(actors, rmheights, offsets);
         }
     }
 
