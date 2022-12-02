@@ -4,6 +4,7 @@ namespace Graph {
 	struct ActionActor{
 	public:
 		float stimulation;
+		float maxStimulation;
 		std::vector<std::string> requirements;
 		std::vector<int> strippingSlots;
 		std::unordered_map<std::string, int> ints;

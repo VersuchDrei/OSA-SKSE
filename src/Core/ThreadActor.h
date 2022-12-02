@@ -8,8 +8,9 @@ namespace OStim {
 		float excitement = 0;
 		float nodeExcitementTick = 0;
 		float baseExcitementMultiplier = 1.0;
+		float maxExcitement = 0;
 		RE::Actor* getActor() { return actor; }
 	private:
 		RE::Actor* actor;
-	};
+	};	
 }

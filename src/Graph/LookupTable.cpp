@@ -113,16 +113,26 @@ namespace Graph {
         else {
             actor.stimulation = 0.0;
         }
+
+        if (json.contains("maxStimulation")) {
+            actor.maxStimulation = json["maxStimulation"];
+        }
+        else {
+            actor.maxStimulation = 100.0;
+        }
+
         if (json.contains("requirements")) {
             for (auto& req : json["requirements"]) {
                 actor.requirements.push_back(req.get<std::string>());
             }
         }
+
         if (json.contains("strippingSlots")) {
             for (auto& slot : json["strippingSlots"]) {
                 actor.strippingSlots.push_back(slot.get<int>());
             }
         }
+
         if (json.contains("floats")) {
             auto& floats = json["floats"];
             for (json::iterator it = floats.begin(); it != floats.end(); it++) {

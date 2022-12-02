@@ -16,13 +16,22 @@ namespace OStim {
         m_currentNode = a_node;
         for (auto& actorIt : m_actors) {
             float excitementInc = 0;
+            actorIt.second.maxExcitement = 0;
             std::vector<float> excitementVals;
             for (auto& action : m_currentNode->actions) {
                 if (action->actor == actorIt.first) {
                     excitementVals.push_back(action->attributes->actor.stimulation);
+                    auto maxStim = action->attributes->actor.maxStimulation;
+                    if (maxStim > actorIt.second.maxExcitement) {
+                        actorIt.second.maxExcitement = maxStim;
+                    }
                 }
                 if (action->target == actorIt.first) {
                     excitementVals.push_back(action->attributes->target.stimulation);
+                    auto maxStim = action->attributes->target.maxStimulation;
+                    if (maxStim > actorIt.second.maxExcitement) {
+                        actorIt.second.maxExcitement = maxStim;
+                    }
                 }
                 if (action->performer == actorIt.first) {
                     excitementVals.push_back(action->attributes->performer.stimulation);
@@ -74,13 +83,26 @@ namespace OStim {
         for (auto& actorIt : m_actors) {
             auto speedMod =
                 (m_currentNodeSpeed - ceil((((m_currentNode->maxspeed - m_currentNode->minspeed) + 1) / 2))) * 0.2;
+            auto& actorRef = actorIt.second;
             auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
-            if (actorIt.second.nodeExcitementTick > 0 && excitementInc > 0) {
-                logger::info("Adding {} base {} speed {}", excitementInc, actorIt.second.nodeExcitementTick, speedMod);
-                actorIt.second.excitement += actorIt.second.baseExcitementMultiplier * excitementInc;
+            auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc;
+            if (finalExcitementInc > 0) {
+                if (actorRef.excitement > actorRef.maxExcitement) {  // Decay from previous scene with higher max
+                    auto excitementDecay = 0.5;
+                    if (actorRef.excitement - excitementDecay < actorRef.maxExcitement) {
+                        actorRef.excitement = actorRef.maxExcitement;
+                    } else {
+                        actorRef.excitement -= excitementDecay;
+                    }
+
+                } else { // increase excitement
+                    if (finalExcitementInc + actorRef.excitement > actorRef.maxExcitement) {                          
+                        actorRef.excitement = actorRef.maxExcitement;
+                    } else {
+                        actorRef.excitement += finalExcitementInc;
+                    }
+                }
             }
-            logger::info("{} excitement {}", actorIt.second.getActor()->GetDisplayFullName(),
-                         actorIt.second.excitement);
         }
     }
 
