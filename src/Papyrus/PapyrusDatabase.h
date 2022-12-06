@@ -329,10 +329,4 @@ namespace PapyrusDatabase {
         std::chrono::duration<double> timer_elapsed = timer_finish - timer_start;
         logger::info("Build time: {}s", timer_elapsed.count());
     }
-
-    bool Bind(VM* a_vm) {
-        const auto obj = "OData"sv;
-
-        return true;
-    }
 }  // namespace PapyrusDatabase

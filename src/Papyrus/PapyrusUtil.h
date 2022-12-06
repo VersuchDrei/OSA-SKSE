@@ -103,6 +103,14 @@ namespace PapyrusUtil {
         locale->SetOverride(a_locale);
     }
 
+    std::string GetSceneIdFromAnimId(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeByAnimation(id)) {
+            return node->scene_id;
+        }
+
+        return "";
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
@@ -119,6 +127,8 @@ namespace PapyrusUtil {
 
         BIND(Translate);
         BIND(SetLocale);
+
+        BIND(GetSceneIdFromAnimId);
 
         return true;
     }

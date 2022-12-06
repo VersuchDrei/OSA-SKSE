@@ -39,6 +39,28 @@ namespace PapyrusMetadata {
     // start of papyrus bound functions
     // *********************************************************
 
+    bool IsTransition(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            return node->isTransition;
+        }
+        return false;
+    }
+
+    int GetMaxSpeed(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            return node->maxspeed;
+        }
+        return 0;
+    }
+
+    int GetActorCount(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            return node->actors.size();
+        }
+        return 0;
+    }
+
+
     std::vector<std::string> GetSceneTags(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return node->tags;
@@ -790,6 +812,10 @@ namespace PapyrusMetadata {
 
 	bool Bind(VM* a_vm) {
         const auto obj = "OMetadata"sv;
+
+        BIND(IsTransition);
+        BIND(GetMaxSpeed);
+        BIND(GetActorCount);
 
         BIND(GetSceneTags);
         BIND(HasSceneTag);

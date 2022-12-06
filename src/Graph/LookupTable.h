@@ -8,6 +8,10 @@
 namespace Graph{
     class LookupTable {
     public:
+        inline static RE::TESQuest* OSexIntegrationMainQuest;
+
+        static void setupForms();
+
         static void addNode(Node* node);
         static Node* getNodeById(std::string id);
         static Node* getNodeByAnimation(std::string anim);

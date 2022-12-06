@@ -23,17 +23,19 @@ namespace Papyrus {
     void Bind() {
         auto papyrus = SKSE::GetPapyrusInterface();
         if (papyrus) {
+            // old stuff
             papyrus->Register(PapyrusActor::Bind);
             papyrus->Register(PapyrusCamera::Bind);
             papyrus->Register(PapyrusControl::Bind);
-            papyrus->Register(PapyrusDatabase::Bind);
             papyrus->Register(PapyrusFace::Bind);
+            papyrus->Register(PapyrusObject::Bind);
+            papyrus->Register(PapyrusUtil::Bind);
+
+            // new stuff
             papyrus->Register(PapyrusFurniture::Bind);
             papyrus->Register(PapyrusLibrary::Bind);
             papyrus->Register(PapyrusMetadata::Bind);
-            papyrus->Register(PapyrusObject::Bind);
             papyrus->Register(PapyrusScenes::Bind);
-            papyrus->Register(PapyrusUtil::Bind);
         }
     }
 

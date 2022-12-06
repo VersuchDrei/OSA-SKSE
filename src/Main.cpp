@@ -58,6 +58,7 @@ namespace {
                 }
             } break;
             case SKSE::MessagingInterface::kDataLoaded: {
+                Graph::LookupTable::setupForms();
                 Trait::TraitTable::setupForms();
                 MCM::MCMTable::setupForms();
                 Furniture::FurnitureTable::setupForms();
