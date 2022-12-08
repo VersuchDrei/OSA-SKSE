@@ -103,6 +103,30 @@ namespace PapyrusUtil {
         locale->SetOverride(a_locale);
     }
 
+    std::string GetSceneIdFromAnimId(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeByAnimation(id)) {
+            return node->scene_id;
+        }
+
+        return "";
+    }
+
+    int GetSpeedFromAnimId(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeByAnimation(id)) {
+            return VectorUtil::getIndex(node->anim_ids, id);;
+        }
+
+        return -1;
+    }
+
+    std::string GetAnimClass(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            return node->animClass;
+        }
+
+        return "Ap";
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
@@ -119,6 +143,10 @@ namespace PapyrusUtil {
 
         BIND(Translate);
         BIND(SetLocale);
+
+        BIND(GetSceneIdFromAnimId);
+        BIND(GetSpeedFromAnimId);
+        BIND(GetAnimClass);
 
         return true;
     }

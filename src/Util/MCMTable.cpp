@@ -3,10 +3,10 @@
 namespace MCM {
     void MCMTable::setupForms() {
         auto dataHandler = RE::TESDataHandler::GetSingleton();
-        disableScalingSetting = dataHandler->LookupForm<RE::TESGlobal>(0x00000D94, "OStim.esp");
-        disableSchlongBendingSetting = dataHandler->LookupForm<RE::TESGlobal>(0x00000D97, "OStim.esp");
-        maleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0x00000DA2, "OStim.esp");
-        femaleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0x00000DA3, "OStim.esp");
+        disableScalingSetting = dataHandler->LookupForm<RE::TESGlobal>(0xD94, "OStim.esp");
+        disableSchlongBendingSetting = dataHandler->LookupForm<RE::TESGlobal>(0xD97, "OStim.esp");
+        maleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA2, "OStim.esp");
+        femaleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA3, "OStim.esp");
     }
 
     bool MCMTable::isScalingDisabled() {

@@ -28,6 +28,15 @@ namespace VectorUtil {
         return true;
     }
 
+    template <class T>
+    int getIndex(std::vector<T> haystack, T needle) {
+        auto it = std::find(haystack.begin(), haystack.end(), needle);
+        if (it == haystack.end()) {
+            return -1;
+        }
+        return it - haystack.begin();
+    }
+
     bool contains(std::vector<int> haystack, int needle);
     std::vector<int> stoiv(std::string string);
     std::vector<std::vector<int>> stoim(std::string string);

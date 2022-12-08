@@ -10,6 +10,11 @@
 namespace Graph {
     const char* ACTION_FILE_PATH{ "Data/SKSE/Plugins/OStim/actions" };
 
+    void LookupTable::setupForms() {
+        auto handler = RE::TESDataHandler::GetSingleton();
+        OSexIntegrationMainQuest = handler->LookupForm<RE::TESQuest>(0x801, "OStim.esp");
+    }
+
     void LookupTable::addNode(Node* node) {
         nodes.insert({node->lowercase_id, node});
         for (std::string anim : node->anim_ids) {

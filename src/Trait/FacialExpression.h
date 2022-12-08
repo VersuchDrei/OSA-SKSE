@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Graph/LookupTable.h"
+
 namespace Trait {
     static const std::vector<int> eyelidModifierTypes = {0, 1, 12, 13};
     static const std::vector<int> eyebrowModifierTypes = {2, 3, 4, 5, 6, 7};
@@ -13,19 +15,25 @@ namespace Trait {
 
     struct FaceModifier {
     public:
-        int type;
-        float baseValue;
-        float speedMultiplier;
-        float excitementMultiplier;
+        int type = 0;
+        float baseValue = 0;
+        float speedMultiplier = 0;
+        float excitementMultiplier = 0;
+        float delay = 0;
+        float delayVariance = 0;
 
         inline int calculate(float speed, float excitement) {
             return (int)(baseValue + speedMultiplier * speed + excitementMultiplier * excitement);
+        }
+
+        inline float randomizeDelay() {
+            return delay + (delayVariance == 0 ? 0 : std::uniform_real_distribution<float>(0, delayVariance)(Graph::LookupTable::rng));
         }
     };
 
     struct GenderExpression {
     public:
-        float duration;
+        float duration = 0;
         FaceModifier expression;
         std::unordered_map<int, FaceModifier> eyelidModifiers;
         std::unordered_map<int, FaceModifier> eyebrowModifiers;
