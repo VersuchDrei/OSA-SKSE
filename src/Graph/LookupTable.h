@@ -10,6 +10,8 @@ namespace Graph{
     public:
         inline static RE::TESQuest* OSexIntegrationMainQuest;
 
+        inline static auto rng = std::default_random_engine{};
+
         static void setupForms();
 
         static void addNode(Node* node);
@@ -30,8 +32,6 @@ namespace Graph{
         inline static std::unordered_map<std::string, Node*> animationNodeTable;
         inline static std::unordered_map<Furniture::FurnitureType, std::unordered_map<int, std::vector<Node*>*>*> nodeList;
         inline static std::unordered_map<std::string, ActionAttributes> actions;
-        
-        inline static auto rng = std::default_random_engine{};
 
         inline static SKEE::INiTransformInterface* niTransformInterface;
     };

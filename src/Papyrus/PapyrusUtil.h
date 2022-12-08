@@ -120,7 +120,7 @@ namespace PapyrusUtil {
     }
 
     std::string GetAnimClass(RE::StaticFunctionTag*, std::string id) {
-        if (auto node = Graph::LookupTable::getNodeByAnimation(id)) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
             return node->animClass;
         }
 

@@ -95,6 +95,12 @@ namespace Trait {
         if (json.contains("excitementMultiplier")) {
             modifier.excitementMultiplier = json["excitementMultiplier"];
         }
+        if (json.contains("delay")) {
+            modifier.delay = json["delay"];
+        }
+        if (json.contains("delayVariance")) {
+            modifier.delayVariance = json["delayVariance"];
+        }
         return modifier;
     }
 

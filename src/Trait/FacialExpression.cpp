@@ -23,14 +23,16 @@ namespace Trait {
                 for (int i : eyelidModifierTypes) {
                     int current = faceData->modifierKeyFrame.values[i] * 100;
                     int goal = 0;
+                    float delay = 0;
                     auto iter = eyelidModifiers.find(i);
                     if (iter != eyelidModifiers.end()) {
                         goal = iter->second.calculate(speed, excitement);
+                        delay = iter->second.randomizeDelay();
                     }
 
                     if (current != goal) {
-                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
-                        vm->DispatchStaticCall("_oGlobal", "BlendMo", args, callback);
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3), std::move(delay));
+                        vm->DispatchStaticCall("OExpression", "BlendMo", args, callback);
                     }
                 }
             }
@@ -39,14 +41,16 @@ namespace Trait {
                 for (int i : eyebrowModifierTypes) {
                     int current = faceData->modifierKeyFrame.values[i] * 100;
                     int goal = 0;
+                    float delay = 0;
                     auto iter = eyebrowModifiers.find(i);
                     if (iter != eyebrowModifiers.end()) {
                         goal = iter->second.calculate(speed, excitement);
+                        delay = iter->second.randomizeDelay();
                     }
 
                     if (current != goal) {
-                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
-                        vm->DispatchStaticCall("_oGlobal", "BlendMo", args, callback);
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3), std::move(delay));
+                        vm->DispatchStaticCall("OExpression", "BlendMo", args, callback);
                     }
                 }
             }
@@ -56,14 +60,16 @@ namespace Trait {
                 for (int i : eyeballModifierTypes) {
                     int current = faceData->modifierKeyFrame.values[i] * 100;
                     int goal = 0;
+                    float delay = 0;
                     auto iter = eyeballModifiersToUse.find(i);
                     if (iter != eyeballModifiersToUse.end()) {
                         goal = iter->second.calculate(speed, excitement);
+                        delay = iter->second.randomizeDelay();
                     }
 
                     if (current != goal) {
-                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
-                        vm->DispatchStaticCall("_oGlobal", "BlendMo", args, callback);
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3), std::move(delay));
+                        vm->DispatchStaticCall("OExpression", "BlendMo", args, callback);
                     }
                 }
             }
@@ -74,14 +80,16 @@ namespace Trait {
                 for (int i = 0; i < 14; i++) {
                     int current = faceData->phenomeKeyFrame.values[i] * 100;
                     int goal = 0;
+                    float delay = 0;
                     auto iter = phonemesToUse.find(i);
                     if (iter != phonemesToUse.end()) {
                         goal = iter->second.calculate(speed, excitement);
+                        delay = iter->second.randomizeDelay();
                     }
 
                     if (current != goal) {
-                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3));
-                        vm->DispatchStaticCall("_oGlobal", "BlendPh", args, callback);
+                        auto args = RE::MakeFunctionArguments(std::move(actor), std::move(goal), std::move(current), std::move(i), std::move(3), std::move(delay));
+                        vm->DispatchStaticCall("OExpression", "BlendPh", args, callback);
                     }
                 }
             }
