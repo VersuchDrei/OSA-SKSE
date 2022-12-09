@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Graph/LookupTable.h"
-
 namespace Trait {
     static const std::vector<int> eyelidModifierTypes = {0, 1, 12, 13};
     static const std::vector<int> eyebrowModifierTypes = {2, 3, 4, 5, 6, 7};
@@ -22,12 +20,14 @@ namespace Trait {
         float delay = 0;
         float delayVariance = 0;
 
+        inline static auto rng = std::default_random_engine{};
+
         inline int calculate(float speed, float excitement) {
             return (int)(baseValue + speedMultiplier * speed + excitementMultiplier * excitement);
         }
 
         inline float randomizeDelay() {
-            return delay + (delayVariance == 0 ? 0 : std::uniform_real_distribution<float>(0, delayVariance)(Graph::LookupTable::rng));
+            return delay + (delayVariance == 0 ? 0 : std::uniform_real_distribution<float>(0, delayVariance)(rng));
         }
     };
 
