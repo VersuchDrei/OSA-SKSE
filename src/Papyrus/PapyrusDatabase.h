@@ -145,6 +145,10 @@ namespace PapyrusDatabase {
                     }
                 }
 
+                if (auto noRandomSelection = metadata.attribute("noRandomSelection")) {
+                    node->noRandomSelection = noRandomSelection.as_bool();
+                }
+
                 if (auto furnitureType = metadata.attribute("furniture")) {
                     node->furnitureType = Furniture::FurnitureTable::getFurnitureType(furnitureType.as_string());
                 }
@@ -190,6 +194,14 @@ namespace PapyrusDatabase {
                                     type = 8;
                                 }
                                 node->actors[pos]->eyeballModifierOverride.insert({type, {.type = type, .baseValue = value}});
+                            } else if (auto lookDown = actor.attribute("lookDown")) {
+                                float value = lookUp.as_float();
+                                int type = 8;
+                                if (value < 0) {
+                                    value *= -1;
+                                    type = 11;
+                                }
+                                node->actors[pos]->eyeballModifierOverride.insert({type, {.type = type, .baseValue = value}});
                             }
 
                             if (auto lookLeft = actor.attribute("lookLeft")) {
@@ -200,12 +212,29 @@ namespace PapyrusDatabase {
                                     type = 10;
                                 }
                                 node->actors[pos]->eyeballModifierOverride.insert({type, {.type = type, .baseValue = value}});
+                            } else if (auto lookRight = actor.attribute("lookRight")) {
+                                float value = lookRight.as_float();
+                                int type = 10;
+                                if (value < 0) {
+                                    value *= -1;
+                                    type = 9;
+                                }
+                                node->actors[pos]->eyeballModifierOverride.insert({type, {.type = type, .baseValue = value}});
                             }
 
                             if (auto tags = actor.attribute("tags")) {
                                 for (std::string tag : StringUtil::toTagVector(tags.as_string())) {
                                     node->actors[pos]->tags.push_back(tag);
                                 }
+                            }
+
+                            for (auto& autotransition : actor.children("autotransition")) {
+                                auto type = autotransition.attribute("type");
+                                auto destination = autotransition.attribute("destination");
+                                if (!type || !destination) {
+                                    continue;
+                                }
+                                node->actors[pos]->autotransitions.insert({type.as_string(), destination.as_string()});
                             }
                         }
                     }
