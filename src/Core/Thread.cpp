@@ -2,12 +2,20 @@
 #include <Graph/Node.h>
 #include <Messaging/IMessages.h>
 #include <Util/MCMTable.h>
+#include <Util/StringUtil.h>
 
 namespace OStim {
     Thread::Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
         m_threadId = a_id;
         for (int i = 0; i < a_actors.size(); i++) {
+            addActorSink(a_actors[i]);
             m_actors.insert(std::make_pair(i, ThreadActor(a_actors[i])));
+        }
+    }
+
+    Thread::~Thread() {
+        for (auto& actorIt : m_actors) {
+            removeActorSink(actorIt.second.getActor());
         }
     }
 
@@ -71,9 +79,15 @@ namespace OStim {
         Messaging::MessagingRegistry::GetSingleton()->SendMessageToListeners(msg);
     }
 
-    void Thread::AddThirdActor(RE::Actor* a_actor) { m_actors.insert(std::make_pair(2, ThreadActor(a_actor))); }
+    void Thread::AddThirdActor(RE::Actor* a_actor) {
+        addActorSink(a_actor);
+        m_actors.insert(std::make_pair(2, ThreadActor(a_actor)));
+    }
 
-    void Thread::RemoveThirdActor() { m_actors.erase(2); }
+    void Thread::RemoveThirdActor() {
+        removeActorSink(m_actors[2].getActor());
+        m_actors.erase(2);
+    }
 
     void Thread::CalculateExcitement() {
         std::shared_lock<std::shared_mutex> readLock;
@@ -86,21 +100,19 @@ namespace OStim {
             auto& actorRef = actorIt.second;
             auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
             auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc;
-            if (finalExcitementInc > 0) {
-                if (actorRef.excitement > actorRef.maxExcitement) {  // Decay from previous scene with higher max
-                    auto excitementDecay = 0.5;
-                    if (actorRef.excitement - excitementDecay < actorRef.maxExcitement) {
-                        actorRef.excitement = actorRef.maxExcitement;
-                    } else {
-                        actorRef.excitement -= excitementDecay;
-                    }
+            if (finalExcitementInc <= 0 || actorRef.excitement > actorRef.maxExcitement) {  // Decay from previous scene with higher max
+                auto excitementDecay = 0.5;
+                if (actorRef.excitement - excitementDecay < actorRef.maxExcitement) {
+                    actorRef.excitement = actorRef.maxExcitement;
+                } else {
+                    actorRef.excitement -= excitementDecay;
+                }
 
-                } else { // increase excitement
-                    if (finalExcitementInc + actorRef.excitement > actorRef.maxExcitement) {                          
-                        actorRef.excitement = actorRef.maxExcitement;
-                    } else {
-                        actorRef.excitement += finalExcitementInc;
-                    }
+            } else { // increase excitement
+                if (finalExcitementInc + actorRef.excitement > actorRef.maxExcitement) {                          
+                    actorRef.excitement = actorRef.maxExcitement;
+                } else {
+                    actorRef.excitement += finalExcitementInc;
                 }
             }
         }
@@ -111,6 +123,44 @@ namespace OStim {
             if (i.second.getActor() == a_actor) return &i.second;
         }
         return nullptr;
+    }
+
+    void Thread::addActorSink(RE::Actor* a_actor) {
+        a_actor->AddAnimationGraphEventSink(this);
+    }
+
+    void Thread::removeActorSink(RE::Actor* a_actor) {
+        a_actor->RemoveAnimationGraphEventSink(this);
+    }
+
+    RE::BSEventNotifyControl Thread::ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) {
+        if (!a_event || !a_event->holder) {
+            return RE::BSEventNotifyControl::kContinue;
+        }
+        auto actor = const_cast<RE::Actor*>(static_cast<const RE::Actor*>(a_event->holder));
+
+        RE::BSAnimationGraphManagerPtr graphManager;
+        actor->GetAnimationGraphManager(graphManager);
+        if (!graphManager) {
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        uint32_t activeGraphIdx = graphManager->GetRuntimeData().activeGraph;
+
+        if (graphManager->graphs[activeGraphIdx] && graphManager->graphs[activeGraphIdx].get() != a_eventSource) {
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        std::string tag = a_event->tag.c_str();
+        StringUtil::toLower(&tag);
+
+        if (tag == "ostim_event") {
+            std::string indexStr = a_event->payload.c_str();
+            int index = std::stoi(indexStr);
+            // TODO: read event from list and send to papyrus
+        }
+
+        return RE::BSEventNotifyControl::kContinue;
     }
 
 }  // namespace OStim
