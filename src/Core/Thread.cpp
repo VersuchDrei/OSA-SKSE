@@ -1,4 +1,5 @@
 #include <Core/Thread.h>
+#include <Graph/LookupTable.h>
 #include <Graph/Node.h>
 #include <Messaging/IMessages.h>
 #include <Util/MCMTable.h>
@@ -85,7 +86,7 @@ namespace OStim {
     }
 
     void Thread::RemoveThirdActor() {
-        removeActorSink(m_actors[2].getActor());
+        removeActorSink(GetActor(2)->getActor());
         m_actors.erase(2);
     }
 
@@ -125,12 +126,31 @@ namespace OStim {
         return nullptr;
     }
 
+    ThreadActor* Thread::GetActor(int a_position) {
+        for (auto& i : m_actors) {
+            if (i.first == a_position) return &i.second;
+        }
+        return nullptr;
+    }
+
     void Thread::addActorSink(RE::Actor* a_actor) {
-        a_actor->AddAnimationGraphEventSink(this);
+        RE::BSAnimationGraphManagerPtr graphManager;
+        a_actor->GetAnimationGraphManager(graphManager);
+        if (graphManager) {
+		    for (const auto& animationGraph : graphManager->graphs) {
+			    animationGraph->GetEventSource<RE::BSAnimationGraphEvent>()->AddEventSink(this);
+		    }
+	    }
     }
 
     void Thread::removeActorSink(RE::Actor* a_actor) {
-        a_actor->RemoveAnimationGraphEventSink(this);
+        RE::BSAnimationGraphManagerPtr graphManager;
+        a_actor->GetAnimationGraphManager(graphManager);
+        if (graphManager) {
+		    for (const auto& animationGraph : graphManager->graphs) {
+			    animationGraph->GetEventSource<RE::BSAnimationGraphEvent>()->RemoveEventSink(this);
+		    }
+	    }
     }
 
     RE::BSEventNotifyControl Thread::ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) {
@@ -152,12 +172,41 @@ namespace OStim {
         }
 
         std::string tag = a_event->tag.c_str();
-        StringUtil::toLower(&tag);
 
-        if (tag == "ostim_event") {
+        if (tag == "OStimClimax") {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                auto args = RE::MakeFunctionArguments(std::move(actor));
+                auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(Graph::LookupTable::OSexIntegrationMainQuest->FORMTYPE), Graph::LookupTable::OSexIntegrationMainQuest);
+                vm->DispatchMethodCall2(handle, "OSexIntegrationMain", "Climax", args, callback);
+            }
+        } else if (tag == "OStimSpank") {
+            
+        } else if (tag == "OStimEvent") {
             std::string indexStr = a_event->payload.c_str();
             int index = std::stoi(indexStr);
-            // TODO: read event from list and send to papyrus
+            if (index >= 0 && index < m_currentNode->xmlEvents.size()) {
+                Graph::XmlEvent* xmlEvent = m_currentNode->xmlEvents[index];
+                RE::Actor* actor;
+                RE::Actor* target;
+                RE::Actor* performer;
+
+                for (auto& i : m_actors) {
+                    if (i.first == xmlEvent->actor) {
+                        actor = i.second.getActor();
+                    }
+                    if (i.first == xmlEvent->target) {
+                        target = i.second.getActor();
+                    }
+                    if (i.first == xmlEvent->performer) {
+                        performer = i.second.getActor();
+                    }
+                }
+
+                //TODO: send in papyrus
+            }
         }
 
         return RE::BSEventNotifyControl::kContinue;

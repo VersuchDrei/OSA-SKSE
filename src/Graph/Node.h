@@ -15,6 +15,14 @@ namespace Graph {
         int performer;
     };
 
+    struct XmlEvent {
+    public:
+        std::string type;
+        int actor;
+        int target;
+        int performer;
+    };
+
     struct Actor {
     public:
         std::string position;
@@ -47,6 +55,7 @@ namespace Graph {
         std::vector<std::string> tags;
         std::vector<Actor*> actors;
         std::vector<Action*> actions;
+        std::vector<XmlEvent*> xmlEvents;
 
         // maybe remove this in a later iteration?
         std::string sourceModule;

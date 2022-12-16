@@ -271,6 +271,36 @@ namespace PapyrusDatabase {
                     node->actions.push_back(actionObj);
                 }
             }
+
+            if (auto events = scene.child("events")) {
+                for (auto& xmlEvent : events.children("event")) {
+                    auto type = xmlEvent.attribute("type");
+                    auto actor = xmlEvent.attribute("actor");
+                    if (!type || !actor) {
+                        continue;
+                    }
+
+                    auto eventObj = new Graph::XmlEvent();
+
+                    std::string typeStr = type.as_string();
+                    StringUtil::toLower(&typeStr);
+                    eventObj->type = typeStr;
+                    eventObj->actor = actor.as_int();
+
+                    if (auto target = xmlEvent.attribute("target")) {
+                        eventObj->target = target.as_int();
+                    } else {
+                        eventObj->target = actor.as_int();
+                    }
+
+                    if (auto performer = xmlEvent.attribute("performer")) {
+                        eventObj->performer = performer.as_int();
+                    } else {
+                        eventObj->performer = actor.as_int();
+                    }
+                    node->xmlEvents.push_back(eventObj);
+                }
+            }
         }
 
         auto anim_class = cls_path.filename().string();
