@@ -15,6 +15,14 @@ namespace Graph {
         int performer;
     };
 
+    struct XmlEvent {
+    public:
+        std::string type;
+        int actor;
+        int target;
+        int performer;
+    };
+
     struct Actor {
     public:
         std::string position;
@@ -26,6 +34,7 @@ namespace Graph {
         std::unordered_map<int, Trait::FaceModifier> eyeballModifierOverride;
         std::vector<std::string> tags;
         Trait::ActorConditions conditions;
+        std::unordered_map<std::string, std::string> autotransitions;
     };
 
     struct Node {
@@ -35,16 +44,18 @@ namespace Graph {
         uint32_t numActors;
         std::string scene_name;
         std::vector<std::string> anim_ids;  // this probably needs to be reworked to contain speed info        
-        bool isTransition;
-        bool isHub;
-        bool isAggresive;
+        bool isTransition = false;
+        bool isHub = false;
+        bool isAggresive = false;
         uint32_t minspeed = 0;
         uint32_t maxspeed = 0;
-        bool hasIdleSpeed;
+        bool hasIdleSpeed = false;
+        bool noRandomSelection = false;
         Furniture::FurnitureType furnitureType = Furniture::FurnitureType::NONE;
         std::vector<std::string> tags;
         std::vector<Actor*> actors;
         std::vector<Action*> actions;
+        std::vector<XmlEvent*> xmlEvents;
 
         // maybe remove this in a later iteration?
         std::string sourceModule;
@@ -55,6 +66,8 @@ namespace Graph {
         void updateActors(std::vector<RE::Actor*> actors, std::vector<float> rmheights, std::vector<float> offsets);
         void updateFacialExpressions(int position, RE::Actor* actor);
         float playExpressionEvent(int position, RE::Actor* actor, std::string eventName);
+
+        std::string getAutoTransitionForActor(int position, std::string type);
 
         bool hasActorTag(int position, std::string tag);
         bool hasAnyActorTag(int position, std::vector<std::string> tags);
