@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+#include "Align/Alignments.h"
 #include "Furniture/FurnitureTable.h"
 #include "Game/Patch.h"
 #include "Graph/LookupTable.h"
@@ -10,6 +11,7 @@
 #include "SKEE.h"
 #include "Serial/Manager.h"
 #include "Trait/TraitTable.h"
+#include "UI/Align/AlignMenu.h"
 #include "Util/MCMTable.h"
 
 using namespace RE::BSScript;
@@ -62,8 +64,14 @@ namespace {
                 Trait::TraitTable::setupForms();
                 MCM::MCMTable::setupForms();
                 Furniture::FurnitureTable::setupForms();
+                OAlign::Alignments::GetSingleton()->LoadAlignments();
+                UI::Align::AlignMenu::Register();
             } break;
+            case SKSE::MessagingInterface::kNewGame: {
+                UI::Align::AlignMenu::Show();
+            }break;
             case SKSE::MessagingInterface::kPostPostLoad: {
+                UI::Align::AlignMenu::Show();
                 SKEE::InterfaceExchangeMessage msg;
                 auto intfc = SKSE::GetMessagingInterface();
                 intfc->Dispatch(SKEE::InterfaceExchangeMessage::kExchangeInterface, (void*)&msg,

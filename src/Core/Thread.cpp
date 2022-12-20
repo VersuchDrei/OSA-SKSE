@@ -2,12 +2,16 @@
 #include <Graph/Node.h>
 #include <Messaging/IMessages.h>
 #include <Util/MCMTable.h>
+#include <UI/Align/AlignMenu.h>
 
 namespace OStim {
     Thread::Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
         m_threadId = a_id;
         for (int i = 0; i < a_actors.size(); i++) {
             m_actors.insert(std::make_pair(i, ThreadActor(a_actors[i])));
+            if (a_actors[i]->IsPlayer() || a_actors[i]->IsPlayerRef()) {
+                isPlayerThread = true;
+            }
         }
     }
 
@@ -69,6 +73,13 @@ namespace OStim {
         msg.newAnimation = a_node;
         logger::info("Sending animation changed event");
         Messaging::MessagingRegistry::GetSingleton()->SendMessageToListeners(msg);
+
+        if (isPlayerThread) {
+            UI::Align::AlignMenu::SetThread(this);
+            UI::Align::AlignMenu::SetNode(a_node);
+            //TODO: Remove this
+            UI::Align::AlignMenu::SetActor(this->GetTESActors()[0]);
+        }        
     }
 
     void Thread::AddThirdActor(RE::Actor* a_actor) { m_actors.insert(std::make_pair(2, ThreadActor(a_actor))); }

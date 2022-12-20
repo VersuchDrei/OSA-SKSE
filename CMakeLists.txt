@@ -24,6 +24,7 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Align/Alignments.cpp
     src/Core/Singleton.h
     src/Core/Thread.cpp
     src/Core/ThreadActor.cpp
@@ -46,6 +47,8 @@ set(sources
     src/Trait/Condition.cpp
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
+    src/UI/Align/AlignMenu.cpp
+    src/UI/UIState.cpp
     src/Util/ActorUtil.cpp
     src/Util/MCMTable.cpp
     src/Util/ObjectRefUtil.cpp

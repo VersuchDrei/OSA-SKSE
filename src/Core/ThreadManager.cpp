@@ -1,4 +1,5 @@
 #include "Core/ThreadManager.h"
+#include "UI/Align/AlignMenu.h"
 
 namespace OStim {
 
@@ -44,6 +45,7 @@ namespace OStim {
         std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
         auto it = m_threadMap.find(a_id);
         if (it != m_threadMap.end()) {
+            UI::Align::AlignMenu::HandleThreadRemoved(it->second);
             delete it->second;
             m_threadMap.erase(a_id);
             auto log = RE::ConsoleLog::GetSingleton();
