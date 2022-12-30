@@ -243,7 +243,7 @@ namespace Graph {
     }
 
     Trait::PhonemeOverrideType Node::getOverrideType(int position) {
-        if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus"}) != -1) {
+        if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus", "suckingnipples"}) != -1) {
             return Trait::PhonemeOverrideType::OpenMouth;
         } else if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"}) != -1) {
             return Trait::PhonemeOverrideType::Licking;
