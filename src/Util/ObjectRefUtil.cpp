@@ -50,4 +50,12 @@ namespace ObjectRefUtil {
         StringUtil::toLower(&id);
         return id.find("luxurysuite") != std::string::npos;
     }
+
+    void ObjectRefUtil::stopTranslation(RE::TESObjectREFR* object) {
+        StopTranslation(nullptr, 0, object);
+    }
+
+    void ObjectRefUtil::translateTo(RE::TESObjectREFR* object, float x, float y, float z, float angleX, float angleY, float angleZ, float speed, float maxRotationSpeed) {
+        TranslateTo(nullptr, 0, object, x, y, z, angleX, angleY, angleZ, speed, maxRotationSpeed);
+    }
 }
