@@ -10,10 +10,15 @@ namespace PapyrusControl {
         UI::UIState::GetSingleton()->HandleControl(a_direction, a_glyph);
     }
 
+    void EndPlayerDialogue(RE::StaticFunctionTag*) {
+        RE::PlayerCharacter::GetSingleton()->EndDialogue();
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
         BIND(Control);
+        BIND(EndPlayerDialogue);
 
         return true;
     }

@@ -44,6 +44,10 @@ namespace Furniture {
 
             for (auto& marker : markers) {
                 if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSleep)) {
+                    if (object->GetBaseObject() == FurnitureTable::BYOHVampireCoffinVert01 || object->HasKeyword(FurnitureTable::isVampireCoffin) || object->HasKeyword(FurnitureTable::DLC1isVampireCoffinHorizontal) || object->HasKeyword(FurnitureTable::DLC1isVampireCoffinVertical)) {
+                        // check for coffins
+                        return FurnitureType::NONE;
+                    }
                     return FurnitureType::BED;
                 } else if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSit) && std::abs(marker.offset.z - 34) < 1) {
                     chairMarkers++;

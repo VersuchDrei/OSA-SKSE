@@ -6,16 +6,21 @@ namespace Furniture {
     class FurnitureTable {
     public:
         inline static RE::BGSKeyword* CraftingCookPot;
+        inline static RE::BGSKeyword* DLC1isVampireCoffinHorizontal;
+        inline static RE::BGSKeyword* DLC1isVampireCoffinVertical;
         inline static RE::BGSKeyword* FurnitureCounterLeanMarker;
         inline static RE::BGSKeyword* FurnitureBedRoll;
         inline static RE::BGSKeyword* isLeanTable;
         inline static RE::BGSKeyword* IsTable;
+        inline static RE::BGSKeyword* isVampireCoffin;
         inline static RE::BGSKeyword* isWritingChair;
         inline static RE::BGSKeyword* RaceToScale;
         inline static RE::BGSKeyword* WICraftingAlchemy;
         inline static RE::BGSKeyword* WICraftingEnchanting;
 
+        inline static RE::TESFurniture* BYOHVampireCoffinVert01;
         inline static RE::TESFurniture* WallLeanMarker;
+
         inline static RE::BGSListForm* OStimShelfList;
 
         static void setupForms();

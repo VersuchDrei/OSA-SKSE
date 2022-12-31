@@ -5,6 +5,7 @@
 #include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
 #include "Util/MCMTable.h"
+#include "Util/StringUtil.h"
 #include "Util/VectorUtil.h"
 #include "SKEE.h"
 
@@ -24,29 +25,42 @@ namespace Graph {
         return true;
     }
 
+    std::string Node::getAutoTransitionForActor(int position, std::string type) {
+        if (position < 0 || position >= actors.size()) {
+            return "";
+        }
+
+        StringUtil::toLower(&type);
+        auto iter = actors[position]->autotransitions.find(type);
+        if (iter != actors[position]->autotransitions.end()) {
+            return iter->second;
+        }
+        return "";
+    }
+
     bool Node::hasActorTag(int position, std::string tag) {
-        if (position >= actors.size()) {
+        if (position < 0 || position >= actors.size()) {
             return false;
         }
         return VectorUtil::contains(actors[position]->tags, tag);
     }
 
     bool Node::hasAnyActorTag(int position, std::vector<std::string> tags) {
-        if (position >= actors.size()) {
+        if (position < 0 || position >= actors.size()) {
             return false;
         }
         return VectorUtil::containsAny(actors[position]->tags, tags);
     }
 
     bool Node::hasAllActorTags(int position, std::vector<std::string> tags) {
-        if (position >= actors.size()) {
+        if (position < 0 || position >= actors.size()) {
             return false;
         }
         return VectorUtil::containsAll(actors[position]->tags, tags);
     }
 
     bool Node::hasOnlyListedActorTags(int position, std::vector<std::string> tags) {
-        if (position >= actors.size()) {
+        if (position < 0 || position >= actors.size()) {
             return true;
         }
         return VectorUtil::containsAll(tags, actors[position]->tags);
@@ -229,7 +243,7 @@ namespace Graph {
     }
 
     Trait::PhonemeOverrideType Node::getOverrideType(int position) {
-        if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus"}) != -1) {
+        if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus", "suckingnipples"}) != -1) {
             return Trait::PhonemeOverrideType::OpenMouth;
         } else if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"}) != -1) {
             return Trait::PhonemeOverrideType::Licking;
