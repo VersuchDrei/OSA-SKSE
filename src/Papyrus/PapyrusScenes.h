@@ -5,9 +5,9 @@
 namespace PapyrusScenes {
     using VM = RE::BSScript::IVirtualMachine;
 
-    void StartScene(RE::StaticFunctionTag*, int64_t a_id, std::vector<RE::Actor*> a_actors) {
+    void StartScene(RE::StaticFunctionTag*, int64_t a_id, std::vector<RE::Actor*> a_actors, RE::TESObjectREFR* a_stageObject) {
         auto tm = OStim::ThreadManager::GetSingleton();
-        tm->TrackThread(a_id, a_actors);
+        tm->TrackThread(a_id, a_actors, a_stageObject);
     }
 
     void EndScene(RE::StaticFunctionTag*, int64_t a_id) {
@@ -46,7 +46,8 @@ namespace PapyrusScenes {
 
     void UpdateSpeed(RE::StaticFunctionTag*, int64_t a_threadId, int a_speed){
         auto tm = OStim::ThreadManager::GetSingleton();
-        tm->GetThread(a_threadId)->SetSpeed(a_speed);
+        auto thread = tm->GetThread(a_threadId);
+        if(thread) thread->SetSpeed(a_speed);
     }
 
     OStim::ThreadActor* GetActor(int64_t a_threadId, RE::Actor* a_actor) {

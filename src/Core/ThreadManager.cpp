@@ -22,8 +22,8 @@ namespace OStim {
         m_excitementThread.detach();
     }
 
-    void ThreadManager::TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
-        Thread* t = new Thread(a_id, a_actors);
+    void ThreadManager::TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors, RE::TESObjectREFR* a_stageObject) {
+        Thread* t = new Thread(a_id, a_actors, a_stageObject);
         std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
         m_threadMap.insert(std::make_pair(a_id, t));
         auto log = RE::ConsoleLog::GetSingleton();

@@ -9,7 +9,7 @@ namespace OStim {
         
     public:
         ThreadManager();
-        void TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors);
+        void TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors, RE::TESObjectREFR* a_stageObj );
         Thread* GetThread(ThreadId a_id);
         void UnTrackThread(ThreadId a_id);
         bool AnySceneRunning();

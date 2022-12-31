@@ -8,7 +8,7 @@ namespace OStim {
     using ThreadId = int64_t;
     class Thread {
     public:
-        Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors);
+        Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors, RE::TESObjectREFR* a_stageObject);
         
         void ChangeNode(Graph::Node* a_node);
 
@@ -22,6 +22,8 @@ namespace OStim {
 
         void SetSpeed(int speed) { m_currentNodeSpeed = speed; }
 
+        RE::TESObjectREFR* GetStageObject() { return stageObject; }
+
         std::vector<RE::Actor*> GetTESActors() { 
             std::vector<RE::Actor*> actors;
             for (auto& pair : m_actors) {                
@@ -29,6 +31,9 @@ namespace OStim {
             }
             return actors;
         }
+
+    public:
+        RE::TESObjectREFR* stageObject;
 
     private:
         ThreadId m_threadId;        

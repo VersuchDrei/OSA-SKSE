@@ -125,10 +125,21 @@ namespace OAlign {
 
     void Alignments::ApplyAlignments(OStim::Thread* thread, std::vector<AlignmentActorInfo>* info) {
         auto actors = thread->GetTESActors();
-
+        
+        auto stage = thread->GetStageObject();
+        
         for (int i = 0; i < actors.size(); i++) {
-            RE::NiPoint3 pos{(float)info->at(i).offsetX, (float)info->at(i).offsetY, (float)info->at(i).offsetZ};
-            actors[i]->SetPosition(pos, false);
+            auto& actorInfo = info->at(i);
+            float theta = actors[i]->GetAngleZ();
+            float x = std::cos(theta) * actorInfo.offsetX - std::sin(theta) * actorInfo.offsetY;
+            float y = std::sin(theta) * actorInfo.offsetX + std::cos(theta) * actorInfo.offsetY;
+
+            RE::NiPoint3 pos{stage->GetPositionX() + (float)info->at(i).offsetX, stage->GetPositionY() + (float)info->at(i).offsetY, stage->GetPositionZ() + (float)info->at(i).offsetZ};
+
+            auto vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();            
+
+            actors[i]->SetPosition(pos, true);
+            actors[i]->UpdateActor3DPosition();
         }
     }
 

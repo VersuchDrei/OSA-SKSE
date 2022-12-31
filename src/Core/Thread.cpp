@@ -5,8 +5,9 @@
 #include <UI/Align/AlignMenu.h>
 
 namespace OStim {
-    Thread::Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
+    Thread::Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors, RE::TESObjectREFR* a_stageObject) {
         m_threadId = a_id;
+        stageObject = a_stageObject;
         for (int i = 0; i < a_actors.size(); i++) {
             m_actors.insert(std::make_pair(i, ThreadActor(a_actors[i])));
             if (a_actors[i]->IsPlayer() || a_actors[i]->IsPlayerRef()) {
