@@ -7,14 +7,13 @@ namespace Util {
 		inline static void LoadFilesInFolder(std::string path, std::function<void(std::string, json)> callback) {
 			fs::path rootPath{ path };
 			if (!fs::exists(rootPath)) {
-				logger::warn("expression path ({}) does not exist", path);
+				logger::warn("path ({}) does not exist", path);
 				return;
 			}
 			for (auto& file : fs::directory_iterator{ rootPath }) {
 				auto& path = file.path();
 				auto pathStr = path.string();
 				if (pathStr.ends_with(".json")) {
-					logger::info("parsing file {}", pathStr);
 					std::ifstream ifs(pathStr);
 					json json = json::parse(ifs, nullptr, false);
 
@@ -23,7 +22,6 @@ namespace Util {
 						continue;
 					}
 					callback(path.filename().replace_extension("").string(), json);
-					logger::info("parsed file {}", pathStr);
 				}
 			}
 		}

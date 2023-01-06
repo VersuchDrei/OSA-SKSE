@@ -53,6 +53,14 @@ namespace OStim {
         }
     }
 
+    void ThreadManager::UntrackAllThreads() {
+        std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
+        for (auto& entry : m_threadMap) {
+            delete entry.second;
+        }
+        m_threadMap.clear();
+    }
+
     bool ThreadManager::AnySceneRunning() {
         return m_threadMap.size() > 0;
     }

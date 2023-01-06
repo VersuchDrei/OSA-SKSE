@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graph/LookupTable.h"
+#include "Util/FormUtil.h"
 
 namespace PapyrusActor {
     using VM = RE::BSScript::IVirtualMachine;
@@ -218,6 +219,10 @@ namespace PapyrusActor {
         return -1;
     }
 
+    bool IsWig(RE::StaticFunctionTag*, RE::Actor* actor, RE::TESObjectARMO* armor) {
+        return FormUtil::isWig(actor, armor);
+    }
+
     bool Bind(VM* a_vm) {
         const auto obj = "OSANative"sv;
 
@@ -237,6 +242,7 @@ namespace PapyrusActor {
         BIND(UpdateForScene);
         BIND(UpdateExpression);
         BIND(PlayExpressionEvent);
+        BIND(IsWig);
 
         return true;
     }

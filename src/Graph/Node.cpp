@@ -12,7 +12,7 @@
 namespace Graph {
     bool Node::fulfilledBy(std::vector<Trait::ActorConditions> conditions) {
         int size = actors.size();
-        if (size != conditions.size()) {
+        if (size < conditions.size()) {
             return false;
         }
 
@@ -23,6 +23,14 @@ namespace Graph {
         }
 
         return true;
+    }
+
+    uint32_t Node::getStrippingMask(int position) {
+        uint32_t mask = 0;
+        for (auto& action : actions) {
+            mask |= action->getStrippingMask(position);
+        }
+        return mask;
     }
 
     std::string Node::getAutoTransitionForActor(int position, std::string type) {
@@ -85,6 +93,15 @@ namespace Graph {
             }
         }
         return ret;
+    }
+
+    bool Node::hasActionTag(std::string tag) {
+        for (auto& action : actions) {
+            if (action->attributes->hasTag(tag)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     int Node::findAction(std::string type) {

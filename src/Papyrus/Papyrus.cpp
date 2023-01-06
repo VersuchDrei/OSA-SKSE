@@ -9,6 +9,7 @@
 #include "Papyrus/PapyrusActor.h"
 #include "Papyrus/PapyrusCamera.h"
 #include "Papyrus/PapyrusControl.h"
+#include "Papyrus/PapyrusData.h"
 #include "Papyrus/PapyrusDatabase.h"
 #include "Papyrus/PapyrusFace.h"
 #include "Papyrus/PapyrusFurniture.h"
@@ -32,6 +33,7 @@ namespace Papyrus {
             papyrus->Register(PapyrusUtil::Bind);
 
             // new stuff
+            papyrus->Register(PapyrusData::Bind);
             papyrus->Register(PapyrusFurniture::Bind);
             papyrus->Register(PapyrusLibrary::Bind);
             papyrus->Register(PapyrusMetadata::Bind);

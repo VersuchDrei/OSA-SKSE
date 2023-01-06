@@ -11,12 +11,21 @@ namespace OStim {
         for (int i = 0; i < a_actors.size(); i++) {
             addActorSink(a_actors[i]);
             m_actors.insert(std::make_pair(i, ThreadActor(a_actors[i])));
+            ThreadActor* actor = GetActor(i);
+            if (MCM::MCMTable::undressAtStart()) {
+                actor->undress();
+            }
+            if (MCM::MCMTable::removeWeaponsAtStart()) {
+                actor->removeWeapons();
+            }
         }
     }
 
     Thread::~Thread() {
         for (auto& actorIt : m_actors) {
             removeActorSink(actorIt.second.getActor());
+            actorIt.second.redress();
+            actorIt.second.addWeapons();
         }
     }
 
@@ -24,6 +33,7 @@ namespace OStim {
         std::unique_lock<std::shared_mutex> writeLock;
         m_currentNode = a_node;
         for (auto& actorIt : m_actors) {
+            // --- excitement calculation --- //
             float excitementInc = 0;
             actorIt.second.maxExcitement = 0;
             std::vector<float> excitementVals;
@@ -70,6 +80,28 @@ namespace OStim {
             }
 
             actorIt.second.nodeExcitementTick = excitementInc;
+
+            
+            // --- undressing --- //
+            if (MCM::MCMTable::undressMidScene() && m_currentNode->hasActionTag("sexual")) {
+                actorIt.second.undress();
+                actorIt.second.removeWeapons();
+                // it is intended that the else fires if undressMidScene is checked but the action is not tagged as sexual
+                // because some non sexual actions still have slots for partial stripping
+                // for example kissing undresses helmets without being sexual
+            } else if (MCM::MCMTable::partialUndressing()) {
+                uint32_t slotMask = 0;
+                for (auto& action : m_currentNode->actions) {
+                    slotMask |= action->getStrippingMask(actorIt.first);
+                }
+                if (slotMask != 0) {
+                    actorIt.second.undressPartial(slotMask);
+                    if ((slotMask & MCM::MCMTable::removeWeaponsWithSlot()) != 0) {
+                        actorIt.second.removeWeapons();
+                    }
+                }
+            }
+            
         }
 
         auto messaging = SKSE::GetMessagingInterface();
@@ -83,10 +115,21 @@ namespace OStim {
     void Thread::AddThirdActor(RE::Actor* a_actor) {
         addActorSink(a_actor);
         m_actors.insert(std::make_pair(2, ThreadActor(a_actor)));
+        ThreadActor* actor = GetActor(2);
+        if (MCM::MCMTable::undressAtStart()) {
+            actor->undress();
+        }
+        if (MCM::MCMTable::removeWeaponsAtStart()) {
+            actor->removeWeapons();
+        }
     }
 
     void Thread::RemoveThirdActor() {
-        removeActorSink(GetActor(2)->getActor());
+        ThreadActor* actor = GetActor(2);
+        removeActorSink(actor->getActor());
+        actor->redress();
+        actor->addWeapons();
+
         m_actors.erase(2);
     }
 
@@ -189,7 +232,15 @@ namespace OStim {
                 vm->DispatchMethodCall2(handle, "OSexIntegrationMain", "Climax", args, callback);
             }
         } else if (tag == "OStimSpank") {
-            
+            //TODO
+        } else if (tag == "OStimUndress") {
+            GetActor(actor)->undress();
+        } else if (tag == "OStimRedress") {
+            GetActor(actor)->redress();
+        } else if (tag == "OStimRemoveWeapons") {
+            GetActor(actor)->removeWeapons();
+        } else if (tag == "OStimAddWeapons"){
+            GetActor(actor)->addWeapons();
         } else if (tag == "OStimEvent") {
             std::string indexStr = a_event->payload.c_str();
             int index = std::stoi(indexStr);

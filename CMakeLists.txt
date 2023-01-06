@@ -33,10 +33,11 @@ set(sources
     src/Furniture/FurnitureTable.cpp
     src/Game/LocaleManager.cpp
 	src/Game/LocaleManager.h
-    src/Graph/LookupTable.cpp
-    src/Graph/Node.cpp
 	src/Game/Locker.h
 	src/Game/Patch.h
+    src/Graph/Action.cpp
+    src/Graph/LookupTable.cpp
+    src/Graph/Node.cpp
     src/InterfaceSpec/PluginInterface.cpp
     src/Messaging/MessagingRegistry.cpp
 	src/PCH.h
@@ -47,6 +48,8 @@ set(sources
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
     src/Util/ActorUtil.cpp
+    src/Util/CompatibilityTable.cpp
+    src/Util/FormUtil.cpp
     src/Util/MCMTable.cpp
     src/Util/ObjectRefUtil.cpp
     src/Util/StringUtil.cpp

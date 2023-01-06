@@ -35,6 +35,7 @@ namespace OStim {
         Graph::Node* m_currentNode = nullptr;
         int m_currentNodeSpeed = 0;        
         std::thread m_excitementThread;
+
         void addActorSink(RE::Actor* a_actor);
         void removeActorSink(RE::Actor* a_actor);
     };

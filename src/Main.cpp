@@ -10,6 +10,7 @@
 #include "SKEE.h"
 #include "Serial/Manager.h"
 #include "Trait/TraitTable.h"
+#include "Util/CompatibilityTable.h"
 #include "Util/MCMTable.h"
 
 using namespace RE::BSScript;
@@ -60,6 +61,7 @@ namespace {
             case SKSE::MessagingInterface::kDataLoaded: {
                 Graph::LookupTable::setupForms();
                 Trait::TraitTable::setupForms();
+                Compatibility::CompatibilityTable::setupForms();
                 MCM::MCMTable::setupForms();
                 Furniture::FurnitureTable::setupForms();
             } break;
@@ -111,7 +113,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     Trait::TraitTable::setup();
 
     const auto serial = SKSE::GetSerializationInterface();
-    serial->SetUniqueID(Serialization::kOSA);
+    serial->SetUniqueID(_byteswap_ulong('OST'));
     serial->SetSaveCallback(Serialization::Save);
     serial->SetLoadCallback(Serialization::Load);
     serial->SetRevertCallback(Serialization::Revert);
