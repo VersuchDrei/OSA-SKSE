@@ -19,4 +19,6 @@ namespace ActorUtil {
     void equipItemEx(RE::Actor* actor, RE::TESForm* item, int slotId, bool preventUnequip, bool equipSound);
     void equipItemEx(RE::Actor* actor, RE::TESForm* item, int slotId);
     void equipItemEx(RE::Actor* actor, RE::TESForm* item);
+
+    float getHeelOffset(RE::Actor* actor, RE::TESObjectARMO** heelArmor);
 }

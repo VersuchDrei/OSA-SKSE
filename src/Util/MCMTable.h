@@ -33,7 +33,7 @@ namespace MCM {
         inline static RE::TESGlobal* OStimRemoveWeaponsWithSlot;
         inline static RE::TESGlobal* OStimAnimateRedress;
         inline static RE::TESGlobal* OStimUsePapyrusUndressing;
-        inline static uint32_t undressingMask = 0x8D;
+        inline static uint32_t undressingMask = 0x3D8BC39D;
 
         inline static RE::TESGlobal* maleExcitementMultSetting;
         inline static RE::TESGlobal* femaleExcitementMultSetting;

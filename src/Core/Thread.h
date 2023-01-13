@@ -26,6 +26,8 @@ namespace OStim {
 
         void SetSpeed(int speed) { m_currentNodeSpeed = speed; }
 
+        void free();
+
         virtual RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
 
     private:

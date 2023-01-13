@@ -15,6 +15,8 @@ namespace OStim {
         void UntrackAllThreads();
         bool AnySceneRunning();
 
+        ThreadActor* findActor(RE::Actor* actor);
+
     private:
         using ThreadMap = std::unordered_map<ThreadId, Thread*>;
         std::shared_mutex m_threadMapMtx;

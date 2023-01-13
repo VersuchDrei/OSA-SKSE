@@ -1,10 +1,37 @@
 #include "ThreadActor.h"
 
+#include "Graph/LookupTable.h"
 #include "Util/ActorUtil.h"
 #include "Util/FormUtil.h"
+#include "Util/MCMTable.h"
 
 namespace OStim {
-    ThreadActor::ThreadActor(RE::Actor* actor) : actor{actor} {}
+    ThreadActor::ThreadActor(RE::Actor* actor) : actor{actor} {
+        scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0;
+        isFemale = actor->GetActorBase()->GetSex() == RE::SEX::kFemale;
+        isPlayer = actor == RE::PlayerCharacter::GetSingleton();
+    }
+
+    void ThreadActor::initContinue() {
+        // for some reason the "this" keyword is not properly giving a pointer to this object when used in the constructor
+        // so we do everything that uses pointers in this initContinue method
+        if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
+            auto nioInterface = Graph::LookupTable::getNiTransformInterface();
+            if (nioInterface->HasNodeTransformScale(actor, false, isFemale, "NPC", "RSMPlugin")) {
+                rmHeight = nioInterface->GetNodeTransformScale(actor, false, isFemale, "NPC", "RSMPlugin");
+            }
+        } else {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new GetRmHeightCallbackFunctor(this));
+                auto args = RE::MakeFunctionArguments(std::move(actor), std::move(isFemale));
+                vm->DispatchStaticCall("OSKSE", "GetRmScale", args, callback);
+            }
+        }
+
+        heelOffset = ActorUtil::getHeelOffset(actor, &heelArmor);
+    }
 
     void ThreadActor::undress() {
         if (undressed) {
@@ -28,6 +55,19 @@ namespace OStim {
 
             undressedItems.push_back(armor);
             ActorUtil::unequipItem(actor, obj);
+
+            if (armor == heelArmor) {
+                updateHeelArmor(true);
+            }
+        }
+
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+        if (vm) {
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+            auto args = RE::MakeFunctionArguments();
+            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
+            vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
         }
 
         undressed = true;
@@ -56,20 +96,26 @@ namespace OStim {
             undressedMask |= armorMask;
             undressedItems.push_back(armor);
             ActorUtil::unequipItem(actor, obj);
+
+            if (armor == heelArmor) {
+                updateHeelArmor(true);
+            }
+        }
+
+        if ((undressedMask & filteredMask) != 0) {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                auto args = RE::MakeFunctionArguments();
+                auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
+                vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
+            }
         }
 
         // some slots might not have any items equipped in them
         // so to not check them over and over again we add those to the undressedMask
         undressedMask |= mask;
-
-        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-        if (vm) {
-            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-            auto args = RE::MakeFunctionArguments();
-            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
-            vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
-        }
     }
 
     void ThreadActor::removeWeapons() {
@@ -101,6 +147,10 @@ namespace OStim {
 
         for (auto& armor : undressedItems) {
             ActorUtil::equipItemEx(actor, armor);
+
+            if (armor == heelArmor) {
+                updateHeelArmor(false);
+            }
         }
         undressedItems.clear();
         undressedMask = 0;
@@ -116,19 +166,26 @@ namespace OStim {
 
         std::vector<RE::TESObjectARMO*>::iterator it = undressedItems.begin();
         while (it != undressedItems.end()) {
-            uint32_t armorMask = static_cast<uint32_t>((*it)->GetSlotMask());
+            RE::TESObjectARMO* armor = *it;
+            uint32_t armorMask = static_cast<uint32_t>(armor->GetSlotMask());
             if ((armorMask & filteredMask) == 0) {
                 ++it;
             } else {
                 undressedMask &= ~armorMask;
-                ActorUtil::equipItemEx(actor, (*it));
+                ActorUtil::equipItemEx(actor, armor);
+
+                if (armor == heelArmor) {
+                    updateHeelArmor(false);
+                }
+
                 undressedItems.erase(it);
             }
         }
 
+        if ((undressedMask & filteredMask) != filteredMask) {
+            undressed = false;
+        }
         undressedMask &= ~mask;
-
-        undressed = false;
     }
 
     void ThreadActor::addWeapons() {
@@ -147,5 +204,113 @@ namespace OStim {
         }
 
         weaponsRemoved = false;
+    }
+
+    void ThreadActor::changeNode(Graph::Actor* graphActor) {
+        this->graphActor = graphActor;
+
+        checkHeelOffset();
+        scale();
+    }
+
+    void ThreadActor::scale() {
+        if (MCM::MCMTable::isScalingDisabled()) {
+            return;
+        }
+
+        float newScale = graphActor->scale / (actor->GetActorBase()->GetHeight() * rmHeight);
+        if (!heelOffsetRemoved && heelOffset != 0) {
+            newScale *= graphActor->scaleHeight / (graphActor->scaleHeight + heelOffset);
+        }
+
+        // setscale resets 3BA physics, so we don't do it if the actor already has the desired scale
+        if (static_cast<int>(newScale * 100) != actor->GetReferenceRuntimeData().refScale) {
+            ActorUtil::setScale(actor, newScale);
+        }
+    }
+
+    void ThreadActor::checkHeelOffset() {
+        if (heelOffset == 0 || heelArmorRemoved || !graphActor || graphActor->feetOnGround != heelOffsetRemoved) {
+            return;
+        }
+
+        updateHeelOffset(!graphActor->feetOnGround);
+    }
+
+    void ThreadActor::updateHeelOffset(bool remove) {
+        if (heelOffsetRemoved == remove) {
+            return;
+        }
+
+        // the NiTransformInterface has only been added to RaceMenu after the AE update
+        // so for SE we have to invoke Papyrus here :^(
+        if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
+            auto nioInterface = Graph::LookupTable::getNiTransformInterface();
+            if (remove) {
+                // we are adding a second node transform with a different key to counter out the existing one, thereby "removing" the heel offset
+                SKEE::INiTransformInterface::Position offset{};
+                offset.z = -heelOffset;
+                nioInterface->AddNodeTransformPosition(actor, false, isFemale, "NPC", "OStim", offset);
+            } else {
+                nioInterface->RemoveNodeTransformPosition(actor, false, isFemale, "NPC", "OStim");
+            }
+            nioInterface->UpdateNodeTransforms(actor, false, isFemale, "NPC");
+        } else {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                auto args = RE::MakeFunctionArguments(std::move(actor), std::move(heelOffset), std::move(remove), std::move(isFemale));
+                vm->DispatchStaticCall("OSKSE", "UpdateHeelOffset", args, callback);
+            }
+        }
+
+        heelOffsetRemoved = remove;
+    }
+
+    void ThreadActor::updateHeelArmor(bool remove) {
+        if (heelArmorRemoved == remove) {
+            return;
+        }
+
+        heelArmorRemoved = remove;
+
+        if (remove) {
+            if (heelOffsetRemoved) {
+                updateHeelOffset(false);
+            } else {
+                scale();
+            }
+        } else {
+            if (graphActor->feetOnGround) {
+                scale();
+            } else {
+                updateHeelOffset(remove);
+            }
+        }
+    }
+
+    void ThreadActor::free() {
+        if (MCM::MCMTable::animateRedress() && !isPlayer) {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                std::vector<RE::TESForm*> weapons = {rightHand, leftHand, ammo};
+                auto args = RE::MakeFunctionArguments(std::move(actor), std::move(isFemale), std::move(undressedItems), std::move(weapons));
+                vm->DispatchStaticCall("OUndress", "AnimateRedress", args, callback);
+            }
+        } else {
+            redress();
+            addWeapons();
+        }
+        updateHeelOffset(false);
+        ActorUtil::setScale(actor, scaleBefore);
+    }
+
+    void ThreadActor::GetRmHeightCallbackFunctor::setRmHeight(float height) {
+        threadActor->rmHeight = height;
+        float currentScale = threadActor->actor->GetReferenceRuntimeData().refScale / 100.0;
+        ActorUtil::setScale(threadActor->actor, currentScale / height);
     }
 }

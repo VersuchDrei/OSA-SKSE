@@ -20,7 +20,7 @@ namespace MCM {
     }
 
     void MCMTable::resetDefaults() {
-        undressingMask = 0x8D;
+        undressingMask = 0x3D8BC39D;
     }
 
 

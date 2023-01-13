@@ -150,60 +150,6 @@ namespace Graph {
             if (!Trait::TraitTable::areFacialExpressionsBlocked(reActors[i])) {
                 updateFacialExpressions(i, reActors[i]);
             }
-
-            // scaling
-            if (!MCM::MCMTable::isScalingDisabled()) {
-                float newScale = actors[i]->scale / (reActors[i]->GetActorBase()->GetHeight() * rmheights[i]);
-                if (actors[i]->feetOnGround && offsets[i] != 0) {
-                    newScale *= actors[i]->scaleHeight / (actors[i]->scaleHeight + offsets[i]);
-                }
-
-                // setscale resets 3BA physics, so we don't do it if the actor already has the desired scale
-                if (static_cast<int>(newScale * 100) != reActors[i]->GetReferenceRuntimeData().refScale) {
-                    ActorUtil::setScale(reActors[i], newScale);
-                }
-            }
-            
-
-            // heel offsets
-            if (offsets[i] != 0) {
-                // the NiTransformInterface has only been added to RaceMenu after the AE update
-                // so for SE we have to invoke Papyrus here :^(
-                if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
-                    bool isFemale = reActors[i]->GetActorBase()->GetSex() == RE::SEX::kFemale;
-                    auto nioInterface = Graph::LookupTable::getNiTransformInterface();
-                    bool hasOffset = nioInterface->HasNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal");
-                    if (actors[i]->feetOnGround) {
-                        if (hasOffset) {
-                            auto offset = nioInterface->GetNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal");
-                            if (offset.z == 0) {
-                                offset.z = offsets[i];
-                            nioInterface->AddNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal", offset);
-                            nioInterface->UpdateNodeTransforms(reActors[i], false, isFemale, "NPC");
-                            }
-                        } else {
-                            SKEE::INiTransformInterface::Position offset{};
-                            offset.z = offsets[i];
-                            nioInterface->AddNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal", offset);
-                            nioInterface->UpdateNodeTransforms(reActors[i], false, isFemale, "NPC");
-                        }
-                    } else {
-                        if (hasOffset) {
-                            nioInterface->RemoveNodeTransformPosition(reActors[i], false, isFemale, "NPC", "internal");
-                            nioInterface->UpdateNodeTransforms(reActors[i], false, isFemale, "NPC");
-                        }
-                    }
-                } else {
-                    const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-                    auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-                    if (vm) {
-                        RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                        float height = actors[i]->scaleHeight;
-                        auto args = RE::MakeFunctionArguments(std::move(reActors[i]), std::move(actors[i]->feetOnGround), std::move(offsets[i]));
-                        vm->DispatchStaticCall("OSANative", "CheckOffset", args, callback);
-                    }
-                }
-            }
         }
     }
 

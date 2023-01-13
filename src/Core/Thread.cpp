@@ -12,6 +12,7 @@ namespace OStim {
             addActorSink(a_actors[i]);
             m_actors.insert(std::make_pair(i, ThreadActor(a_actors[i])));
             ThreadActor* actor = GetActor(i);
+            actor->initContinue();
             if (MCM::MCMTable::undressAtStart()) {
                 actor->undress();
             }
@@ -24,14 +25,13 @@ namespace OStim {
     Thread::~Thread() {
         for (auto& actorIt : m_actors) {
             removeActorSink(actorIt.second.getActor());
-            actorIt.second.redress();
-            actorIt.second.addWeapons();
         }
     }
 
     void Thread::ChangeNode(Graph::Node* a_node) {
         std::unique_lock<std::shared_mutex> writeLock;
         m_currentNode = a_node;
+
         for (auto& actorIt : m_actors) {
             // --- excitement calculation --- //
             float excitementInc = 0;
@@ -81,7 +81,7 @@ namespace OStim {
 
             actorIt.second.nodeExcitementTick = excitementInc;
 
-            
+
             // --- undressing --- //
             if (MCM::MCMTable::undressMidScene() && m_currentNode->hasActionTag("sexual")) {
                 actorIt.second.undress();
@@ -101,7 +101,11 @@ namespace OStim {
                     }
                 }
             }
-            
+
+            // --- scaling / heel offsets --- //
+            if (actorIt.first < m_currentNode->actors.size()) {
+                actorIt.second.changeNode(m_currentNode->actors[actorIt.first]);
+            }
         }
 
         auto messaging = SKSE::GetMessagingInterface();
@@ -116,6 +120,7 @@ namespace OStim {
         addActorSink(a_actor);
         m_actors.insert(std::make_pair(2, ThreadActor(a_actor)));
         ThreadActor* actor = GetActor(2);
+        actor->initContinue();
         if (MCM::MCMTable::undressAtStart()) {
             actor->undress();
         }
@@ -127,8 +132,7 @@ namespace OStim {
     void Thread::RemoveThirdActor() {
         ThreadActor* actor = GetActor(2);
         removeActorSink(actor->getActor());
-        actor->redress();
-        actor->addWeapons();
+        actor->free();
 
         m_actors.erase(2);
     }
@@ -180,6 +184,12 @@ namespace OStim {
             if (i.first == a_position) return &i.second;
         }
         return nullptr;
+    }
+
+    void Thread::free() {
+        for (auto& actorIt : m_actors) {
+            actorIt.second.free();
+        }
     }
 
     void Thread::addActorSink(RE::Actor* a_actor) {
