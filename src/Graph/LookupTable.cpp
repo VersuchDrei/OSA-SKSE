@@ -13,6 +13,9 @@ namespace Graph {
     void LookupTable::setupForms() {
         auto handler = RE::TESDataHandler::GetSingleton();
         OSexIntegrationMainQuest = handler->LookupForm<RE::TESQuest>(0x801, "OStim.esp");
+        OStimNoStrip = handler->LookupForm<RE::BGSKeyword>(0xDB1, "OStim.esp");
+
+        noStripKeywords.push_back(OStimNoStrip);
     }
 
     void LookupTable::addNode(Node* node) {
@@ -134,7 +137,7 @@ namespace Graph {
 
         if (json.contains("strippingSlots")) {
             for (auto& slot : json["strippingSlots"]) {
-                actor.strippingSlots.push_back(slot.get<int>());
+                actor.strippingMask |= 1 << (slot.get<int>() - 30);
             }
         }
 
@@ -178,6 +181,13 @@ namespace Graph {
                 Graph::ActionActor performer;
                 parseActor(json["performer"], performer);
                 attr.performer = performer;
+            }
+            if (json.contains("tags")) {
+                for (auto& tag : json["tags"]) {
+                    std::string tagStr = tag.get<std::string>();
+                    StringUtil::toLower(&tagStr);
+                    attr.tags.push_back(tagStr);
+                }
             }
             actions.insert(std::make_pair(filename, attr));
         });

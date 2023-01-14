@@ -9,6 +9,7 @@
 #include "Papyrus/PapyrusActor.h"
 #include "Papyrus/PapyrusCamera.h"
 #include "Papyrus/PapyrusControl.h"
+#include "Papyrus/PapyrusData.h"
 #include "Papyrus/PapyrusDatabase.h"
 #include "Papyrus/PapyrusFace.h"
 #include "Papyrus/PapyrusFurniture.h"
@@ -16,6 +17,9 @@
 #include "Papyrus/PapyrusMetadata.h"
 #include "Papyrus/PapyrusObject.h"
 #include "Papyrus/PapyrusScenes.h"
+#include "Papyrus/PapyrusThread.h"
+#include "Papyrus/PapyrusThreadActor.h"
+#include "Papyrus/PapyrusUndress.h"
 #include "Papyrus/PapyrusUtil.h"
 #undef BIND
 
@@ -32,10 +36,14 @@ namespace Papyrus {
             papyrus->Register(PapyrusUtil::Bind);
 
             // new stuff
+            papyrus->Register(PapyrusData::Bind);
             papyrus->Register(PapyrusFurniture::Bind);
             papyrus->Register(PapyrusLibrary::Bind);
             papyrus->Register(PapyrusMetadata::Bind);
             papyrus->Register(PapyrusScenes::Bind);
+            papyrus->Register(PapyrusThread::Bind);
+            papyrus->Register(PapyrusThreadActor::Bind);
+            papyrus->Register(PapyrusUndress::Bind);
         }
     }
 

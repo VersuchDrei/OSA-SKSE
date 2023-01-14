@@ -13,18 +13,20 @@ namespace OStim {
         ~Thread();
         
         void ChangeNode(Graph::Node* a_node);
+        Graph::Node* getCurrentNode();
 
         void AddThirdActor(RE::Actor* a_actor);
-
         void RemoveThirdActor();
 
         void CalculateExcitement();
 
         ThreadActor* GetActor(RE::Actor* a_actor);
-
         ThreadActor* GetActor(int a_position);
+        int getActorPosition(RE::Actor* actor);
 
         void SetSpeed(int speed) { m_currentNodeSpeed = speed; }
+
+        void free();
 
         virtual RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
 
@@ -35,6 +37,7 @@ namespace OStim {
         Graph::Node* m_currentNode = nullptr;
         int m_currentNodeSpeed = 0;        
         std::thread m_excitementThread;
+
         void addActorSink(RE::Actor* a_actor);
         void removeActorSink(RE::Actor* a_actor);
     };

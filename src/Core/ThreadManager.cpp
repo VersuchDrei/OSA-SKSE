@@ -44,6 +44,7 @@ namespace OStim {
         std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
         auto it = m_threadMap.find(a_id);
         if (it != m_threadMap.end()) {
+            it->second->free();
             delete it->second;
             m_threadMap.erase(a_id);
             auto log = RE::ConsoleLog::GetSingleton();
@@ -53,7 +54,28 @@ namespace OStim {
         }
     }
 
+    void ThreadManager::UntrackAllThreads() {
+        // this is a force close due to the user loading another save
+        // so no need to free actors etc. here
+        std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
+        for (auto& entry : m_threadMap) {
+            delete entry.second;
+        }
+        m_threadMap.clear();
+    }
+
     bool ThreadManager::AnySceneRunning() {
         return m_threadMap.size() > 0;
+    }
+
+    ThreadActor* ThreadManager::findActor(RE::Actor* actor) {
+        for (auto&[id, thread] : m_threadMap) {
+            ThreadActor* threadActor = thread->GetActor(actor);
+            if (threadActor) {
+                return threadActor;
+            }
+        }
+
+        return nullptr;
     }
 }  // namespace OStim

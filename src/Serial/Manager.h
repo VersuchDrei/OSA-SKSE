@@ -1,7 +1,7 @@
 #pragma once
 
 namespace Serialization {
-    enum : uint32_t { kSerializationVersion = 0, kOSA = 'OSA_' };
+    inline std::mutex _lock;
 
     void Save(SKSE::SerializationInterface* a_intfc);
     void Load(SKSE::SerializationInterface* a_intfc);

@@ -6,15 +6,6 @@
 #include "Trait/FacialExpression.h"
 
 namespace Graph {
-    struct Action {
-    public:
-        std::string type;
-        ActionAttributes* attributes;
-        int actor;
-        int target;
-        int performer;
-    };
-
     struct XmlEvent {
     public:
         std::string type;
@@ -67,6 +58,8 @@ namespace Graph {
         void updateFacialExpressions(int position, RE::Actor* actor);
         float playExpressionEvent(int position, RE::Actor* actor, std::string eventName);
 
+        uint32_t getStrippingMask(int index);
+
         std::string getAutoTransitionForActor(int position, std::string type);
 
         bool hasActorTag(int position, std::string tag);
@@ -76,6 +69,8 @@ namespace Graph {
 
         int findAction(std::function<bool(Action*)> condition);
         std::vector<int> findActions(std::function<bool(Action*)> condition);
+
+        bool hasActionTag(std::string tag);
 
         int findAction(std::string type);
         int findAnyAction(std::vector<std::string> types);
