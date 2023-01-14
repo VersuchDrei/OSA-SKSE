@@ -17,7 +17,9 @@
 #include "Papyrus/PapyrusMetadata.h"
 #include "Papyrus/PapyrusObject.h"
 #include "Papyrus/PapyrusScenes.h"
+#include "Papyrus/PapyrusThread.h"
 #include "Papyrus/PapyrusThreadActor.h"
+#include "Papyrus/PapyrusUndress.h"
 #include "Papyrus/PapyrusUtil.h"
 #undef BIND
 
@@ -39,7 +41,9 @@ namespace Papyrus {
             papyrus->Register(PapyrusLibrary::Bind);
             papyrus->Register(PapyrusMetadata::Bind);
             papyrus->Register(PapyrusScenes::Bind);
+            papyrus->Register(PapyrusThread::Bind);
             papyrus->Register(PapyrusThreadActor::Bind);
+            papyrus->Register(PapyrusUndress::Bind);
         }
     }
 

@@ -4,9 +4,10 @@
 #include "Util/ActorUtil.h"
 #include "Util/FormUtil.h"
 #include "Util/MCMTable.h"
+#include "Util/VectorUtil.h"
 
 namespace OStim {
-    ThreadActor::ThreadActor(RE::Actor* actor) : actor{actor} {
+    ThreadActor::ThreadActor(int threadId, RE::Actor* actor) : threadId{threadId}, actor{actor} {
         scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0;
         isFemale = actor->GetActorBase()->GetSex() == RE::SEX::kFemale;
         isPlayer = actor == RE::PlayerCharacter::GetSingleton();
@@ -34,6 +35,17 @@ namespace OStim {
     }
 
     void ThreadActor::undress() {
+        if (MCM::MCMTable::usePapyrusUndressing()) {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new PapyrusUndressCallbackFunctor(this, false));
+                auto args = RE::MakeFunctionArguments(std::move(threadId), std::move(actor));
+                vm->DispatchStaticCall("OUndress", "Undress", args, callback);
+            }
+            return;
+        }
+
         if (undressed) {
             return;
         }
@@ -74,6 +86,17 @@ namespace OStim {
     }
 
     void ThreadActor::undressPartial(uint32_t mask) {
+        if (MCM::MCMTable::usePapyrusUndressing()) {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new PapyrusUndressCallbackFunctor(this, false));
+                auto args = RE::MakeFunctionArguments(std::move(threadId), std::move(actor), std::move(mask));
+                vm->DispatchStaticCall("OUndress", "UndressPartial", args, callback);
+            }
+            return;
+        }
+
         uint32_t filteredMask = (~undressedMask) & mask;
         if (filteredMask == 0) {
             return;
@@ -141,6 +164,17 @@ namespace OStim {
     }
 
     void ThreadActor::redress() {
+        if (MCM::MCMTable::usePapyrusUndressing()) {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new PapyrusUndressCallbackFunctor(this, true));
+                auto args = RE::MakeFunctionArguments(std::move(threadId), std::move(actor), std::move(undressedItems));
+                vm->DispatchStaticCall("OUndress", "Redress", args, callback);
+            }
+            return;
+        }
+
         if (undressedMask == 0) {
             return;
         }
@@ -159,6 +193,17 @@ namespace OStim {
     }
 
     void ThreadActor::redressPartial(uint32_t mask) {
+        if (MCM::MCMTable::usePapyrusUndressing()) {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new PapyrusUndressCallbackFunctor(this, true));
+                auto args = RE::MakeFunctionArguments(std::move(threadId), std::move(actor), std::move(undressedItems), std::move(mask));
+                vm->DispatchStaticCall("OUndress", "RedressPartial", args, callback);
+            }
+            return;
+        }
+
         uint32_t filteredMask = undressedMask & mask;
         if (filteredMask == 0) {
             return;
@@ -301,11 +346,44 @@ namespace OStim {
                 vm->DispatchStaticCall("OUndress", "AnimateRedress", args, callback);
             }
         } else {
-            redress();
+            if (MCM::MCMTable::usePapyrusUndressing()) {
+                // this object will be destroyed before papyrus redressing is done
+                // so for this case we need to invoke Redress without a callback here
+                const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+                auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+                if (vm) {
+                    RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                    auto args = RE::MakeFunctionArguments(std::move(threadId), std::move(actor), std::move(undressedItems));
+                    vm->DispatchStaticCall("OUndress", "Redress", args, callback);
+                }
+            } else {
+                redress();
+            }
             addWeapons();
         }
         updateHeelOffset(false);
         ActorUtil::setScale(actor, scaleBefore);
+    }
+
+    void ThreadActor::papyrusUndressCallback(std::vector<RE::TESObjectARMO*> items) {
+        for (RE::TESObjectARMO* item : items) {
+            if (VectorUtil::contains(undressedItems, item)) {
+                continue;
+            }
+
+            undressedItems.push_back(item);
+            if (item == heelArmor) {
+                updateHeelArmor(true);
+            }
+        }
+    }
+
+    void ThreadActor::papyrusRedressCallback(std::vector<RE::TESObjectARMO*> items) {
+        if (VectorUtil::contains(items, heelArmor) && VectorUtil::contains(undressedItems, heelArmor)) {
+            updateHeelArmor(false);
+        }
+
+        std::erase_if(undressedItems, [items](RE::TESObjectARMO* item){return VectorUtil::contains(items, item);});
     }
 
     void ThreadActor::GetRmHeightCallbackFunctor::setRmHeight(float height) {

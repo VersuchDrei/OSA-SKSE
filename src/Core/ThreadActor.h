@@ -5,7 +5,7 @@
 namespace OStim {
 	class ThreadActor {
 	public:
-		ThreadActor(RE::Actor* actor);
+        ThreadActor(int threadId, RE::Actor* actor);
         void initContinue();
 
 		float excitement = 0;
@@ -49,6 +49,43 @@ namespace OStim {
             ThreadActor* threadActor;
         };
 
+        class PapyrusUndressCallbackFunctor : public RE::BSScript::IStackCallbackFunctor {
+        public:
+            PapyrusUndressCallbackFunctor(ThreadActor* threadActor, bool isRedress) : threadActor{threadActor}, isRedress{isRedress} {}
+
+            virtual inline void operator()(RE::BSScript::Variable a_result) override {
+                if (a_result.IsNoneObject()) {
+                    logger::info("result is none");
+                } else if (a_result.IsNoneArray()) {
+                    logger::info("result is none array");
+                } else if (a_result.IsObjectArray()) {
+                    auto items = a_result.GetArray().get();
+                    std::vector<RE::TESObjectARMO*> armors;
+                    for (int i = 0; i < items->size(); i++) {
+                        RE::BSScript::Variable item = items->operator[](i);
+                        if (item.IsObject()) {
+                            auto armor = item.Unpack<RE::TESObjectARMO*>();
+                            armors.push_back(armor);
+                        }
+                    }
+                    if (isRedress) {
+                        threadActor->papyrusRedressCallback(armors);
+                    } else {
+                        threadActor->papyrusUndressCallback(armors);
+                    }
+                } else {
+                    logger::info("result is not an object array");
+                }
+            }
+
+            virtual inline void SetObject(const RE::BSTSmartPointer<RE::BSScript::Object>& a_object){};
+
+        private:
+            ThreadActor* threadActor;
+            bool isRedress;
+        };
+
+        int threadId;
 		RE::Actor* actor;
         float scaleBefore = 1;
         bool isPlayer;
@@ -74,5 +111,8 @@ namespace OStim {
         void checkHeelOffset();
         void updateHeelOffset(bool remove);
         void updateHeelArmor(bool remove);
+
+        void papyrusUndressCallback(std::vector<RE::TESObjectARMO*> items);
+        void papyrusRedressCallback(std::vector<RE::TESObjectARMO*> items);
 	};	
 }

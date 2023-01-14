@@ -13,16 +13,16 @@ namespace OStim {
         ~Thread();
         
         void ChangeNode(Graph::Node* a_node);
+        Graph::Node* getCurrentNode();
 
         void AddThirdActor(RE::Actor* a_actor);
-
         void RemoveThirdActor();
 
         void CalculateExcitement();
 
         ThreadActor* GetActor(RE::Actor* a_actor);
-
         ThreadActor* GetActor(int a_position);
+        int getActorPosition(RE::Actor* actor);
 
         void SetSpeed(int speed) { m_currentNodeSpeed = speed; }
 

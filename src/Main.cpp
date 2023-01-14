@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+#include "Events/EventListener.h"
 #include "Furniture/FurnitureTable.h"
 #include "Game/Patch.h"
 #include "Graph/LookupTable.h"
@@ -53,6 +54,8 @@ namespace {
     void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {        
         switch (a_msg->type) {
             case SKSE::MessagingInterface::kPostLoad: {
+                RE::ScriptEventSourceHolder::GetSingleton()->AddEventSink(Events::EventListener::GetSingleton());
+
                 auto message = SKSE::GetMessagingInterface();
                 if (message) {
                     message->RegisterListener(nullptr, UnspecificedSenderMessageHandler);

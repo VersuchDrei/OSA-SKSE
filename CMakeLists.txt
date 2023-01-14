@@ -29,6 +29,7 @@ set(sources
     src/Core/ThreadActor.cpp
     src/Core/ThreadManager.cpp
     src/Core/ThreadManager.h
+    src/Events/EventListener.cpp
     src/Furniture/Furniture.cpp
     src/Furniture/FurnitureTable.cpp
     src/Game/LocaleManager.cpp

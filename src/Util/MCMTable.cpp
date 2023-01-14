@@ -21,6 +21,7 @@ namespace MCM {
 
     void MCMTable::resetDefaults() {
         undressingMask = 0x3D8BC39D;
+        doPapyrusUndressing = false;
     }
 
 
@@ -59,16 +60,22 @@ namespace MCM {
         return OStimAnimateRedress->value != 0;
     }
 
-    bool MCMTable::usePapyrusUndressing() {
-        return OStimUsePapyrusUndressing->value != 0;
-    }
-
     uint32_t MCMTable::getUndressingMask() {
         return undressingMask;
     }
 
     void MCMTable::setUndressingMask(uint32_t mask) {
         undressingMask = mask;
+    }
+
+    void MCMTable::setPapyusUndressing(bool doPapyrus) {
+        doPapyrusUndressing = doPapyrus;
+        OStimUsePapyrusUndressing->value = doPapyrus ? 1 : 0;
+        logger::info("papyrus undressing {}", doPapyrus ? "enabled" : "disabled");
+    }
+
+    bool MCMTable::usePapyrusUndressing() {
+        return doPapyrusUndressing;
     }
 
 

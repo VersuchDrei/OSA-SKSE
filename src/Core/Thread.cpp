@@ -10,7 +10,7 @@ namespace OStim {
         m_threadId = a_id;
         for (int i = 0; i < a_actors.size(); i++) {
             addActorSink(a_actors[i]);
-            m_actors.insert(std::make_pair(i, ThreadActor(a_actors[i])));
+            m_actors.insert(std::make_pair(i, ThreadActor(a_id, a_actors[i])));
             ThreadActor* actor = GetActor(i);
             actor->initContinue();
             if (MCM::MCMTable::undressAtStart()) {
@@ -116,9 +116,13 @@ namespace OStim {
         Messaging::MessagingRegistry::GetSingleton()->SendMessageToListeners(msg);
     }
 
+    Graph::Node* Thread::getCurrentNode() {
+        return m_currentNode;
+    }
+
     void Thread::AddThirdActor(RE::Actor* a_actor) {
         addActorSink(a_actor);
-        m_actors.insert(std::make_pair(2, ThreadActor(a_actor)));
+        m_actors.insert(std::make_pair(2, ThreadActor(m_threadId, a_actor)));
         ThreadActor* actor = GetActor(2);
         actor->initContinue();
         if (MCM::MCMTable::undressAtStart()) {
@@ -184,6 +188,13 @@ namespace OStim {
             if (i.first == a_position) return &i.second;
         }
         return nullptr;
+    }
+
+    int Thread::getActorPosition(RE::Actor* actor) {
+        for (auto& i : m_actors) {
+            if (i.second.getActor() == actor) return i.first;
+        }
+        return -1;
     }
 
     void Thread::free() {
