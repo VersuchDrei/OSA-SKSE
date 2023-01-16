@@ -38,6 +38,12 @@ namespace ActorUtil {
                 auto& data = weightModel->objects[i];
                 if (data.partClone) {
                     RE::TESForm* bipedArmor = data.item;
+
+                    // some, but not all, weapon meshes CTD if you check them for "HH_OFFSET", so we skip those
+                    if (bipedArmor->formType == RE::TESObjectWEAP::FORMTYPE || bipedArmor->formType == RE::TESAmmo::FORMTYPE){
+                        continue;
+                    }
+
                     RE::NiAVObject* object = data.partClone.get();
                     
                     if (!touched.count(object)) {

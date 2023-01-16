@@ -144,7 +144,9 @@ namespace OStim {
     void Thread::CalculateExcitement() {
         std::shared_lock<std::shared_mutex> readLock;
         // TODO: Can remove this when we start scenes in c++ with a starting node
-        if (!m_currentNode) return;
+        if (!m_currentNode) {
+            return;
+        }
 
         for (auto& actorIt : m_actors) {
             auto speedMod = (m_currentNodeSpeed - ceil((((m_currentNode->maxspeed - m_currentNode->minspeed) + 1) / 2))) * 0.2;
@@ -258,6 +260,14 @@ namespace OStim {
             GetActor(actor)->undress();
         } else if (tag == "OStimRedress") {
             GetActor(actor)->redress();
+        } else if (tag == "OStimUndressPartial") {
+            std::string payload = a_event->payload.c_str();
+            int mask = std::stoi(payload, nullptr, 16);
+            GetActor(actor)->undressPartial(mask);
+        } else if (tag == "OStimRedressPartial"){
+            std::string payload = a_event->payload.c_str();
+            int mask = std::stoi(payload, nullptr, 16);
+            GetActor(actor)->redressPartial(mask);
         } else if (tag == "OStimRemoveWeapons") {
             GetActor(actor)->removeWeapons();
         } else if (tag == "OStimAddWeapons"){

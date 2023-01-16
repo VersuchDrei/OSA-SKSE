@@ -71,7 +71,7 @@ namespace MCM {
     void MCMTable::setPapyusUndressing(bool doPapyrus) {
         doPapyrusUndressing = doPapyrus;
         OStimUsePapyrusUndressing->value = doPapyrus ? 1 : 0;
-        logger::info("papyrus undressing {}", doPapyrus ? "enabled" : "disabled");
+        logger::info("papyrus undressing is {}", doPapyrus ? "enabled" : "disabled");
     }
 
     bool MCMTable::usePapyrusUndressing() {

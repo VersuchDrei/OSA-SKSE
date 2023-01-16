@@ -8,14 +8,14 @@ namespace OStim {
             auto previousTime = calendar->GetCurrentGameTime();
             while (true) {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
-                auto currentTime = calendar->GetCurrentGameTime();                
+                auto currentTime = calendar->GetCurrentGameTime(); 
                 if (previousTime < currentTime) {
                     std::shared_lock<std::shared_mutex> lock(m_threadMapMtx);
                     for (auto& it : m_threadMap) {
                         it.second->CalculateExcitement();
-                    }                    
-                    previousTime = currentTime;
+                    }
                 }
+                previousTime = currentTime;
             }
         });
         m_excitementThread.detach();
