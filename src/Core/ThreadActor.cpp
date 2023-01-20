@@ -264,7 +264,7 @@ namespace OStim {
         }
 
         float newScale = graphActor->scale / (actor->GetActorBase()->GetHeight() * rmHeight);
-        if (!heelOffsetRemoved && heelOffset != 0) {
+        if (!heelArmorRemoved && !heelOffsetRemoved && heelOffset != 0) {
             newScale *= graphActor->scaleHeight / (graphActor->scaleHeight + heelOffset);
         }
 

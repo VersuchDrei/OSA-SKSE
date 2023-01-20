@@ -56,7 +56,7 @@ namespace ActorUtil {
                                     if (hh_offset) {
                                         if (bipedArmor->formType == RE::TESObjectARMO::FORMTYPE) {
                                             RE::TESObjectARMO* armor = bipedArmor->As<RE::TESObjectARMO>();
-                                            heelArmor = &armor;
+                                            *heelArmor = armor;
                                         }
                                         return hh_offset->value;
                                     }

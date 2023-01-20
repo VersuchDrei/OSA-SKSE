@@ -60,6 +60,15 @@ namespace PapyrusMetadata {
         return 0;
     }
 
+    std::string GetAnimationId(RE::StaticFunctionTag*, std::string id, int index) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (node->anim_ids.size() > index) {
+                return node->anim_ids[index];
+            }
+        }
+        return "";
+    }
+
     std::string GetAutoTransitionForActor(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return node->getAutoTransitionForActor(position, type);
@@ -823,6 +832,7 @@ namespace PapyrusMetadata {
         BIND(IsTransition);
         BIND(GetMaxSpeed);
         BIND(GetActorCount);
+        BIND(GetAnimationId);
         BIND(GetAutoTransitionForActor);
 
         BIND(GetSceneTags);
