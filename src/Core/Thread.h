@@ -18,13 +18,13 @@ namespace OStim {
         void AddThirdActor(RE::Actor* a_actor);
         void RemoveThirdActor();
 
-        void CalculateExcitement();
+        void loop();
 
         ThreadActor* GetActor(RE::Actor* a_actor);
         ThreadActor* GetActor(int a_position);
         int getActorPosition(RE::Actor* actor);
 
-        void SetSpeed(int speed) { m_currentNodeSpeed = speed; }
+        void SetSpeed(int speed);
 
         void free();
 

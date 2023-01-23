@@ -24,6 +24,8 @@ namespace OStim {
 
         void changeNode(Graph::Actor* graphActor);
 
+        void loop();
+
         void free();
 
     private:

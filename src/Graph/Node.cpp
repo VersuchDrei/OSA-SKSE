@@ -141,11 +141,6 @@ namespace Graph {
     void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> rmheights, std::vector<float> offsets) {
         int count = std::min(actors.size(), reActors.size());
         for (int i = 0; i < count; i++) {
-            // penis bending
-            if (!MCM::MCMTable::isSchlongBendingDisabled()) {
-                reActors[i]->NotifyAnimationGraph("SOSBend" + std::to_string(actors[i]->penisAngle));
-            }
-
             // expressions
             if (!Trait::TraitTable::areFacialExpressionsBlocked(reActors[i])) {
                 updateFacialExpressions(i, reActors[i]);

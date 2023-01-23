@@ -20,8 +20,8 @@ namespace Graph {
 
     void LookupTable::addNode(Node* node) {
         nodes.insert({node->lowercase_id, node});
-        for (std::string anim : node->anim_ids) {
-            animationNodeTable.insert({anim, node});
+        for (Graph::Speed speed : node->speeds) {
+            animationNodeTable.insert({speed.animation, node});
         }
 
         std::unordered_map<int, std::vector<Node*>*>* innerMap;

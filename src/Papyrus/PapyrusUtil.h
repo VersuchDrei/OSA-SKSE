@@ -113,7 +113,11 @@ namespace PapyrusUtil {
 
     int GetSpeedFromAnimId(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeByAnimation(id)) {
-            return VectorUtil::getIndex(node->anim_ids, id);;
+            for (int i = 0; i < node->speeds.size(); i++) {
+                if (node->speeds[i].animation == id) {
+                    return i;
+                }
+            }
         }
 
         return -1;

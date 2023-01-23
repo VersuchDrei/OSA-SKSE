@@ -1,5 +1,7 @@
 #include "Core/ThreadManager.h"
 
+#include "Util/Globals.h"
+
 namespace OStim {
 
     ThreadManager::ThreadManager() {
@@ -7,12 +9,12 @@ namespace OStim {
             auto calendar = RE::Calendar::GetSingleton();
             auto previousTime = calendar->GetCurrentGameTime();
             while (true) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                std::this_thread::sleep_for(std::chrono::milliseconds(Globals::LOOP_TIME));
                 auto currentTime = calendar->GetCurrentGameTime(); 
                 if (previousTime < currentTime) {
                     std::shared_lock<std::shared_mutex> lock(m_threadMapMtx);
                     for (auto& it : m_threadMap) {
-                        it.second->CalculateExcitement();
+                        it.second->loop();
                     }
                 }
                 previousTime = currentTime;

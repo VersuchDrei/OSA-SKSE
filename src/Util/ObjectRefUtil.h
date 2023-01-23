@@ -17,5 +17,4 @@ namespace ObjectRefUtil {
         REL::Relocation<func_t> func{RELOCATION_ID(55706, 56237)};
         func(vm, stackID, object, afX, afY, afZ, afAngleX, afAngleY, afAngleZ, afSpeed, afMaxRotationSpeed);
     }
-
 }

@@ -141,7 +141,7 @@ namespace OStim {
         m_actors.erase(2);
     }
 
-    void Thread::CalculateExcitement() {
+    void Thread::loop() {
         std::shared_lock<std::shared_mutex> readLock;
         // TODO: Can remove this when we start scenes in c++ with a starting node
         if (!m_currentNode) {
@@ -149,7 +149,7 @@ namespace OStim {
         }
 
         for (auto& actorIt : m_actors) {
-            auto speedMod = (m_currentNodeSpeed - ceil((((m_currentNode->maxspeed - m_currentNode->minspeed) + 1) / 2))) * 0.2;
+            auto speedMod = (m_currentNodeSpeed - ceil(m_currentNode->speeds.size() / 2)) * 0.2;
             auto& actorRef = actorIt.second;
             auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
             auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc;
@@ -175,6 +175,8 @@ namespace OStim {
                     actorRef.excitement += finalExcitementInc;
                 }
             }
+
+            actorRef.loop();
         }
     }
 
@@ -197,6 +199,17 @@ namespace OStim {
             if (i.second.getActor() == actor) return i.first;
         }
         return -1;
+    }
+
+    void Thread::SetSpeed(int speed) {
+        m_currentNodeSpeed = speed;
+        if (m_currentNode && m_currentNode->speeds.size() > speed) {
+            for (auto& actorIt : m_actors) {
+                RE::Actor* actor = actorIt.second.getActor();
+                actor->SetGraphVariableFloat("OStimSpeed", m_currentNode->speeds[speed].playbackSpeed);
+                actor->NotifyAnimationGraph(m_currentNode->speeds[speed].animation + "_" + std::to_string(actorIt.first));
+            }
+        }
     }
 
     void Thread::free() {
@@ -273,28 +286,7 @@ namespace OStim {
         } else if (tag == "OStimAddWeapons"){
             GetActor(actor)->addWeapons();
         } else if (tag == "OStimEvent") {
-            std::string indexStr = a_event->payload.c_str();
-            int index = std::stoi(indexStr);
-            if (index >= 0 && index < m_currentNode->xmlEvents.size()) {
-                Graph::XmlEvent* xmlEvent = m_currentNode->xmlEvents[index];
-                RE::Actor* actor;
-                RE::Actor* target;
-                RE::Actor* performer;
-
-                for (auto& i : m_actors) {
-                    if (i.first == xmlEvent->actor) {
-                        actor = i.second.getActor();
-                    }
-                    if (i.first == xmlEvent->target) {
-                        target = i.second.getActor();
-                    }
-                    if (i.first == xmlEvent->performer) {
-                        performer = i.second.getActor();
-                    }
-                }
-
-                //TODO: send in papyrus
-            }
+            
         }
 
         return RE::BSEventNotifyControl::kContinue;

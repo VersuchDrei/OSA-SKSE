@@ -112,8 +112,8 @@ SKSEPluginLoad(const LoadInterface* skse) {
     Patch::Install();
     Papyrus::Bind();
     Graph::LookupTable::SetupActions();
-    Papyrus::Build();
     Trait::TraitTable::setup();
+    Papyrus::Build();
 
     const auto serial = SKSE::GetSerializationInterface();
     serial->SetUniqueID(_byteswap_ulong('OST'));

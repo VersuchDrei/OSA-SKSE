@@ -3,7 +3,9 @@
 #include "Graph/LookupTable.h"
 #include "Util/ActorUtil.h"
 #include "Util/FormUtil.h"
+#include "Util/Globals.h"
 #include "Util/MCMTable.h"
+#include "Util/ObjectRefUtil.h"
 #include "Util/VectorUtil.h"
 
 namespace OStim {
@@ -253,9 +255,25 @@ namespace OStim {
 
     void ThreadActor::changeNode(Graph::Actor* graphActor) {
         this->graphActor = graphActor;
+        if (!MCM::MCMTable::isSchlongBendingDisabled()) {
+            actor->NotifyAnimationGraph("SOSBend" + std::to_string(graphActor->penisAngle));
+        }
 
         checkHeelOffset();
         scale();
+    }
+
+    void ThreadActor::loop() {
+        if (graphActor) {
+            if (!MCM::MCMTable::isSchlongBendingDisabled()) {
+                // calling NotifyAnimationGraph directly here causes a CTD
+                // probably because you cannot access the animation graph from subthreads
+                // so we queue this action for the main thread
+                RE::Actor* tempActor = actor;
+                int angle = graphActor->penisAngle;
+                SKSE::GetTaskInterface()->AddTask([tempActor, angle]() { tempActor->NotifyAnimationGraph("SOSBend" + std::to_string(angle)); });
+            }
+        }
     }
 
     void ThreadActor::scale() {

@@ -6,12 +6,10 @@
 #include "Trait/FacialExpression.h"
 
 namespace Graph {
-    struct XmlEvent {
+    struct Speed {
     public:
-        std::string type;
-        int actor;
-        int target;
-        int performer;
+        std::string animation;
+        float playbackSpeed = 1.0;
     };
 
     struct Actor {
@@ -34,19 +32,17 @@ namespace Graph {
         std::string lowercase_id;
         uint32_t numActors;
         std::string scene_name;
-        std::vector<std::string> anim_ids;  // this probably needs to be reworked to contain speed info        
+        std::vector<Speed> speeds;
+        uint32_t defaultSpeed = 0;
         bool isTransition = false;
         bool isHub = false;
         bool isAggresive = false;
-        uint32_t minspeed = 0;
-        uint32_t maxspeed = 0;
         bool hasIdleSpeed = false;
         bool noRandomSelection = false;
         Furniture::FurnitureType furnitureType = Furniture::FurnitureType::NONE;
         std::vector<std::string> tags;
         std::vector<Actor*> actors;
         std::vector<Action*> actions;
-        std::vector<XmlEvent*> xmlEvents;
 
         // maybe remove this in a later iteration?
         std::string sourceModule;

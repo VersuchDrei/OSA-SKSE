@@ -46,9 +46,16 @@ namespace PapyrusMetadata {
         return false;
     }
 
+    int GetDefaultSpeed(RE::StaticFunctionTag*, std::string id) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            return node->defaultSpeed;
+        }
+        return 0;
+    }
+
     int GetMaxSpeed(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
-            return node->maxspeed;
+            return node->speeds.size() - 1;
         }
         return 0;
     }
@@ -62,8 +69,8 @@ namespace PapyrusMetadata {
 
     std::string GetAnimationId(RE::StaticFunctionTag*, std::string id, int index) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
-            if (node->anim_ids.size() > index) {
-                return node->anim_ids[index];
+            if (node->speeds.size() > index) {
+                return node->speeds[index].animation;
             }
         }
         return "";
@@ -830,6 +837,7 @@ namespace PapyrusMetadata {
         const auto obj = "OMetadata"sv;
 
         BIND(IsTransition);
+        BIND(GetDefaultSpeed);
         BIND(GetMaxSpeed);
         BIND(GetActorCount);
         BIND(GetAnimationId);

@@ -64,16 +64,6 @@ namespace PapyrusDatabase {
                 if (!is_hub) {
                     if (auto actor = speed.attribute("a")) j_obj["mainActor"] = actor.as_int();
 
-                    if (auto min = speed.attribute("min")) {
-                        j_obj["minspeed"] = min.as_int();
-                        node->minspeed = min.as_int();
-                    }
-
-                    if (auto max = speed.attribute("max")) {
-                        j_obj["maxspeed"] = max.as_int();
-                        node->maxspeed = max.as_int();
-                    }
-
                     j_obj["hasIdleSpeed"] = 0;
                     node->hasIdleSpeed = false;
 
@@ -83,13 +73,18 @@ namespace PapyrusDatabase {
                             if (mtx_str == "^idle"s) {
                                 j_obj["hasIdleSpeed"] = 1;
                                 node->hasIdleSpeed = true;
+                                node->defaultSpeed = 1;
                             }
                         }
 
                         if (auto anim = sp.child("anim")) {
                             if (auto id = anim.attribute("id")) {
                                 j_obj["OAanimids"].push_back(id.value());
-                                node->anim_ids.push_back(id.value());
+                                if (auto playbackSpeed = anim.attribute("playbackSpeed")) {
+                                    node->speeds.push_back({.animation = id.value(), .playbackSpeed = playbackSpeed.as_float()});
+                                } else {
+                                    node->speeds.push_back({.animation = id.value()});
+                                }
                             }
                         }
                             
@@ -113,7 +108,7 @@ namespace PapyrusDatabase {
 
                     if (auto id = anim.attribute("id")) {
                         j_obj["OAanimids"].push_back(id.value());
-                        node->anim_ids.push_back(id.value());
+                        node->speeds.push_back({.animation = id.value()});
                     }
                 }
             }
@@ -133,7 +128,7 @@ namespace PapyrusDatabase {
                     if (auto anim = role.child("animplan").child("anim"))
                         if (auto id = anim.attribute("id")) {
                             j_obj["OAanimids"].push_back(id.value());
-                            node->anim_ids.push_back(id.value());
+                            node->speeds.push_back({.animation = id.value()});
                         }
                 }
             }
@@ -269,36 +264,6 @@ namespace PapyrusDatabase {
                     }
                     actionObj->attributes = Graph::LookupTable::GetActionAttributesByType(actionObj->type);
                     node->actions.push_back(actionObj);
-                }
-            }
-
-            if (auto events = scene.child("events")) {
-                for (auto& xmlEvent : events.children("event")) {
-                    auto type = xmlEvent.attribute("type");
-                    auto actor = xmlEvent.attribute("actor");
-                    if (!type || !actor) {
-                        continue;
-                    }
-
-                    auto eventObj = new Graph::XmlEvent();
-
-                    std::string typeStr = type.as_string();
-                    StringUtil::toLower(&typeStr);
-                    eventObj->type = typeStr;
-                    eventObj->actor = actor.as_int();
-
-                    if (auto target = xmlEvent.attribute("target")) {
-                        eventObj->target = target.as_int();
-                    } else {
-                        eventObj->target = actor.as_int();
-                    }
-
-                    if (auto performer = xmlEvent.attribute("performer")) {
-                        eventObj->performer = performer.as_int();
-                    } else {
-                        eventObj->performer = actor.as_int();
-                    }
-                    node->xmlEvents.push_back(eventObj);
                 }
             }
         }
