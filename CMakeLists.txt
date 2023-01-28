@@ -49,7 +49,6 @@ set(sources
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
     src/Util/ActorUtil.cpp
-    src/Util/CompatibilityTable.cpp
     src/Util/FormUtil.cpp
     src/Util/MCMTable.cpp
     src/Util/ObjectRefUtil.cpp

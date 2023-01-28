@@ -4,9 +4,10 @@
 #include "Util/MCMTable.h"
 
 namespace Events {
-    class EventListener final : public OStim::ISingleton<EventListener>, public RE::BSTEventSink<RE::TESLoadGameEvent> {
+    class EventListener final : public OStim::ISingleton<EventListener>, public RE::BSTEventSink<RE::TESLoadGameEvent>, public RE::BSTEventSink<SKSE::NiNodeUpdateEvent> {
     public:
         virtual RE::BSEventNotifyControl ProcessEvent(const RE::TESLoadGameEvent* a_event, RE::BSTEventSource<RE::TESLoadGameEvent>* a_eventSource) override;
+        virtual RE::BSEventNotifyControl ProcessEvent(const SKSE::NiNodeUpdateEvent* a_event, RE::BSTEventSource<SKSE::NiNodeUpdateEvent>* a_eventSource) override;
 
     private:
         class CheckPapyrusUndressingCallbackFunctor : public RE::BSScript::IStackCallbackFunctor {

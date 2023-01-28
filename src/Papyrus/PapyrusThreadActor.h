@@ -1,9 +1,34 @@
 #pragma once
 
 #include "Core/ThreadManager.h"
+#include "Trait/TraitTable.h"
 
 namespace PapyrusThreadActor {
     using VM = RE::BSScript::IVirtualMachine;
+
+    float PlayExpression(RE::StaticFunctionTag*, RE::Actor* actor, std::string expression) {
+        return 0.5;
+        std::vector<Trait::FacialExpression*>* expressions = Trait::TraitTable::getExpressionsForEvent(expression);
+        if (!expressions) {
+            return -1;
+        }
+
+        Trait::FacialExpression* eventExpression = expressions->at(std::rand() % expressions->size());
+
+        OStim::ThreadActor* threadActor = OStim::ThreadManager::GetSingleton()->findActor(actor);
+        if (threadActor) {
+            threadActor->setEventExpression(eventExpression);
+        }
+
+        return eventExpression->getDuration(actor);
+    }
+    
+    void ClearExpression(RE::StaticFunctionTag*, RE::Actor* actor) {
+        OStim::ThreadActor* threadActor = OStim::ThreadManager::GetSingleton()->findActor(actor);
+        if (threadActor) {
+            threadActor->clearEventExpression();
+        }
+    }
 
     void Undress(RE::StaticFunctionTag*, RE::Actor* actor) {
         OStim::ThreadActor* threadActor = OStim::ThreadManager::GetSingleton()->findActor(actor);
@@ -50,6 +75,8 @@ namespace PapyrusThreadActor {
     bool Bind(VM* a_vm) {
         const auto obj = "OActor"sv;
 
+        BIND(PlayExpression);
+        BIND(ClearExpression);
         BIND(Undress);
         BIND(Redress);
         BIND(UndressPartial);

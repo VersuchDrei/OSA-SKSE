@@ -138,81 +138,42 @@ namespace Graph {
         return findAction([actorPosition, targetPosition, types](Action* action) {return action->actor == actorPosition && action->target == targetPosition && VectorUtil::contains(types, action->type);});
     }
 
-    void Node::updateActors(std::vector<RE::Actor*> reActors, std::vector<float> rmheights, std::vector<float> offsets) {
-        int count = std::min(actors.size(), reActors.size());
-        for (int i = 0; i < count; i++) {
-            // expressions
-            if (!Trait::TraitTable::areFacialExpressionsBlocked(reActors[i])) {
-                updateFacialExpressions(i, reActors[i]);
-            }
-        }
-    }
-
-    void Node::updateFacialExpressions(int position, RE::Actor* actor) {
-        if (Trait::TraitTable::areFacialExpressionsBlocked(actor)) {
-            return;
-        }
-
-        if (position > actors.size()) {
-            if (actors[position]->expressionAction != -1 && actors[position]->expressionAction < actions.size()) {
-                auto& action = actions[actors[position]->expressionAction];
-                if (action->target == position) {
-                    if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
-                        expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
-                        return;
-                    }
-                } else if (action->actor == position) {
-                    if (auto expression = Trait::TraitTable::getExpressionForActionActor(action->type)) {
-                        expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
-                        return;
-                    }
+    std::vector<Trait::FacialExpression*>* Node::getFacialExpressions(int position) {
+        if (actors[position]->expressionAction != -1 && actors[position]->expressionAction < actions.size()) {
+            auto& action = actions[actors[position]->expressionAction];
+            if (action->target == position) {
+                if (auto expressions = Trait::TraitTable::getExpressionsForActionTarget(action->type)) {
+                    return expressions;
+                }
+            } else if (action->actor == position) {
+                if (auto expressions = Trait::TraitTable::getExpressionsForActionActor(action->type)) {
+                    return expressions;
                 }
             }
         }
 
         for (auto& action : actions) {
             if (action->target == position) {
-                if (auto expression = Trait::TraitTable::getExpressionForActionTarget(action->type)) {
-                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
-                    return;
+                if (auto expressions = Trait::TraitTable::getExpressionsForActionTarget(action->type)) {
+                    return expressions;
                 }
             } else if (action->actor == position) {
-                if (auto expression = Trait::TraitTable::getExpressionForActionActor(action->type)) {
-                    expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
-                    return;
+                if (auto expressions = Trait::TraitTable::getExpressionsForActionActor(action->type)) {
+                    return expressions;
                 }
             }
         }
 
-        if (auto expression = Trait::TraitTable::getExpressionForEvent("default")) {
-            expression->apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
-            return;
-        }
-
-        Trait::TraitTable::fallbackExpression.apply(actor, false, 0, Trait::TraitTable::getExcitement(actor), getEyeballModifierOverride(position), getOverrideType(position));
+        return Trait::TraitTable::getExpressionsForSet("default");
     }
 
-    float Node::playExpressionEvent(int position, RE::Actor* actor, std::string eventName) {
-        if (auto expression = Trait::TraitTable::getExpressionForEvent(eventName)) {
-            expression->apply(actor, true, 0, Trait::TraitTable::getExcitement(actor), {}, Trait::PhonemeOverrideType::NoOveride);
-            return expression->getDuration(actor);
-        }
-        return -1;
-    }
-
-    Trait::PhonemeOverrideType Node::getOverrideType(int position) {
+    std::vector<Trait::FacialExpression*>* Node::getOverrideExpressions(int position) {
         if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus", "suckingnipples"}) != -1) {
-            return Trait::PhonemeOverrideType::OpenMouth;
-        } else if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"}) != -1) {
-            return Trait::PhonemeOverrideType::Licking;
+            return Trait::TraitTable::getExpressionsForSet("openmouth");
         }
-        return Trait::PhonemeOverrideType::NoOveride;
-    }
-
-    std::unordered_map<int, Trait::FaceModifier> Node::getEyeballModifierOverride(int position) {
-        if (actors.size() > position) {
-            return actors[position]->eyeballModifierOverride;
+        if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"})) {
+            return Trait::TraitTable::getExpressionsForSet("tongue");
         }
-        return {};
+        return nullptr;
     }
 }

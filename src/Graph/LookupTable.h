@@ -9,9 +9,6 @@ namespace Graph{
     class LookupTable {
     public:
         inline static RE::TESQuest* OSexIntegrationMainQuest;
-        inline static RE::BGSKeyword* OStimNoStrip;
-
-        inline static std::vector<RE::BGSKeyword*> noStripKeywords;
 
         inline static auto rng = std::default_random_engine{};
 

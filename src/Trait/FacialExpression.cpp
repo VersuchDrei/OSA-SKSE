@@ -3,7 +3,7 @@
 #include "TraitTable.h"
 
 namespace Trait {
-    void GenderExpression::apply(RE::Actor* actor, bool isEvent, float speed, float excitement, std::unordered_map<int, FaceModifier> eyeballModifierOverride, std::unordered_map<int, FaceModifier> phonemeOverride) {
+    void GenderExpression::apply(RE::Actor* actor, int mask, float speed, float excitement) {
         const auto skyrimVM = RE::SkyrimVM::GetSingleton();
         auto vm = skyrimVM ? skyrimVM->impl : nullptr;
         if (vm) {
@@ -12,14 +12,17 @@ namespace Trait {
             auto faceData = actor->GetFaceGenAnimationData();
 
             // expression
-            if (auto value = expression.calculate(speed, excitement)) {
-                faceData->exprOverride = false;
-                faceData->SetExpressionOverride(expression.type, static_cast<float>(value) / 100.0f);
-                faceData->exprOverride = true;
+            if ((mask & ExpressionType::EXPRESSION) == ExpressionType::EXPRESSION) {
+                if (auto value = expression.calculate(speed, excitement)) {
+                    faceData->exprOverride = false;
+                    faceData->SetExpressionOverride(expression.type, static_cast<float>(value) / 100.0f);
+                    faceData->exprOverride = true;
+                }
             }
             
+            
             // modifiers
-            if (!isEvent || !eyelidModifiers.empty()) {
+            if ((mask & ExpressionType::LID_MODIFIER) == ExpressionType::LID_MODIFIER) {
                 for (int i : eyelidModifierTypes) {
                     int current = faceData->modifierKeyFrame.values[i] * 100;
                     int goal = 0;
@@ -37,7 +40,7 @@ namespace Trait {
                 }
             }
 
-            if (!isEvent || !eyebrowModifiers.empty()) {
+            if ((mask & ExpressionType::BROW_MODIFIER) == ExpressionType::BROW_MODIFIER) {
                 for (int i : eyebrowModifierTypes) {
                     int current = faceData->modifierKeyFrame.values[i] * 100;
                     int goal = 0;
@@ -55,14 +58,13 @@ namespace Trait {
                 }
             }
 
-            auto& eyeballModifiersToUse = (isEvent && !eyeballModifiers.empty()) || eyeballModifierOverride.empty() ? eyeballModifiers : eyeballModifierOverride;
-            if (!isEvent || !eyeballModifiersToUse.empty()) {
+            if ((mask & ExpressionType::BALL_MODIFIER) == ExpressionType::BALL_MODIFIER) {
                 for (int i : eyeballModifierTypes) {
                     int current = faceData->modifierKeyFrame.values[i] * 100;
                     int goal = 0;
                     float delay = 0;
-                    auto iter = eyeballModifiersToUse.find(i);
-                    if (iter != eyeballModifiersToUse.end()) {
+                    auto iter = eyeballModifiers.find(i);
+                    if (iter != eyeballModifiers.end()) {
                         goal = iter->second.calculate(speed, excitement);
                         delay = iter->second.randomizeDelay();
                     }
@@ -75,14 +77,13 @@ namespace Trait {
             }
 
             // phonemes
-            auto& phonemesToUse = phonemeOverride.empty() ? phonemes : phonemeOverride;
-            if (!isEvent || !phonemesToUse.empty()) {
+            if ((mask & ExpressionType::PHONEME) == ExpressionType::PHONEME) {
                 for (int i = 0; i < 14; i++) {
                     int current = faceData->phenomeKeyFrame.values[i] * 100;
                     int goal = 0;
                     float delay = 0;
-                    auto iter = phonemesToUse.find(i);
-                    if (iter != phonemesToUse.end()) {
+                    auto iter = phonemes.find(i);
+                    if (iter != phonemes.end()) {
                         goal = iter->second.calculate(speed, excitement);
                         delay = iter->second.randomizeDelay();
                     }
@@ -96,23 +97,11 @@ namespace Trait {
         }
     }
 
-    void FacialExpression::apply(RE::Actor* actor, bool isEvent, float speed, float excitement, std::unordered_map<int, FaceModifier> eyeballModifierOverride, PhonemeOverrideType phonemeOverride) {
-        std::unordered_map<int, FaceModifier> phonemeOverrideMap;
-        switch (phonemeOverride) {
-        case OpenMouth:
-            phonemeOverrideMap = TraitTable::openMouthPhonemes;
-            break;
-        case Licking:
-            phonemeOverrideMap = TraitTable::lickingPhonemes;
-            break;
-        default:
-            break;
-        }
-
+    void FacialExpression::apply(RE::Actor* actor, int mask, float speed, float excitement) {
         if (actor->GetActorBase()->GetSex() == RE::SEX::kFemale) {
-            female.apply(actor, isEvent, speed, excitement, eyeballModifierOverride, phonemeOverrideMap);
+            female.apply(actor, mask, speed, excitement);
         } else {
-            male.apply(actor, isEvent, speed, excitement, eyeballModifierOverride, phonemeOverrideMap);
+            male.apply(actor, mask, speed, excitement);
         }
     }
 
@@ -121,6 +110,14 @@ namespace Trait {
             return female.duration;
         } else {
             return male.duration;
+        }
+    }
+
+    int FacialExpression::getTypeMask(RE::Actor* actor) {
+        if (actor->GetActorBase()->GetSex() == RE::SEX::kFemale) {
+            return female.typeMask;
+        } else {
+            return male.typeMask;
         }
     }
 }

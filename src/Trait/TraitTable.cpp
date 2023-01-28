@@ -3,9 +3,11 @@
 #include "FacialExpression.h"
 #include "Util/VectorUtil.h"
 #include "Util/JsonFileLoader.h"
+#include "Util/JsonUtil.h"
 
 namespace Trait {
     const char* EXPRESSION_FILE_PATH{"Data/SKSE/Plugins/OStim/facial expressions"};
+    const char* EQUIP_OBJECT_FILE_PATH{"Data/SKSE/Plugins/OStim/equip objects"};
 
     void TraitTable::setup() {
         openMouthPhonemes.insert({0, {.type = 0, .baseValue = 100}});
@@ -16,7 +18,7 @@ namespace Trait {
 
         std::srand((unsigned)time(NULL));
 
-        Util::JsonFileLoader::LoadFilesInFolder(EXPRESSION_FILE_PATH,[&](std::string,json json) {
+        Util::JsonFileLoader::LoadFilesInFolder(EXPRESSION_FILE_PATH,[&](std::string,std::string,json json) {
             FacialExpression* expression = new FacialExpression();
             if (json.contains("female")) {
                 parseGender(json["female"], &expression->female);
@@ -24,6 +26,12 @@ namespace Trait {
 
             if (json.contains("male")) {
                 parseGender(json["male"], &expression->male);
+            }
+
+            if (json.contains("sets")) {
+                for (auto& group : json["sets"]) {
+                    addToTable(&expressionsBySets, group, expression);
+                }
             }
 
             if (json.contains("events")) {
@@ -43,7 +51,61 @@ namespace Trait {
                     addToTable(&expressionsByActionTargets, action, expression);
                 }
             }
-        });        
+        });
+
+        auto iter = expressionsBySets.find("default");
+        if (iter == expressionsBySets.end()) {
+            std::vector<FacialExpression*> expressions;
+            expressions.push_back({});
+            expressionsBySets.insert({"default", expressions});
+        }
+
+        Util::JsonFileLoader::LoadFilesInFolder(EQUIP_OBJECT_FILE_PATH, [&](std::string path, std::string, json json) {
+            if (!json.contains("id")) {
+                logger::info("file {} does not have field 'id' defined", path);
+                return;
+            }
+            if (!json.contains("type")) {
+                logger::info("file {} does not have field 'type' defined", path);
+                return;
+            }
+            if (!json.contains("name")) {
+                logger::info("file {} does not have field 'name' defined", path);
+                return;
+            }
+
+            RE::TESObjectARMO* item = JsonUtil::getForm<RE::TESObjectARMO>(path, json);
+            if (!item) {
+                return;
+            }
+
+            EquipObject* object = new EquipObject();
+            object->name = json["name"];
+            object->item = item;
+
+            if (json.contains("variants")) {
+                for (auto& [key, val] : json["variants"].items()) {
+                    RE::TESObjectARMO* variant = JsonUtil::getForm<RE::TESObjectARMO>(path, val);
+                    if (variant) {
+                        object->variants.emplace(key, variant);
+                    }
+                }
+            }
+
+            std::string id = json["id"];
+            std::string type = json["type"];
+            auto iter = equipObjects.find(type);
+            if (iter != equipObjects.end()) {
+                if (iter->second.contains(id)) {
+                    logger::info("duplicate equip object id {} for type {}", id, type);
+                } else {
+                    iter->second.emplace(id, object);
+                }
+            } else {
+                equipObjects.emplace(type, std::unordered_map<std::string, EquipObject*>{{id, object}});
+            }
+        });
+
     }
 
     void TraitTable::setupForms() {
@@ -58,6 +120,7 @@ namespace Trait {
 
         if (json.contains("expression")) {
             genderExpression->expression = parseModifier(json["expression"]);
+            genderExpression->typeMask |= ExpressionType::EXPRESSION;
         }
 
         if (json.contains("modifiers")) {
@@ -65,10 +128,13 @@ namespace Trait {
                 auto mod = parseModifier(modifier);
                 if (VectorUtil::contains(eyelidModifierTypes, mod.type)) {
                     genderExpression->eyelidModifiers.insert({mod.type, mod});
+                    genderExpression->typeMask |= ExpressionType::LID_MODIFIER;
                 } else if (VectorUtil::contains(eyebrowModifierTypes, mod.type)) {
                     genderExpression->eyebrowModifiers.insert({mod.type, mod});
+                    genderExpression->typeMask |= ExpressionType::BROW_MODIFIER;
                 } else if (VectorUtil::contains(eyeballModifierTypes, mod.type)) {
                     genderExpression->eyeballModifiers.insert({mod.type, mod});
+                    genderExpression->typeMask |= ExpressionType::BALL_MODIFIER;
                 }
             }
         }
@@ -78,6 +144,7 @@ namespace Trait {
                 auto mod = parseModifier(phoneme);
                 genderExpression->phonemes.insert({mod.type, mod});
             }
+            genderExpression->typeMask |= ExpressionType::PHONEME;
         }
     }
 
@@ -115,26 +182,26 @@ namespace Trait {
         }
     }
 
-    FacialExpression* TraitTable::getExpressionForActionActor(std::string action) {
-        return getExpressionFromTable(expressionsByActionActors, action);
+    std::vector<FacialExpression*>* TraitTable::getExpressionsForActionActor(std::string action) {
+        return getExpressionsFromTable(expressionsByActionActors, action);
     }
 
-    FacialExpression* TraitTable::getExpressionForActionTarget(std::string action) {
-        return getExpressionFromTable(expressionsByActionTargets, action);
+    std::vector<FacialExpression*>* TraitTable::getExpressionsForActionTarget(std::string action) {
+        return getExpressionsFromTable(expressionsByActionTargets, action);
     }
 
-    FacialExpression* TraitTable::getExpressionForEvent(std::string strEvent) {
-        return getExpressionFromTable(expressionsByEvents, strEvent);
+    std::vector<FacialExpression*>* TraitTable::getExpressionsForEvent(std::string strEvent) {
+        return getExpressionsFromTable(expressionsByEvents, strEvent);
     }
 
-    FacialExpression* TraitTable::getExpressionFromTable(std::unordered_map<std::string, std::vector<FacialExpression*>> table, std::string key) {
+    std::vector<FacialExpression*>* TraitTable::getExpressionsForSet(std::string set) {
+        return getExpressionsFromTable(expressionsBySets, set);
+    }
+
+    std::vector<FacialExpression*>* TraitTable::getExpressionsFromTable(std::unordered_map<std::string, std::vector<FacialExpression*>> table, std::string key) {
         auto iter = table.find(key);
         if (iter != table.end()) {
-            auto& expressions = iter->second;
-            auto size = expressions.size();
-            if (size != 0) {
-                return expressions[std::rand() % size];
-            }
+            return &iter->second;
         }
         return nullptr;
     }

@@ -5,10 +5,12 @@ namespace Trait {
     static const std::vector<int> eyebrowModifierTypes = {2, 3, 4, 5, 6, 7};
     static const std::vector<int> eyeballModifierTypes = {8, 9, 10, 11};
 
-    enum PhonemeOverrideType {
-        NoOveride,
-        OpenMouth,
-        Licking
+    enum ExpressionType {
+        EXPRESSION = 1 << 0,
+        PHONEME = 1 << 1,
+        LID_MODIFIER = 1 << 2,
+        BROW_MODIFIER = 1 << 3,
+        BALL_MODIFIER = 1 << 4
     };
 
     struct FaceModifier {
@@ -39,8 +41,9 @@ namespace Trait {
         std::unordered_map<int, FaceModifier> eyebrowModifiers;
         std::unordered_map<int, FaceModifier> eyeballModifiers;
         std::unordered_map<int, FaceModifier> phonemes;
+        int typeMask = 0;
 
-        void apply(RE::Actor* actor, bool isEvent, float speed, float excitement, std::unordered_map<int, FaceModifier> eyeballModifierOverride, std::unordered_map<int, FaceModifier> phonemeOverride);
+        void apply(RE::Actor* actor, int mask, float speed, float excitement);
     };
 
     struct FacialExpression {
@@ -48,7 +51,8 @@ namespace Trait {
         GenderExpression female;
         GenderExpression male;
 
-        void apply(RE::Actor* actor, bool isEvent, float speed, float excitement, std::unordered_map<int, FaceModifier> eyeballModifierOverride, PhonemeOverrideType phonemeOverride);
+        void apply(RE::Actor* actor, int mask, float speed, float excitement);
         float getDuration(RE::Actor* actor);
+        int getTypeMask(RE::Actor* actor);
     };
 }

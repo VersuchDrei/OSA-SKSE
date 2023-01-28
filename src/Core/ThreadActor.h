@@ -22,7 +22,12 @@ namespace OStim {
         void redressPartial(uint32_t mask);
         void addWeapons();
 
-        void changeNode(Graph::Actor* graphActor);
+        void bendSchlong();
+
+        void changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions);
+
+        void setEventExpression(Trait::FacialExpression* expression);
+        void clearEventExpression();
 
         void loop();
 
@@ -109,10 +114,22 @@ namespace OStim {
         RE::TESObjectARMO* heelArmor;
         bool heelArmorRemoved = false;
 
+        std::vector<Trait::FacialExpression*>* nodeExpressions;
+        Trait::FacialExpression* underlyingExpression;
+        int underlyingExpressionCooldown = 0;
+        Trait::FacialExpression* eventExpression;
+        std::vector<Trait::FacialExpression*>* overrideExpressions;
+        Trait::FacialExpression* overrideExpression;
+        int overwriteExpressionCooldown = 0;
+
         void scale();
         void checkHeelOffset();
         void updateHeelOffset(bool remove);
         void updateHeelArmor(bool remove);
+
+        int updateUnderlyingExpression();
+        int updateOverrideExpression();
+        void applyExpression(int mask);
 
         void papyrusUndressCallback(std::vector<RE::TESObjectARMO*> items);
         void papyrusRedressCallback(std::vector<RE::TESObjectARMO*> items);

@@ -50,9 +50,8 @@ namespace Graph {
 
         bool fulfilledBy(std::vector<Trait::ActorConditions> conditions);
 
-        void updateActors(std::vector<RE::Actor*> actors, std::vector<float> rmheights, std::vector<float> offsets);
-        void updateFacialExpressions(int position, RE::Actor* actor);
-        float playExpressionEvent(int position, RE::Actor* actor, std::string eventName);
+        std::vector<Trait::FacialExpression*>* getFacialExpressions(int position);
+        std::vector<Trait::FacialExpression*>* getOverrideExpressions(int position);
 
         uint32_t getStrippingMask(int index);
 
@@ -76,9 +75,5 @@ namespace Graph {
         int findAnyActionForTarget(int position, std::vector<std::string> types);
         int findActionForActorAndTarget(int actorPosition, int targetPosition, std::string type);
         int findAnyActionForActorAndTarget(int actorPosition, int targetPosition, std::vector<std::string> types);
-
-    private:
-        Trait::PhonemeOverrideType getOverrideType(int position);
-        std::unordered_map<int, Trait::FaceModifier> getEyeballModifierOverride(int position);
     };
 }

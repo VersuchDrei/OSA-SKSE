@@ -1,9 +1,10 @@
 #include "ThreadActor.h"
 
 #include "Graph/LookupTable.h"
+#include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
 #include "Util/FormUtil.h"
-#include "Util/Globals.h"
+#include "Util/Constants.h"
 #include "Util/MCMTable.h"
 #include "Util/ObjectRefUtil.h"
 #include "Util/VectorUtil.h"
@@ -253,17 +254,32 @@ namespace OStim {
         weaponsRemoved = false;
     }
 
-    void ThreadActor::changeNode(Graph::Actor* graphActor) {
-        this->graphActor = graphActor;
-        if (!MCM::MCMTable::isSchlongBendingDisabled()) {
-            actor->NotifyAnimationGraph("SOSBend" + std::to_string(graphActor->penisAngle));
+    void ThreadActor::changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions) {
+        int mask = 0;
+        if (this->graphActor || !this->graphActor->eyeballModifierOverride.empty()) {
+            mask = Trait::ExpressionType::BALL_MODIFIER;
         }
 
+        this->graphActor = graphActor;
+        bendSchlong();
+
+        // heel stuff
         checkHeelOffset();
         scale();
+
+        // facial expressions
+        if (this->graphActor || !this->graphActor->eyeballModifierOverride.empty()) {
+            mask |= Trait::ExpressionType::BALL_MODIFIER;
+        }
+        this->nodeExpressions = nodeExpressions;
+        this->overrideExpressions = overrideExpressions;
+        mask |= updateUnderlyingExpression();
+        mask |= updateOverrideExpression();
+        applyExpression(mask);
     }
 
     void ThreadActor::loop() {
+        /*
         if (graphActor) {
             if (!MCM::MCMTable::isSchlongBendingDisabled()) {
                 // calling NotifyAnimationGraph directly here causes a CTD
@@ -273,6 +289,13 @@ namespace OStim {
                 int angle = graphActor->penisAngle;
                 SKSE::GetTaskInterface()->AddTask([tempActor, angle]() { tempActor->NotifyAnimationGraph("SOSBend" + std::to_string(angle)); });
             }
+        }
+        */
+    }
+
+    void ThreadActor::bendSchlong() {
+        if (!MCM::MCMTable::isSchlongBendingDisabled()) {
+            actor->NotifyAnimationGraph("SOSBend" + std::to_string(graphActor ? graphActor->penisAngle : 0));
         }
     }
 
@@ -351,6 +374,72 @@ namespace OStim {
                 updateHeelOffset(remove);
             }
         }
+    }
+
+    int ThreadActor::updateUnderlyingExpression() {
+        int mask = 0;
+        if (!Trait::TraitTable::areFacialExpressionsBlocked(actor)) {
+            if (underlyingExpression) {
+                //mask = underlyingExpression->getTypeMask(actor);
+            }
+            //underlyingExpression = nodeExpressions->at(std::rand() % nodeExpressions->size());
+            //mask |= underlyingExpression->getTypeMask(actor);
+
+            if (graphActor && !graphActor->eyeballModifierOverride.empty()) {
+                //mask &= ~Trait::ExpressionType::BALL_MODIFIER;
+            }
+            if (eventExpression) {
+                //mask &= ~eventExpression->getTypeMask(actor);
+            }
+            if (overrideExpression) {
+                //mask &= ~overrideExpression->getTypeMask(actor);
+            }
+        }
+
+        return mask;
+    }
+
+    int ThreadActor::updateOverrideExpression() {
+        int mask = 0;
+        if (overrideExpression) {
+            //mask = overrideExpression->getTypeMask(actor);
+        }
+        if (overrideExpressions) {
+            //overrideExpression = overrideExpressions->at(std::rand() % overrideExpressions->size());
+            //mask |= overrideExpression->getTypeMask(actor);
+        } else {
+            overrideExpression = nullptr;
+        }
+        
+        return mask;
+    }
+
+    void ThreadActor::setEventExpression(Trait::FacialExpression* expression) {
+        int mask = 0;
+        if (eventExpression) {
+            //mask = eventExpression->getTypeMask(actor);
+        }
+        eventExpression = expression;
+        if (eventExpression) {
+            //mask |= eventExpression->getTypeMask(actor);
+        }
+        applyExpression(mask);
+    }
+
+    void ThreadActor::clearEventExpression() {
+        int mask = 0;
+        if (eventExpression) {
+            //mask = eventExpression->getTypeMask(actor);
+        }
+        eventExpression = nullptr;
+        applyExpression(mask);
+    }
+
+    void ThreadActor::applyExpression(int mask) {
+        if (mask == 0) {
+            return;
+        }
+        //TODO
     }
 
     void ThreadActor::free() {

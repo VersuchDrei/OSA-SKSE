@@ -13,9 +13,6 @@ namespace Graph {
     void LookupTable::setupForms() {
         auto handler = RE::TESDataHandler::GetSingleton();
         OSexIntegrationMainQuest = handler->LookupForm<RE::TESQuest>(0x801, "OStim.esp");
-        OStimNoStrip = handler->LookupForm<RE::BGSKeyword>(0xDB1, "OStim.esp");
-
-        noStripKeywords.push_back(OStimNoStrip);
     }
 
     void LookupTable::addNode(Node* node) {
@@ -163,9 +160,8 @@ namespace Graph {
         }
     };
 
-    void LookupTable::SetupActions(){        
-    
-        Util::JsonFileLoader::LoadFilesInFolder(ACTION_FILE_PATH, [&](std::string filename, json json) {
+    void LookupTable::SetupActions(){
+        Util::JsonFileLoader::LoadFilesInFolder(ACTION_FILE_PATH, [&](std::string, std::string filename, json json) {
             Graph::ActionAttributes attr;
             if(json.contains("actor")){
                 Graph::ActionActor actor;

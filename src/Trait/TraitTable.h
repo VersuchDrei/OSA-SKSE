@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EquipObject.h"
 #include "FacialExpression.h"
 
 namespace Trait {
@@ -13,9 +14,10 @@ namespace Trait {
         static void setup();
         static void setupForms();
 
-        static FacialExpression* getExpressionForActionActor(std::string);
-        static FacialExpression* getExpressionForActionTarget(std::string);
-        static FacialExpression* getExpressionForEvent(std::string);
+        static std::vector<FacialExpression*>* getExpressionsForActionActor(std::string);
+        static std::vector<FacialExpression*>* getExpressionsForActionTarget(std::string);
+        static std::vector<FacialExpression*>* getExpressionsForEvent(std::string);
+        static std::vector<FacialExpression*>* getExpressionsForSet(std::string);
 
         static void setExcitement(RE::Actor* actor, float excitement);
         static float getExcitement(RE::Actor* actor);
@@ -27,11 +29,14 @@ namespace Trait {
         static void parseGender(nlohmann::json json, GenderExpression* genderExpression);
         static FaceModifier parseModifier(nlohmann::json json);
         static void addToTable(std::unordered_map<std::string, std::vector<FacialExpression*>>* table, std::string key, FacialExpression* expression);
-        static FacialExpression* getExpressionFromTable(std::unordered_map<std::string, std::vector<FacialExpression*>> table, std::string key);
+        static std::vector<FacialExpression*>* getExpressionsFromTable(std::unordered_map<std::string, std::vector<FacialExpression*>> table, std::string key);
 
         inline static std::unordered_map<std::string, std::vector<FacialExpression*>> expressionsByActionActors;
         inline static std::unordered_map<std::string, std::vector<FacialExpression*>> expressionsByActionTargets;
         inline static std::unordered_map<std::string, std::vector<FacialExpression*>> expressionsByEvents;
+        inline static std::unordered_map<std::string, std::vector<FacialExpression*>> expressionsBySets;
+
+        inline static std::unordered_map <std::string, std::unordered_map<std::string, EquipObject*>> equipObjects;
 
         inline static RE::TESFaction* excitementFaction;
         inline static RE::TESFaction* noFacialExpressionsFaction;

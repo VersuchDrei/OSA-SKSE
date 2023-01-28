@@ -2,6 +2,7 @@
 #include <Graph/LookupTable.h>
 #include <Graph/Node.h>
 #include <Messaging/IMessages.h>
+#include "Util/Constants.h"
 #include <Util/MCMTable.h>
 #include <Util/StringUtil.h>
 
@@ -83,28 +84,30 @@ namespace OStim {
 
 
             // --- undressing --- //
-            if (MCM::MCMTable::undressMidScene() && m_currentNode->hasActionTag("sexual")) {
-                actorIt.second.undress();
-                actorIt.second.removeWeapons();
-                // it is intended that the else fires if undressMidScene is checked but the action is not tagged as sexual
-                // because some non sexual actions still have slots for partial stripping
-                // for example kissing undresses helmets without being sexual
-            } else if (MCM::MCMTable::partialUndressing()) {
-                uint32_t slotMask = 0;
-                for (auto& action : m_currentNode->actions) {
-                    slotMask |= action->getStrippingMask(actorIt.first);
-                }
-                if (slotMask != 0) {
-                    actorIt.second.undressPartial(slotMask);
-                    if ((slotMask & MCM::MCMTable::removeWeaponsWithSlot()) != 0) {
-                        actorIt.second.removeWeapons();
+            if (!m_currentNode->hasActorTag(actorIt.first, "nostrip")) {
+                if (MCM::MCMTable::undressMidScene() && m_currentNode->hasActionTag("sexual")) {
+                    actorIt.second.undress();
+                    actorIt.second.removeWeapons();
+                    // it is intended that the else fires if undressMidScene is checked but the action is not tagged as
+                    // sexual because some non sexual actions still have slots for partial stripping for example kissing
+                    // undresses helmets without being sexual
+                } else if (MCM::MCMTable::partialUndressing()) {
+                    uint32_t slotMask = 0;
+                    for (auto& action : m_currentNode->actions) {
+                        slotMask |= action->getStrippingMask(actorIt.first);
+                    }
+                    if (slotMask != 0) {
+                        actorIt.second.undressPartial(slotMask);
+                        if ((slotMask & MCM::MCMTable::removeWeaponsWithSlot()) != 0) {
+                            actorIt.second.removeWeapons();
+                        }
                     }
                 }
             }
 
-            // --- scaling / heel offsets --- //
+            // --- scaling / heel offsets / facial expressions --- //
             if (actorIt.first < m_currentNode->actors.size()) {
-                actorIt.second.changeNode(m_currentNode->actors[actorIt.first]);
+                actorIt.second.changeNode(m_currentNode->actors[actorIt.first], m_currentNode->getFacialExpressions(actorIt.first), m_currentNode->getOverrideExpressions(actorIt.first));
             }
         }
 
@@ -152,7 +155,7 @@ namespace OStim {
             auto speedMod = (m_currentNodeSpeed - ceil(m_currentNode->speeds.size() / 2)) * 0.2;
             auto& actorRef = actorIt.second;
             auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
-            auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc;
+            auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc * Constants::LOOP_TIME_SECONDS;
             if (finalExcitementInc <= 0) {  // Decay from previous scene with higher max
                 auto excitementDecay = 0.5;
                 if (actorRef.excitement - excitementDecay < 0) {
