@@ -98,7 +98,7 @@ namespace OStim {
         bool isPlayer;
         bool isFemale;
 
-        Graph::Actor* graphActor;
+        Graph::Actor* graphActor = nullptr;
 
         bool undressed = false;
         uint32_t undressedMask = 0;

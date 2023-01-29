@@ -256,7 +256,7 @@ namespace OStim {
 
     void ThreadActor::changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions) {
         int mask = 0;
-        if (this->graphActor || !this->graphActor->eyeballModifierOverride.empty()) {
+        if (this->graphActor && !this->graphActor->eyeballModifierOverride.empty()) {
             mask = Trait::ExpressionType::BALL_MODIFIER;
         }
 
@@ -300,7 +300,7 @@ namespace OStim {
     }
 
     void ThreadActor::scale() {
-        if (MCM::MCMTable::isScalingDisabled()) {
+        if (MCM::MCMTable::isScalingDisabled() || !graphActor) {
             return;
         }
 

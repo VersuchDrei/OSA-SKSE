@@ -64,8 +64,16 @@ namespace ActorUtil {
                                     auto sdta = child->GetExtraData<RE::NiStringExtraData>("SDTA");
                                     if (sdta) {
                                         json json = json::parse(sdta->value, nullptr, false);
-                                        if (!json.is_discarded() && json.contains("name") && json["name"] == "NPC" && json.contains("pos")) {
-                                            return json["pos"][2];
+                                        if (!json.is_discarded()) {
+                                            for (auto& element : json) {
+                                                if (element.contains("name") && element["name"] == "NPC" && element.contains("pos")) {
+                                                    if (bipedArmor->formType == RE::TESObjectARMO::FORMTYPE) {
+                                                        RE::TESObjectARMO* armor = bipedArmor->As<RE::TESObjectARMO>();
+                                                        *heelArmor = armor;
+                                                    }
+                                                    return element["pos"][2];
+                                                }
+                                            }
                                         }
                                     }
                                 }
