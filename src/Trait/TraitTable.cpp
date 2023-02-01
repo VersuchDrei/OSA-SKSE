@@ -55,8 +55,8 @@ namespace Trait {
 
         auto iter = expressionsBySets.find("default");
         if (iter == expressionsBySets.end()) {
-            std::vector<FacialExpression*> expressions;
-            expressions.push_back({});
+            std::vector<FacialExpression*>* expressions = new std::vector<FacialExpression*>();
+            expressions->push_back({});
             expressionsBySets.insert({"default", expressions});
         }
 
@@ -171,13 +171,13 @@ namespace Trait {
         return modifier;
     }
 
-    void TraitTable::addToTable(std::unordered_map<std::string, std::vector<FacialExpression*>>* table, std::string key, FacialExpression* expression) {
+    void TraitTable::addToTable(std::unordered_map<std::string, std::vector<FacialExpression*>*>* table, std::string key, FacialExpression* expression) {
         auto iter = table->find(key);
         if (iter != table->end()) {
-            iter->second.push_back(expression);
+            iter->second->push_back(expression);
         } else {
-            std::vector<FacialExpression*> expressions;
-            expressions.push_back(expression);
+            std::vector<FacialExpression*>* expressions = new std::vector<FacialExpression*>();
+            expressions->push_back(expression);
             table->insert({key, expressions});
         }
     }
@@ -198,10 +198,10 @@ namespace Trait {
         return getExpressionsFromTable(expressionsBySets, set);
     }
 
-    std::vector<FacialExpression*>* TraitTable::getExpressionsFromTable(std::unordered_map<std::string, std::vector<FacialExpression*>> table, std::string key) {
+    std::vector<FacialExpression*>* TraitTable::getExpressionsFromTable(std::unordered_map<std::string, std::vector<FacialExpression*>*> table, std::string key) {
         auto iter = table.find(key);
         if (iter != table.end()) {
-            return &iter->second;
+            return iter->second;
         }
         return nullptr;
     }

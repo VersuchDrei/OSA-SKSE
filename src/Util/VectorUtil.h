@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Util.h"
+#include "Util/Constants.h"
 
 namespace VectorUtil {
 	template<class T>
@@ -35,6 +36,11 @@ namespace VectorUtil {
             return -1;
         }
         return it - haystack.begin();
+    }
+
+    template <class T>
+    T randomElement(std::vector<T>* vec) {
+        return vec->at(std::uniform_int_distribution<>(1, vec->size())(Constants::RNG) - 1);
     }
 
     bool contains(std::vector<int> haystack, int needle);

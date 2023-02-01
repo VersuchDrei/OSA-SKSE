@@ -2,18 +2,18 @@
 
 #include "Core/ThreadManager.h"
 #include "Trait/TraitTable.h"
+#include "Util/VectorUtil.h"
 
 namespace PapyrusThreadActor {
     using VM = RE::BSScript::IVirtualMachine;
 
     float PlayExpression(RE::StaticFunctionTag*, RE::Actor* actor, std::string expression) {
-        return 0.5;
         std::vector<Trait::FacialExpression*>* expressions = Trait::TraitTable::getExpressionsForEvent(expression);
         if (!expressions) {
             return -1;
         }
 
-        Trait::FacialExpression* eventExpression = expressions->at(std::rand() % expressions->size());
+        Trait::FacialExpression* eventExpression = VectorUtil::randomElement(expressions);
 
         OStim::ThreadActor* threadActor = OStim::ThreadManager::GetSingleton()->findActor(actor);
         if (threadActor) {

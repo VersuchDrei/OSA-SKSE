@@ -58,12 +58,6 @@ namespace OStim {
                 }
             }
 
-            if (actorIt.second.getActor()->GetActorBase()->GetSex() == RE::SEX::kMale) {
-                actorIt.second.baseExcitementMultiplier = MCM::MCMTable::getMaleSexExcitementMult();
-            } else {
-                actorIt.second.baseExcitementMultiplier = MCM::MCMTable::getFemaleSexExcitementMult();
-            }
-
             switch (excitementVals.size()) {
                 case 0:
                     excitementInc = 0;
@@ -80,7 +74,10 @@ namespace OStim {
                 } break;
             }
 
-            actorIt.second.nodeExcitementTick = excitementInc;
+            actorIt.second.baseExcitementInc = excitementInc;
+            if (excitementInc <= 0) {
+                actorIt.second.maxExcitement = 0;
+            }
 
 
             // --- undressing --- //
@@ -152,34 +149,7 @@ namespace OStim {
         }
 
         for (auto& actorIt : m_actors) {
-            auto speedMod = (m_currentNodeSpeed - ceil(m_currentNode->speeds.size() / 2)) * 0.2;
-            auto& actorRef = actorIt.second;
-            auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
-            auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc * Constants::LOOP_TIME_SECONDS;
-            if (finalExcitementInc <= 0) {  // Decay from previous scene with higher max
-                auto excitementDecay = 0.5;
-                if (actorRef.excitement - excitementDecay < 0) {
-                    actorRef.excitement = 0;
-                } else {
-                    actorRef.excitement -= excitementDecay;
-                }
-
-            } else if (actorRef.excitement > actorRef.maxExcitement) {
-                auto excitementDecay = 0.5;
-                if (actorRef.excitement - excitementDecay < actorRef.maxExcitement) {
-                    actorRef.excitement = actorRef.maxExcitement;
-                } else {
-                    actorRef.excitement -= excitementDecay;
-                }
-            } else { // increase excitement
-                if (finalExcitementInc + actorRef.excitement > actorRef.maxExcitement) {                          
-                    actorRef.excitement = actorRef.maxExcitement;
-                } else {
-                    actorRef.excitement += finalExcitementInc;
-                }
-            }
-
-            actorRef.loop();
+            actorIt.second.loop();
         }
     }
 
@@ -206,12 +176,19 @@ namespace OStim {
 
     void Thread::SetSpeed(int speed) {
         m_currentNodeSpeed = speed;
-        if (m_currentNode && m_currentNode->speeds.size() > speed) {
-            for (auto& actorIt : m_actors) {
-                RE::Actor* actor = actorIt.second.getActor();
-                actor->SetGraphVariableFloat("OStimSpeed", m_currentNode->speeds[speed].playbackSpeed);
-                actor->NotifyAnimationGraph(m_currentNode->speeds[speed].animation + "_" + std::to_string(actorIt.first));
+        for (auto& actorIt : m_actors) {
+            if (m_currentNode) {
+                if (m_currentNode->speeds.size() > speed) {
+                    RE::Actor* actor = actorIt.second.getActor();
+                    actor->SetGraphVariableFloat("OStimSpeed", m_currentNode->speeds[speed].playbackSpeed);
+                    actor->NotifyAnimationGraph(m_currentNode->speeds[speed].animation + "_" + std::to_string(actorIt.first));
+                }
+
+                float speedMod = 1 + speed / m_currentNode->speeds.size();
+                actorIt.second.loopExcitementInc = actorIt.second.baseExcitementInc * actorIt.second.baseExcitementMultiplier * speedMod * Constants::LOOP_TIME_SECONDS;
             }
+
+            actorIt.second.changeSpeed(speed);
         }
     }
 

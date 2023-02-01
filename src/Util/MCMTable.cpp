@@ -4,6 +4,11 @@ namespace MCM {
     void MCMTable::setupForms() {
         auto dataHandler = RE::TESDataHandler::GetSingleton();
 
+        maleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA2, "OStim.esp");
+        femaleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA3, "OStim.esp");
+        OStimExcitementDecayRate = dataHandler->LookupForm<RE::TESGlobal>(0xDB5, "OStim.esp");
+        OStimExcitementDecayGracePeriod = dataHandler->LookupForm<RE::TESGlobal>(0xDB4, "OStim.esp");
+
         disableScalingSetting = dataHandler->LookupForm<RE::TESGlobal>(0xD94, "OStim.esp");
         disableSchlongBendingSetting = dataHandler->LookupForm<RE::TESGlobal>(0xD97, "OStim.esp");
 
@@ -15,13 +20,30 @@ namespace MCM {
         OStimAnimateRedress = dataHandler->LookupForm<RE::TESGlobal>(0xDAF, "OStim.esp");
         OStimUsePapyrusUndressing = dataHandler->LookupForm<RE::TESGlobal>(0xDB0, "OStim.esp");
 
-        maleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA2, "OStim.esp");
-        femaleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA3, "OStim.esp");
+        OStimExpressionDurationMin = dataHandler->LookupForm<RE::TESGlobal>(0xDB2, "OStim.esp");
+        OStimExpressionDurationMax = dataHandler->LookupForm<RE::TESGlobal>(0xDB3, "OStim.esp");
     }
 
     void MCMTable::resetDefaults() {
         undressingMask = 0x3D8BC39D;
         doPapyrusUndressing = false;
+    }
+
+    float MCMTable::getMaleSexExcitementMult() {
+        return maleExcitementMultSetting->value;
+    }
+
+
+    float MCMTable::getFemaleSexExcitementMult() {
+        return femaleExcitementMultSetting->value;
+    }
+
+    float MCMTable::getExcitementDecayRate() {
+        return OStimExcitementDecayRate->value;
+    }
+
+    int MCMTable::getExcitementDecayGracePeriod() {
+        return OStimExcitementDecayGracePeriod->value;
     }
 
 
@@ -79,12 +101,11 @@ namespace MCM {
     }
 
 
-    float MCMTable::getMaleSexExcitementMult() {
-        return maleExcitementMultSetting->value;
+    int MCMTable::getExpressionDurationMin() {
+        return OStimExpressionDurationMin->value;
     }
 
-
-    float MCMTable::getFemaleSexExcitementMult() {
-        return femaleExcitementMultSetting->value;
+    int MCMTable::getExpressionDurationMax() {
+        return OStimExpressionDurationMax->value;
     }
 }

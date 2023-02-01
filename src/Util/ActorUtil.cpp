@@ -64,6 +64,7 @@ namespace ActorUtil {
                                     auto sdta = child->GetExtraData<RE::NiStringExtraData>("SDTA");
                                     if (sdta) {
                                         json json = json::parse(sdta->value, nullptr, false);
+
                                         if (!json.is_discarded()) {
                                             for (auto& element : json) {
                                                 if (element.contains("name") && element["name"] == "NPC" && element.contains("pos")) {

@@ -10,8 +10,6 @@ namespace Graph{
     public:
         inline static RE::TESQuest* OSexIntegrationMainQuest;
 
-        inline static auto rng = std::default_random_engine{};
-
         static void setupForms();
 
         static void addNode(Node* node);

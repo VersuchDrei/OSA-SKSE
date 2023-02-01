@@ -14,6 +14,9 @@ namespace OStim {
         scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0;
         isFemale = actor->GetActorBase()->GetSex() == RE::SEX::kFemale;
         isPlayer = actor == RE::PlayerCharacter::GetSingleton();
+
+        baseExcitementMultiplier = isFemale ? MCM::MCMTable::getFemaleSexExcitementMult() : MCM::MCMTable::getMaleSexExcitementMult();
+        loopExcitementDecay = MCM::MCMTable::getExcitementDecayRate() * Constants::LOOP_TIME_SECONDS;
     }
 
     void ThreadActor::initContinue() {
@@ -255,11 +258,6 @@ namespace OStim {
     }
 
     void ThreadActor::changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions) {
-        int mask = 0;
-        if (this->graphActor && !this->graphActor->eyeballModifierOverride.empty()) {
-            mask = Trait::ExpressionType::BALL_MODIFIER;
-        }
-
         this->graphActor = graphActor;
         bendSchlong();
 
@@ -268,29 +266,97 @@ namespace OStim {
         scale();
 
         // facial expressions
-        if (this->graphActor || !this->graphActor->eyeballModifierOverride.empty()) {
-            mask |= Trait::ExpressionType::BALL_MODIFIER;
-        }
         this->nodeExpressions = nodeExpressions;
         this->overrideExpressions = overrideExpressions;
-        mask |= updateUnderlyingExpression();
-        mask |= updateOverrideExpression();
-        applyExpression(mask);
+        updateOverrideExpression();
+        if (!graphActor->eyeballModifierOverride.empty() &&
+            (!overrideExpression || (overrideExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0) &&
+            (!eventExpression || (eventExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0)){
+            applyEyeballOverride();
+        }
+        updateUnderlyingExpression();
+    }
+
+    void ThreadActor::changeSpeed(int speed) {
+        this->speed = speed;
     }
 
     void ThreadActor::loop() {
-        /*
-        if (graphActor) {
-            if (!MCM::MCMTable::isSchlongBendingDisabled()) {
-                // calling NotifyAnimationGraph directly here causes a CTD
-                // probably because you cannot access the animation graph from subthreads
-                // so we queue this action for the main thread
-                RE::Actor* tempActor = actor;
-                int angle = graphActor->penisAngle;
-                SKSE::GetTaskInterface()->AddTask([tempActor, angle]() { tempActor->NotifyAnimationGraph("SOSBend" + std::to_string(angle)); });
+        if (excitement > maxExcitement) {
+            if (excitementDecayCooldown > 0) {
+                excitementDecayCooldown -= Constants::LOOP_TIME_MILLISECONDS;
+            } else {
+                excitement -= loopExcitementDecay;
+                if (excitement < maxExcitement) {
+                    excitement = maxExcitement;
+                }
+            }
+        } else {  // increase excitement
+            excitement += loopExcitementInc;
+            if (excitement > maxExcitement) {
+                excitement = maxExcitement;
+            }
+            excitementDecayCooldown = MCM::MCMTable::getExcitementDecayGracePeriod();
+        }
+
+        // expressions
+        if (overwriteExpressionCooldown > 0) {
+            overwriteExpressionCooldown -= Constants::LOOP_TIME_MILLISECONDS;
+            if (overwriteExpressionCooldown <= 0) {
+                updateOverrideExpression();
             }
         }
-        */
+        if ((underlyingExpressionCooldown -= Constants::LOOP_TIME_MILLISECONDS) < 0) {
+            updateUnderlyingExpression();
+        }
+
+        auto faceData = actor->GetFaceGenAnimationData();
+
+        if (faceData) {
+            if (!modifierUpdaters.empty()) {
+                std::vector<int> toDelete;
+                for (auto& [key, updater] : modifierUpdaters) {
+                    if (updater.delay > 0) {
+                        updater.delay -= Constants::LOOP_TIME_MILLISECONDS;
+                    } else {
+                        faceData->modifierKeyFrame.values[key] = updater.step() / 100.0f;
+                        if (updater.isDone()) {
+                            toDelete.push_back(key);
+                        }
+                    }
+                }
+
+                for (int i : toDelete) {
+                    modifierUpdaters.erase(i);
+                }
+
+                faceData->modifierKeyFrame.isUpdated = false;
+            }
+
+            if (!phonemeUpdaters.empty()) {
+                std::vector<int> toDelete;
+                for (auto& [key, updater] : phonemeUpdaters) {
+                    if (updater.delay > 0) {
+                        updater.delay -= Constants::LOOP_TIME_MILLISECONDS;
+                    } else {
+                        faceData->phenomeKeyFrame.values[key] = updater.step() / 100.0f;
+                        if (updater.isDone()) {
+                            toDelete.push_back(key);
+                        }
+                    }
+                }
+
+                for (int i : toDelete) {
+                    phonemeUpdaters.erase(i);
+                }
+
+                faceData->phenomeKeyFrame.isUpdated = false;
+            }
+        } else {
+            logger::warn("no face data on actor {}", actor->GetDisplayFullName());
+        }
+
+        
     }
 
     void ThreadActor::bendSchlong() {
@@ -376,70 +442,202 @@ namespace OStim {
         }
     }
 
-    int ThreadActor::updateUnderlyingExpression() {
-        int mask = 0;
+    void ThreadActor::updateUnderlyingExpression() {
         if (!Trait::TraitTable::areFacialExpressionsBlocked(actor)) {
+            int mask = 0;
             if (underlyingExpression) {
-                //mask = underlyingExpression->getTypeMask(actor);
+                mask = underlyingExpression->typeMask;
             }
-            //underlyingExpression = nodeExpressions->at(std::rand() % nodeExpressions->size());
-            //mask |= underlyingExpression->getTypeMask(actor);
-
+            underlyingExpression = VectorUtil::randomElement(nodeExpressions)->getGenderExpression(isFemale);
+            mask |= underlyingExpression->typeMask;
             if (graphActor && !graphActor->eyeballModifierOverride.empty()) {
-                //mask &= ~Trait::ExpressionType::BALL_MODIFIER;
+                mask &= ~Trait::ExpressionType::BALL_MODIFIER;
             }
             if (eventExpression) {
-                //mask &= ~eventExpression->getTypeMask(actor);
+                mask &= ~eventExpression->typeMask;
             }
             if (overrideExpression) {
-                //mask &= ~overrideExpression->getTypeMask(actor);
+                mask &= ~overrideExpression->typeMask;
             }
+            applyExpression(underlyingExpression, mask, 1);
         }
-
-        return mask;
+        underlyingExpressionCooldown = std::uniform_int_distribution<>(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax())(Constants::RNG);
     }
 
-    int ThreadActor::updateOverrideExpression() {
+    void ThreadActor::updateOverrideExpression() {
         int mask = 0;
         if (overrideExpression) {
-            //mask = overrideExpression->getTypeMask(actor);
+            mask = overrideExpression->typeMask;
         }
         if (overrideExpressions) {
-            //overrideExpression = overrideExpressions->at(std::rand() % overrideExpressions->size());
-            //mask |= overrideExpression->getTypeMask(actor);
+            overrideExpression = VectorUtil::randomElement(overrideExpressions)->getGenderExpression(isFemale);
+            mask &= ~overrideExpression->typeMask;
+            applyExpression(overrideExpression, overrideExpression->typeMask, 5);
+            overwriteExpressionCooldown = std::uniform_int_distribution<>(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax())(Constants::RNG);
         } else {
             overrideExpression = nullptr;
+            overwriteExpressionCooldown = -1;
         }
         
-        return mask;
+        wakeExpressions(mask);
     }
 
     void ThreadActor::setEventExpression(Trait::FacialExpression* expression) {
         int mask = 0;
         if (eventExpression) {
-            //mask = eventExpression->getTypeMask(actor);
+            mask = eventExpression->typeMask;
         }
-        eventExpression = expression;
-        if (eventExpression) {
-            //mask |= eventExpression->getTypeMask(actor);
+        eventExpression = expression->getGenderExpression(isFemale);
+        if (overrideExpression) {
+            applyExpression(eventExpression, eventExpression->typeMask & ~overrideExpression->typeMask, 3);
+            mask &= ~eventExpression->typeMask & ~overrideExpression->typeMask;
+        } else {
+            applyExpression(eventExpression, eventExpression->typeMask, 3);
+            mask &= ~eventExpression->typeMask;
         }
-        applyExpression(mask);
+        
+        wakeExpressions(mask);
     }
 
     void ThreadActor::clearEventExpression() {
-        int mask = 0;
         if (eventExpression) {
-            //mask = eventExpression->getTypeMask(actor);
+            int mask = eventExpression->typeMask;
+            if (overrideExpression) {
+                mask &= ~overrideExpression->typeMask;
+            }
+            eventExpression = nullptr;
+            wakeExpressions(mask);
         }
-        eventExpression = nullptr;
-        applyExpression(mask);
     }
 
-    void ThreadActor::applyExpression(int mask) {
+    void ThreadActor::wakeExpressions(int mask) {
         if (mask == 0) {
             return;
         }
-        //TODO
+
+        if (eventExpression) {
+            applyExpression(eventExpression, mask & eventExpression->typeMask, 3);
+            mask &= ~eventExpression->typeMask;
+        }
+
+        if ((mask & Trait::ExpressionType::BALL_MODIFIER) == Trait::ExpressionType::BALL_MODIFIER && graphActor && !graphActor->eyeballModifierOverride.empty()) {
+            applyEyeballOverride();
+            mask &= ~Trait::ExpressionType::BALL_MODIFIER;
+        }
+        
+        if (underlyingExpression) {
+            applyExpression(underlyingExpression, mask, 1);
+        }
+    }
+
+    void ThreadActor::applyExpression(Trait::GenderExpression* expression, int mask, int updateSpeed) {
+        if (mask == 0) {
+            return;
+        }
+
+        auto faceData = actor->GetFaceGenAnimationData();
+
+        // expression
+        if ((mask & Trait::ExpressionType::EXPRESSION) == Trait::ExpressionType::EXPRESSION) {
+            if (auto value = expression->expression.calculate(speed, excitement)) {
+                faceData->exprOverride = false;
+                faceData->SetExpressionOverride(expression->expression.type, static_cast<float>(value) / 100.0f);
+                faceData->exprOverride = true;
+            }
+        }
+
+        // modifiers
+        if ((mask & Trait::ExpressionType::LID_MODIFIER) == Trait::ExpressionType::LID_MODIFIER) {
+            for (int i : Trait::eyelidModifierTypes) {
+                int current = faceData->modifierKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->eyelidModifiers.find(i);
+                if (iter != expression->eyelidModifiers.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    modifierUpdaters.erase(i);
+                } else {
+                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                }
+            }
+        }
+
+        if ((mask & Trait::ExpressionType::BROW_MODIFIER) == Trait::ExpressionType::BROW_MODIFIER) {
+            for (int i : Trait::eyebrowModifierTypes) {
+                int current = faceData->modifierKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->eyebrowModifiers.find(i);
+                if (iter != expression->eyebrowModifiers.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    modifierUpdaters.erase(i);
+                } else {
+                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                }
+            }
+        }
+
+        if ((mask & Trait::ExpressionType::BALL_MODIFIER) == Trait::ExpressionType::BALL_MODIFIER) {
+            for (int i : Trait::eyeballModifierTypes) {
+                int current = faceData->modifierKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->eyeballModifiers.find(i);
+                if (iter != expression->eyeballModifiers.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    modifierUpdaters.erase(i);
+                } else {
+                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                }
+            }
+        }
+
+        // phonemes
+        if ((mask & Trait::ExpressionType::PHONEME) == Trait::ExpressionType::PHONEME) {
+            for (int i = 0; i < 14; i++) {
+                int current = faceData->phenomeKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->phonemes.find(i);
+                if (iter != expression->phonemes.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    phonemeUpdaters.erase(i);
+                } else {
+                    phonemeUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                }
+            }
+        }
+    }
+
+    void ThreadActor::applyEyeballOverride() {
+        auto faceData = actor->GetFaceGenAnimationData();
+        for (int i : Trait::eyeballModifierTypes) {
+            int current = faceData->modifierKeyFrame.values[i] * 100;
+            int goal = 0;
+            int delay = 0;
+            auto iter = graphActor->eyeballModifierOverride.find(i);
+            if (iter != graphActor->eyeballModifierOverride.end()) {
+                goal = iter->second.calculate(speed, excitement);
+                delay = iter->second.randomizeDelay();
+            }
+            if (current == goal) {
+                modifierUpdaters.erase(i);
+            } else {
+                modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = 1};
+            }
+        }
     }
 
     void ThreadActor::free() {

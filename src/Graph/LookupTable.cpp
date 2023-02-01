@@ -2,6 +2,7 @@
 
 #include "Graph/Node.h"
 #include "Trait/Condition.h"
+#include "Util/Constants.h"
 #include "Util/StringUtil.h"
 #include "Util/JsonFileLoader.h"
 #include "SKEE.h"
@@ -92,7 +93,7 @@ namespace Graph {
         // the copy is to prevent race conditions if several scripts try to call this at once
         std::vector<Node*> copy = *iter2->second;
 
-        std::shuffle(std::begin(copy), std::end(copy), rng);
+        std::shuffle(std::begin(copy), std::end(copy), Constants::RNG);
 
         for (auto& node : copy) {
             if (!node->isTransition && !node->noRandomSelection && node->fulfilledBy(actorConditions) && nodeCondition(node)) {

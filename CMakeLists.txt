@@ -24,6 +24,7 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Core/ExpressionUpdater.cpp
     src/Core/Singleton.h
     src/Core/Thread.cpp
     src/Core/ThreadActor.cpp
