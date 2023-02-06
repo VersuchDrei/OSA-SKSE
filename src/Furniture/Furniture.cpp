@@ -17,6 +17,10 @@ namespace Furniture {
                 return FurnitureType::NONE;
             }
 
+            if (object->HasKeyword(FurnitureTable::WICraftingSmithing)) {
+                return FurnitureType::NONE;
+            }
+
             if (object->HasKeyword(FurnitureTable::WICraftingAlchemy) || object->HasKeyword(FurnitureTable::WICraftingEnchanting) || object->HasKeyword(FurnitureTable::isLeanTable)) {
                 return FurnitureType::TABLE;
             }
@@ -55,13 +59,7 @@ namespace Furniture {
             }
 
             if (chairMarkers == 1) {
-                std::string id = object->GetBaseObject()->GetFormEditorID();
-                StringUtil::toLower(&id);
-                if (id.find("bench") != std::string::npos) {
-                    return FurnitureType::BENCH;
-                } else {
-                    return FurnitureType::CHAIR;
-                }
+                return FurnitureType::CHAIR;
             } else if (chairMarkers > 1) {
                 return FurnitureType::BENCH;
             }
@@ -152,6 +150,13 @@ namespace Furniture {
                     break;
                 default:
                     break;
+            }
+
+            float refScale = object->GetReferenceRuntimeData().refScale / 100.0f;
+            if (refScale != 1) {
+                ret[0] *= refScale;
+                ret[1] *= refScale;
+                ret[2] *= refScale;
             }
         }
 

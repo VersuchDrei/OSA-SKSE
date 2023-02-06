@@ -120,10 +120,11 @@ namespace OStim {
         return m_currentNode;
     }
 
-    void Thread::AddThirdActor(RE::Actor* a_actor) {
+    void Thread::AddActor(RE::Actor* a_actor) {
         addActorSink(a_actor);
-        m_actors.insert(std::make_pair(2, ThreadActor(m_threadId, a_actor)));
-        ThreadActor* actor = GetActor(2);
+        int index = m_actors.size();
+        m_actors.insert(std::make_pair(index, ThreadActor(m_threadId, a_actor)));
+        ThreadActor* actor = GetActor(index);
         actor->initContinue();
         if (MCM::MCMTable::undressAtStart()) {
             actor->undress();
@@ -133,12 +134,13 @@ namespace OStim {
         }
     }
 
-    void Thread::RemoveThirdActor() {
-        ThreadActor* actor = GetActor(2);
+    void Thread::RemoveActor() {
+        int index = m_actors.size() - 1;
+        ThreadActor* actor = GetActor(index);
         removeActorSink(actor->getActor());
         actor->free();
 
-        m_actors.erase(2);
+        m_actors.erase(index);
     }
 
     void Thread::loop() {

@@ -122,7 +122,7 @@ namespace OStim {
 
         std::vector<Trait::FacialExpression*>* nodeExpressions = nullptr;
         Trait::GenderExpression* underlyingExpression = nullptr;
-        int underlyingExpressionCooldown = 0;
+        int underlyingExpressionCooldown = 999999;
         Trait::GenderExpression* eventExpression = nullptr;
         std::vector<Trait::FacialExpression*>* overrideExpressions = nullptr;
         Trait::GenderExpression* overrideExpression = nullptr;

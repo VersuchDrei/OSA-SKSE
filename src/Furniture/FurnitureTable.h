@@ -17,6 +17,7 @@ namespace Furniture {
         inline static RE::BGSKeyword* RaceToScale;
         inline static RE::BGSKeyword* WICraftingAlchemy;
         inline static RE::BGSKeyword* WICraftingEnchanting;
+        inline static RE::BGSKeyword* WICraftingSmithing;
 
         inline static RE::TESFurniture* BYOHVampireCoffinVert01;
         inline static RE::TESFurniture* WallLeanMarker;

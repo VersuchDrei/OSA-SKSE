@@ -40,7 +40,7 @@ namespace VectorUtil {
 
     template <class T>
     T randomElement(std::vector<T>* vec) {
-        return vec->at(std::uniform_int_distribution<>(1, vec->size())(Constants::RNG) - 1);
+        return vec->at(std::uniform_int_distribution<>(0, vec->size() - 1)(Constants::RNG));
     }
 
     bool contains(std::vector<int> haystack, int needle);

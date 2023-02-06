@@ -34,14 +34,14 @@ namespace PapyrusScenes {
         }
     }
 
-    void AddThirdActor(RE::StaticFunctionTag*, int64_t a_threadId, RE::Actor* a_actor) {
+    void AddActor(RE::StaticFunctionTag*, int64_t a_threadId, RE::Actor* a_actor) {
         auto tm = OStim::ThreadManager::GetSingleton();
-        tm->GetThread(a_threadId)->AddThirdActor(a_actor);
+        tm->GetThread(a_threadId)->AddActor(a_actor);
     }
 
-    void RemoveThirdActor(RE::StaticFunctionTag*, int64_t a_threadId) {
+    void RemoveActor(RE::StaticFunctionTag*, int64_t a_threadId) {
         auto tm = OStim::ThreadManager::GetSingleton();
-        tm->GetThread(a_threadId)->RemoveThirdActor();
+        tm->GetThread(a_threadId)->RemoveActor();
     }
 
     void UpdateSpeed(RE::StaticFunctionTag*, int64_t a_threadId, int a_speed){
@@ -83,8 +83,8 @@ namespace PapyrusScenes {
         BIND(StartScene);
         BIND(EndScene);
         BIND(ChangeAnimation);
-        BIND(AddThirdActor);
-        BIND(RemoveThirdActor);
+        BIND(AddActor);
+        BIND(RemoveActor);
         BIND(UpdateSpeed);
         BIND(GetActorExcitement);
         BIND(SetActorExcitement);

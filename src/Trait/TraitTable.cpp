@@ -1,6 +1,7 @@
 #include "TraitTable.h"
 
 #include "FacialExpression.h"
+#include "Util/ActorUtil.h"
 #include "Util/VectorUtil.h"
 #include "Util/JsonFileLoader.h"
 #include "Util/JsonUtil.h"
@@ -204,6 +205,14 @@ namespace Trait {
             return iter->second;
         }
         return nullptr;
+    }
+
+    void TraitTable::addToExcitementFaction(RE::Actor* actor) {
+        //actor->AddToFaction(excitementFaction, 0);
+    }
+
+    void TraitTable::removeFromExcitementFaction(RE::Actor* actor) {
+        ActorUtil::removeFromFaction(actor, excitementFaction);
     }
 
     void TraitTable::setExcitement(RE::Actor* actor, float excitement) {

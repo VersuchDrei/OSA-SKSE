@@ -15,8 +15,8 @@ namespace OStim {
         void ChangeNode(Graph::Node* a_node);
         Graph::Node* getCurrentNode();
 
-        void AddThirdActor(RE::Actor* a_actor);
-        void RemoveThirdActor();
+        void AddActor(RE::Actor* a_actor);
+        void RemoveActor();
 
         void loop();
 

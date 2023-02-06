@@ -17,6 +17,7 @@ namespace Furniture {
         RaceToScale = handler->LookupForm<RE::BGSKeyword>(0x0FD0E1, "Skyrim.esm");
         WICraftingAlchemy = handler->LookupForm<RE::BGSKeyword>(0x04f6e6, "Skyrim.esm");
         WICraftingEnchanting = handler->LookupForm<RE::BGSKeyword>(0x04f6dd, "Skyrim.esm");
+        WICraftingSmithing = handler->LookupForm<RE::BGSKeyword>(0x04f680, "Skyrim.esm");
 
         BYOHVampireCoffinVert01 = handler->LookupForm<RE::TESFurniture>(0x000801, "HearthFires.esm");
         WallLeanMarker = handler->LookupForm<RE::TESFurniture>(0x052ff5, "Skyrim.esm");

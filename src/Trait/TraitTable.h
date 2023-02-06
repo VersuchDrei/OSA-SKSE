@@ -19,8 +19,11 @@ namespace Trait {
         static std::vector<FacialExpression*>* getExpressionsForEvent(std::string);
         static std::vector<FacialExpression*>* getExpressionsForSet(std::string);
 
+        static void addToExcitementFaction(RE::Actor* actor);
+        static void removeFromExcitementFaction(RE::Actor* actor);
         static void setExcitement(RE::Actor* actor, float excitement);
         static float getExcitement(RE::Actor* actor);
+
         inline static bool areFacialExpressionsBlocked(RE::Actor* actor) {
             return actor->IsInFaction(noFacialExpressionsFaction);
         }

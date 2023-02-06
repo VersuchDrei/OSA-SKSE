@@ -1,5 +1,6 @@
 #include "ThreadActor.h"
 
+#include "Core.h"
 #include "Graph/LookupTable.h"
 #include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
@@ -7,13 +8,15 @@
 #include "Util/Constants.h"
 #include "Util/MCMTable.h"
 #include "Util/ObjectRefUtil.h"
+#include "Trait/TraitTable.h"
 #include "Util/VectorUtil.h"
 
 namespace OStim {
     ThreadActor::ThreadActor(int threadId, RE::Actor* actor) : threadId{threadId}, actor{actor} {
-        scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0;
+        scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0f;
         isFemale = actor->GetActorBase()->GetSex() == RE::SEX::kFemale;
         isPlayer = actor == RE::PlayerCharacter::GetSingleton();
+        Trait::TraitTable::addToExcitementFaction(actor);
 
         baseExcitementMultiplier = isFemale ? MCM::MCMTable::getFemaleSexExcitementMult() : MCM::MCMTable::getMaleSexExcitementMult();
         loopExcitementDecay = MCM::MCMTable::getExcitementDecayRate() * Constants::LOOP_TIME_SECONDS;
@@ -290,12 +293,14 @@ namespace OStim {
                 if (excitement < maxExcitement) {
                     excitement = maxExcitement;
                 }
+                Trait::TraitTable::setExcitement(actor, excitement);
             }
         } else {  // increase excitement
             excitement += loopExcitementInc;
             if (excitement > maxExcitement) {
                 excitement = maxExcitement;
             }
+            Trait::TraitTable::setExcitement(actor, excitement);
             excitementDecayCooldown = MCM::MCMTable::getExcitementDecayGracePeriod();
         }
 
@@ -536,6 +541,9 @@ namespace OStim {
         }
 
         auto faceData = actor->GetFaceGenAnimationData();
+        if (!faceData) {
+            return;
+        }
 
         // expression
         if ((mask & Trait::ExpressionType::EXPRESSION) == Trait::ExpressionType::EXPRESSION) {
@@ -549,6 +557,10 @@ namespace OStim {
         // modifiers
         if ((mask & Trait::ExpressionType::LID_MODIFIER) == Trait::ExpressionType::LID_MODIFIER) {
             for (int i : Trait::eyelidModifierTypes) {
+                if (i >= faceData->modifierKeyFrame.count) {
+                    continue;
+                }
+
                 int current = faceData->modifierKeyFrame.values[i] * 100;
                 int goal = 0;
                 int delay = 0;
@@ -567,6 +579,10 @@ namespace OStim {
 
         if ((mask & Trait::ExpressionType::BROW_MODIFIER) == Trait::ExpressionType::BROW_MODIFIER) {
             for (int i : Trait::eyebrowModifierTypes) {
+                if (i >= faceData->modifierKeyFrame.count) {
+                    continue;
+                }
+
                 int current = faceData->modifierKeyFrame.values[i] * 100;
                 int goal = 0;
                 int delay = 0;
@@ -585,6 +601,10 @@ namespace OStim {
 
         if ((mask & Trait::ExpressionType::BALL_MODIFIER) == Trait::ExpressionType::BALL_MODIFIER) {
             for (int i : Trait::eyeballModifierTypes) {
+                if (i >= faceData->modifierKeyFrame.count) {
+                    continue;
+                }
+
                 int current = faceData->modifierKeyFrame.values[i] * 100;
                 int goal = 0;
                 int delay = 0;
@@ -604,6 +624,10 @@ namespace OStim {
         // phonemes
         if ((mask & Trait::ExpressionType::PHONEME) == Trait::ExpressionType::PHONEME) {
             for (int i = 0; i < 14; i++) {
+                if (i >= faceData->phenomeKeyFrame.count) {
+                    continue;
+                }
+
                 int current = faceData->phenomeKeyFrame.values[i] * 100;
                 int goal = 0;
                 int delay = 0;
@@ -624,6 +648,10 @@ namespace OStim {
     void ThreadActor::applyEyeballOverride() {
         auto faceData = actor->GetFaceGenAnimationData();
         for (int i : Trait::eyeballModifierTypes) {
+            if (i >= faceData->modifierKeyFrame.count) {
+                continue;
+            }
+
             int current = faceData->modifierKeyFrame.values[i] * 100;
             int goal = 0;
             int delay = 0;
@@ -668,6 +696,15 @@ namespace OStim {
         }
         updateHeelOffset(false);
         ActorUtil::setScale(actor, scaleBefore);
+        
+        freeActor(actor, false);
+
+        // no need to do this in ActorUtil::free since facedata isn't written into the savefile anyways
+        auto faceData = actor->GetFaceGenAnimationData();
+        if (faceData) {
+            faceData->ClearExpressionOverride();
+            faceData->Reset(0.0, true, true, true, false);
+        }
     }
 
     void ThreadActor::papyrusUndressCallback(std::vector<RE::TESObjectARMO*> items) {
@@ -693,7 +730,7 @@ namespace OStim {
 
     void ThreadActor::GetRmHeightCallbackFunctor::setRmHeight(float height) {
         threadActor->rmHeight = height;
-        float currentScale = threadActor->actor->GetReferenceRuntimeData().refScale / 100.0;
+        float currentScale = threadActor->actor->GetReferenceRuntimeData().refScale / 100.0f;
         ActorUtil::setScale(threadActor->actor, currentScale / height);
     }
 }

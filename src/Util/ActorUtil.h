@@ -7,10 +7,17 @@ namespace ActorUtil {
         func(actor, scale);
     }
 
-    inline void UnequipItem(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::Actor* actor, RE::TESForm* akItem, bool abPreventEquip, bool abSilent) {
+    inline void UnequipItem(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::Actor* actor,
+                            RE::TESForm* akItem, bool abPreventEquip, bool abSilent) {
         using func_t = decltype(UnequipItem);
         REL::Relocation<func_t> func{RELOCATION_ID(53950, 54774)};
         func(vm, stackID, actor, akItem, abPreventEquip, abSilent);
+    }
+
+    inline void removeFromFaction(RE::Actor* actor, RE::TESFaction* faction) {
+        using func_t = decltype(removeFromFaction);
+        REL::Relocation<func_t> func{RELOCATION_ID(36680, 37688)};
+        func(actor, faction);
     }
 
     void unequipItem(RE::Actor* actor, RE::TESForm* item, bool preventEquip, bool silent);
@@ -21,4 +28,4 @@ namespace ActorUtil {
     void equipItemEx(RE::Actor* actor, RE::TESForm* item);
 
     float getHeelOffset(RE::Actor* actor, RE::TESObjectARMO** heelArmor);
-}
+}  // namespace ActorUtil
