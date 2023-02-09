@@ -145,7 +145,8 @@ namespace Graph {
                 if (auto expressions = Trait::TraitTable::getExpressionsForActionTarget(action->type)) {
                     return expressions;
                 }
-            } else if (action->actor == position) {
+            }
+            if (action->actor == position) {
                 if (auto expressions = Trait::TraitTable::getExpressionsForActionActor(action->type)) {
                     return expressions;
                 }
@@ -157,7 +158,8 @@ namespace Graph {
                 if (auto expressions = Trait::TraitTable::getExpressionsForActionTarget(action->type)) {
                     return expressions;
                 }
-            } else if (action->actor == position) {
+            }
+            if (action->actor == position) {
                 if (auto expressions = Trait::TraitTable::getExpressionsForActionActor(action->type)) {
                     return expressions;
                 }
@@ -171,7 +173,7 @@ namespace Graph {
         if (hasActorTag(position, "openmouth") || findAnyActionForActor(position, {"blowjob", "cunnilingus", "suckingnipples"}) != -1) {
             return Trait::TraitTable::getExpressionsForSet("openmouth");
         }
-        if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"})) {
+        if (hasActorTag(position, "licking") || findAnyActionForActor(position, {"lickingnipples", "lickingpenis", "lickingtesticles", "lickingvagina", "rimjob"}) != -1) {
             return Trait::TraitTable::getExpressionsForSet("tongue");
         }
         return nullptr;

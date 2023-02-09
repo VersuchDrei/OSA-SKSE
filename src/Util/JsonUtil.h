@@ -10,6 +10,7 @@ namespace JsonUtil {
 
 		if (!json.contains("formid")) {
             logger::info("file {} does not have field 'formid' defined", path);
+            return nullptr;
 		}
 
 		std::string mod = json["mod"];

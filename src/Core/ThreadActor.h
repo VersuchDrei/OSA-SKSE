@@ -1,7 +1,9 @@
 #pragma once
 
 #include "ExpressionUpdater.h"
+
 #include "Graph/Node.h"
+#include "Serial/OldThread.h"
 
 namespace OStim {
 	class ThreadActor {
@@ -37,6 +39,8 @@ namespace OStim {
         void loop();
 
         void free();
+
+        Serialization::OldThreadActor serialize();
 
     private:
         class GetRmHeightCallbackFunctor : public RE::BSScript::IStackCallbackFunctor {

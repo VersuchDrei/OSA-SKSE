@@ -3,8 +3,16 @@
 namespace ObjectRefUtil {
     int getMotionType(RE::TESObjectREFR* object);
     bool isInBBLS(RE::TESObjectREFR* object);
+    void removeItem(RE::TESObjectREFR* object, RE::TESForm* itemToRemove, int count, bool silent, RE::TESObjectREFR* otherContainer);
+    void removeItem(RE::TESObjectREFR* object, RE::TESForm* item);
     void stopTranslation(RE::TESObjectREFR* object);
     void translateTo(RE::TESObjectREFR* object, float x, float y, float z, float angleX, float angleY, float angleZ, float speed, float maxRotationSpeed);
+
+    inline void RemoveItem(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* object, RE::TESForm* akItemToRemove, int aiCount, bool abSilent, RE::TESObjectREFR* akOtherContainer) {
+        using func_t = decltype(RemoveItem);
+        REL::Relocation<func_t> func{RELOCATION_ID(55687, 56218)};
+        func(vm, stackID, object, akItemToRemove, aiCount, abSilent, akOtherContainer);
+    }
 
     inline void StopTranslation(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* object) {
         using func_t = decltype(StopTranslation);

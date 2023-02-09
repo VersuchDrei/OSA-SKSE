@@ -9,6 +9,7 @@ namespace Graph{
     class LookupTable {
     public:
         inline static RE::TESQuest* OSexIntegrationMainQuest;
+        inline static RE::TESObjectSTAT* OStimVehicle;
 
         static void setupForms();
 

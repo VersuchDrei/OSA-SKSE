@@ -66,7 +66,7 @@ namespace OStim {
             if (!entry->IsWorn() || !obj->IsArmor() || !FormUtil::canUndress(obj)) {
                 continue;
             }
-
+            
             auto armor = obj->As<RE::TESObjectARMO>();
             if (FormUtil::isWig(actor, armor)) {
                 continue;
@@ -560,7 +560,7 @@ namespace OStim {
                 if (i >= faceData->modifierKeyFrame.count) {
                     continue;
                 }
-
+                
                 int current = faceData->modifierKeyFrame.values[i] * 100;
                 int goal = 0;
                 int delay = 0;
@@ -732,5 +732,15 @@ namespace OStim {
         threadActor->rmHeight = height;
         float currentScale = threadActor->actor->GetReferenceRuntimeData().refScale / 100.0f;
         ActorUtil::setScale(threadActor->actor, currentScale / height);
+    }
+
+    Serialization::OldThreadActor ThreadActor::serialize() {
+        Serialization::OldThreadActor oldThreadActor;
+
+        oldThreadActor.actor = actor;
+
+        //TODO equipobjects
+
+        return oldThreadActor;
     }
 }

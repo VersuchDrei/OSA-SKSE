@@ -3,6 +3,7 @@
 #include "Furniture/FurnitureTable.h"
 #include "Graph/LookupTable.h"
 #include "Util/StringUtil.h"
+#include "Util/VectorUtil.h"
 
 namespace PapyrusDatabase {
     using VM = RE::BSScript::IVirtualMachine;
@@ -15,6 +16,8 @@ namespace PapyrusDatabase {
         auto j_obj = json::object();
 
         std::vector<std::string> split_id;
+
+        bool isOldFormat = true;
 
         if (auto scene = xml_doc.child("scene")) {
             if (auto id = scene.attribute("id")) {
@@ -147,6 +150,8 @@ namespace PapyrusDatabase {
                 if (auto furnitureType = metadata.attribute("furniture")) {
                     node->furnitureType = Furniture::FurnitureTable::getFurnitureType(furnitureType.as_string());
                 }
+
+                isOldFormat = false;
             }
 
             for (int i = 0; i < actorCount; i++) {
@@ -171,10 +176,6 @@ namespace PapyrusDatabase {
 
                             if (auto scaleHeight = actor.attribute("scaleHeight")) {
                                 node->actors[pos]->scaleHeight = scaleHeight.as_float();
-                            }
-
-                            if (auto feetOnGround = actor.attribute("feetOnGround")) {
-                                node->actors[pos]->feetOnGround = feetOnGround.as_bool();
                             }
 
                             if (auto expressionAction = actor.attribute("expressionAction")) {
@@ -223,6 +224,12 @@ namespace PapyrusDatabase {
                                 }
                             }
 
+                            if (auto feetOnGround = actor.attribute("feetOnGround")) {
+                                node->actors[pos]->feetOnGround = feetOnGround.as_bool();
+                            } else {
+                                node->actors[pos]->feetOnGround = VectorUtil::containsAny(node->actors[pos]->tags, {"standing", "squatting"});
+                            }
+
                             for (auto& autotransition : actor.children("autotransition")) {
                                 auto type = autotransition.attribute("type");
                                 auto destination = autotransition.attribute("destination");
@@ -234,6 +241,8 @@ namespace PapyrusDatabase {
                         }
                     }
                 }
+
+                isOldFormat = false;
             }
 
             if (auto actions = scene.child("actions")) {
@@ -265,6 +274,8 @@ namespace PapyrusDatabase {
                     actionObj->attributes = Graph::LookupTable::GetActionAttributesByType(actionObj->type);
                     node->actions.push_back(actionObj);
                 }
+
+                isOldFormat = false;
             }
         }
 
@@ -289,6 +300,104 @@ namespace PapyrusDatabase {
         j_obj["animclass"] = anim_class;
         node->animClass = anim_class;
         j_obj["positiondata"] = split_id[1];
+
+        // auto generate data for legacy packs
+        if (isOldFormat) {
+            Graph::Action* actionObj = nullptr;
+            Graph::Action* actionObj2 = nullptr;
+            if (anim_class == "Sx") {
+                actionObj = new Graph::Action();
+                actionObj->type = "vaginalsex";
+                actionObj->actor = 0;
+                actionObj->target = 1;
+            } else if (anim_class == "An") {
+                actionObj = new Graph::Action();
+                actionObj->type = "analsex";
+                actionObj->actor = 0;
+                actionObj->target = 1;
+            } else if (anim_class == "BJ" || anim_class == "HhBJ" || anim_class == "PJ" || anim_class == "HhPJ") {
+                actionObj = new Graph::Action();
+                actionObj->type = "blowjob";
+                actionObj->actor = 1;
+                actionObj->target = 0;
+            } else if (anim_class == "VJ") {
+                actionObj = new Graph::Action();
+                actionObj->type = "cunnilingus";
+                actionObj->actor = 0;
+                actionObj->target = 1;
+            } else if (anim_class == "HJ" || anim_class == "ApHJ") {
+                actionObj = new Graph::Action();
+                actionObj->type = "handjob";
+                actionObj->actor = 1;
+                actionObj->target = 0;
+            } else if (anim_class == "Cr") {
+                actionObj = new Graph::Action();
+                actionObj->type = "rubbingclitoris";
+                actionObj->actor = 0;
+                actionObj->target = 1;
+            } else if (anim_class == "Pf1" || anim_class == "Pf2") {
+                actionObj = new Graph::Action();
+                actionObj->type = "vaginalfingering";
+                actionObj->actor = 0;
+                actionObj->target = 1;
+            } else if (anim_class == "BoJ") {
+                actionObj = new Graph::Action();
+                actionObj->type = "boobjob";
+                actionObj->actor = 1;
+                actionObj->target = 0;
+                actionObj = new Graph::Action();
+                actionObj->type = "footjob";
+                actionObj->actor = 1;
+                actionObj->target = 0;
+            } else if (anim_class == "BoF") {
+                actionObj = new Graph::Action();
+                actionObj->type = "suckingnipples";
+                actionObj->actor = 0;
+                actionObj->target = 1;
+            } else if (anim_class == "Po") {
+                actionObj = new Graph::Action();
+                actionObj->type = "masturbation";
+                actionObj->actor = 0;
+                actionObj->target = 0;
+            } else if (anim_class == "DHJ") {
+                actionObj = new Graph::Action();
+                actionObj->type = "handjob";
+                actionObj->actor = 1;
+                actionObj->target = 0;
+                actionObj2 = new Graph::Action();
+                actionObj2->type = "handjob";
+                actionObj2->actor = 1;
+                actionObj2->target = 2;
+            } else if (anim_class == "VBJ") {
+                actionObj = new Graph::Action();
+                actionObj->type = "blowjob";
+                actionObj->actor = 1;
+                actionObj->target = 0;
+                actionObj2 = new Graph::Action();
+                actionObj2->type = "cunnilingus";
+                actionObj2->actor = 0;
+                actionObj2->target = 1;
+            } else if (anim_class == "VHJ") {
+                actionObj = new Graph::Action();
+                actionObj->type = "handjob";
+                actionObj->actor = 1;
+                actionObj->target = 0;
+                actionObj2 = new Graph::Action();
+                actionObj2->type = "cunnilingus";
+                actionObj2->actor = 0;
+                actionObj2->target = 1;
+            }
+            if (actionObj) {
+                actionObj->performer = actionObj->actor;
+                actionObj->attributes = Graph::LookupTable::GetActionAttributesByType(actionObj->type);
+                node->actions.push_back(actionObj);
+            }
+            if (actionObj2) {
+                actionObj2->performer = actionObj2->actor;
+                actionObj2->attributes = Graph::LookupTable::GetActionAttributesByType(actionObj2->type);
+                node->actions.push_back(actionObj2);
+            }
+        }
 
         Graph::LookupTable::addNode(node);
 

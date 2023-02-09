@@ -5,9 +5,9 @@
 namespace PapyrusScenes {
     using VM = RE::BSScript::IVirtualMachine;
 
-    void StartScene(RE::StaticFunctionTag*, int64_t a_id, std::vector<RE::Actor*> a_actors) {
+    void StartScene(RE::StaticFunctionTag*, int64_t id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) {
         auto tm = OStim::ThreadManager::GetSingleton();
-        tm->TrackThread(a_id, a_actors);
+        tm->TrackThread(id, furniture, actors);
     }
 
     void EndScene(RE::StaticFunctionTag*, int64_t a_id) {

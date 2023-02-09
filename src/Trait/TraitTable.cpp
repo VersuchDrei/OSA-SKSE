@@ -19,7 +19,7 @@ namespace Trait {
 
         std::srand((unsigned)time(NULL));
 
-        Util::JsonFileLoader::LoadFilesInFolder(EXPRESSION_FILE_PATH,[&](std::string,std::string,json json) {
+        Util::JsonFileLoader::LoadFilesInFolder(EXPRESSION_FILE_PATH,[&](std::string,std::string filename,json json) {
             FacialExpression* expression = new FacialExpression();
             if (json.contains("female")) {
                 parseGender(json["female"], &expression->female);
@@ -30,8 +30,8 @@ namespace Trait {
             }
 
             if (json.contains("sets")) {
-                for (auto& group : json["sets"]) {
-                    addToTable(&expressionsBySets, group, expression);
+                for (auto& set : json["sets"]) {
+                    addToTable(&expressionsBySets, set, expression);
                 }
             }
 
@@ -56,11 +56,18 @@ namespace Trait {
 
         auto iter = expressionsBySets.find("default");
         if (iter == expressionsBySets.end()) {
+            logger::warn("no default expression defined, generating empty");
             std::vector<FacialExpression*>* expressions = new std::vector<FacialExpression*>();
-            expressions->push_back({});
+            expressions->push_back(new FacialExpression());
             expressionsBySets.insert({"default", expressions});
         }
+    }
 
+    void TraitTable::setupForms() {
+        excitementFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D93, "OStim.esp");
+        noFacialExpressionsFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D92, "OStim.esp");
+
+        // this needs to go in setupForms because it requires the kDataLoaded event
         Util::JsonFileLoader::LoadFilesInFolder(EQUIP_OBJECT_FILE_PATH, [&](std::string path, std::string, json json) {
             if (!json.contains("id")) {
                 logger::info("file {} does not have field 'id' defined", path);
@@ -106,12 +113,6 @@ namespace Trait {
                 equipObjects.emplace(type, std::unordered_map<std::string, EquipObject*>{{id, object}});
             }
         });
-
-    }
-
-    void TraitTable::setupForms() {
-        excitementFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D93, "OStim.esp");
-        noFacialExpressionsFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D92, "OStim.esp");
     }
 
     void TraitTable::parseGender(nlohmann::json json, GenderExpression* genderExpression) {

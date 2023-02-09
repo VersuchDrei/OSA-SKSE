@@ -1,27 +1,28 @@
 #include "Serial/Manager.h"
 
+#include "OldThread.h"
+
 #include "Core/ThreadManager.h"
 #include "Game/Locker.h"
 #include "Util/MCMTable.h"
 
 namespace Serialization {
     inline const auto UndressingMaskRecord = _byteswap_ulong('UDRM');
+    inline const auto OldThreadsRecord = _byteswap_ulong('OLTH');
 
-    constexpr std::size_t SIZE = sizeof(uint32_t);
+    std::vector<OldThread> oldThreads;
+    uint32_t deserializationErrors = 0;
 
-    std::string DecodeType(uint32_t a_typeCode) {
-        std::string sig;
-        sig.resize(SIZE);
-        char* iter = reinterpret_cast<char*>(&a_typeCode);
-        for (std::size_t i = 0, j = SIZE - 2; i < SIZE - 1; ++i, --j) {
-            sig[j] = iter[i];
+    void closeOldThreads() {
+        for (OldThread thread : oldThreads) {
+            thread.close();
         }
-
-        return sig;
+        oldThreads.clear();
     }
 
     void Save(SKSE::SerializationInterface* serial) {
         std::unique_lock lock(_lock);
+        logger::info("serializing data");
 
         if (!serial->OpenRecord(UndressingMaskRecord, 0)) {
             logger::error("Unable to open record to write cosave data.");
@@ -30,10 +31,23 @@ namespace Serialization {
 
         uint32_t undressingMask = MCM::MCMTable::getUndressingMask();
         serial->WriteRecordData(&undressingMask, sizeof(undressingMask));
+
+        if (!serial->OpenRecord(OldThreadsRecord, 0)) {
+            logger::error("Unable to open record to write cosave data.");
+            return;
+        }
+
+        std::vector<OldThread> oldThreads = OStim::ThreadManager::GetSingleton()->serialize();
+        size_t size = oldThreads.size();
+        serial->WriteRecordData(&size, sizeof(size));
+        for (OldThread oldThread : oldThreads) {
+            oldThread.serialize(serial);
+        }
     }
 
     void Load(SKSE::SerializationInterface* serial) {
         std::unique_lock lock(_lock);
+        logger::info("deserializing data");
 
         std::uint32_t type;
         std::uint32_t size;
@@ -44,6 +58,13 @@ namespace Serialization {
                 uint32_t undressingMask;
                 serial->ReadRecordData(&undressingMask, sizeof(undressingMask));
                 MCM::MCMTable::setUndressingMask(undressingMask);
+            } else if (type == OldThreadsRecord){
+                size_t size;
+                serial->ReadRecordData(&size, sizeof(size));
+                deserializationErrors = 0;
+                for (int i = 0; i < size; i++) {
+                    OldThread::deserialize(serial, oldThreads, deserializationErrors);
+                }
             } else {
                 logger::warn("Unknown record type in cosave.");
             }

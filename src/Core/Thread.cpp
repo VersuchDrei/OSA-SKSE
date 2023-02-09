@@ -7,11 +7,13 @@
 #include <Util/StringUtil.h>
 
 namespace OStim {
-    Thread::Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
-        m_threadId = a_id;
-        for (int i = 0; i < a_actors.size(); i++) {
-            addActorSink(a_actors[i]);
-            m_actors.insert(std::make_pair(i, ThreadActor(a_id, a_actors[i])));
+    Thread::Thread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) : m_threadId{id}, furniture{furniture} {
+        RE::TESObjectREFR* center = furniture ? furniture : actors[0];
+        vehicle = center->PlaceObjectAtMe(Graph::LookupTable::OStimVehicle, false).get();
+
+        for (int i = 0; i < actors.size(); i++) {
+            addActorSink(actors[i]);
+            m_actors.insert(std::make_pair(i, ThreadActor(id, actors[i])));
             ThreadActor* actor = GetActor(i);
             actor->initContinue();
             if (MCM::MCMTable::undressAtStart()) {
@@ -194,7 +196,10 @@ namespace OStim {
         }
     }
 
-    void Thread::free() {
+    void Thread::close() {
+        vehicle->Disable();
+        vehicle->SetDelete(true);
+
         for (auto& actorIt : m_actors) {
             actorIt.second.free();
         }
@@ -272,6 +277,19 @@ namespace OStim {
         }
 
         return RE::BSEventNotifyControl::kContinue;
+    }
+
+    Serialization::OldThread Thread::serialize() {
+        Serialization::OldThread oldThread;
+
+        oldThread.vehicle = vehicle;
+        oldThread.furniture = furniture;
+
+        for (auto& actorIt : m_actors) {
+            oldThread.actors.push_back(actorIt.second.serialize());
+        }
+
+        return oldThread;
     }
 
 }  // namespace OStim
