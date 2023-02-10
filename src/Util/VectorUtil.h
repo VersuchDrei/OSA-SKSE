@@ -43,6 +43,12 @@ namespace VectorUtil {
         return vec->at(std::uniform_int_distribution<>(0, vec->size() - 1)(Constants::RNG));
     }
 
+    template <class T>
+    std::vector<T> toVector(std::set<T> set) {
+        std::vector<T> vec(set.begin(), set.end());
+        return vec;
+    }
+
     bool contains(std::vector<int> haystack, int needle);
     std::vector<int> stoiv(std::string string);
     std::vector<std::vector<int>> stoim(std::string string);

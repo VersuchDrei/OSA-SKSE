@@ -8,8 +8,11 @@ namespace Graph {
 		std::vector<std::string> requirements;
 		uint32_t strippingMask = 0;
 		std::unordered_map<std::string, int> ints;
-		std::unordered_map<std::string, float> floats;
-		std::unordered_map<std::string, std::string> strings;
+        std::unordered_map<std::string, std::vector<int>> intLists;
+        std::unordered_map<std::string, float> floats;
+        std::unordered_map<std::string, std::vector<float>> floatLists;
+        std::unordered_map<std::string, std::string> strings;
+        std::unordered_map<std::string, std::vector<std::string>> stringLists;
 	};
 
 	struct ActionAttributes {

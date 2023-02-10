@@ -140,24 +140,68 @@ namespace Graph {
             }
         }
 
-        if (json.contains("floats")) {
-            auto& floats = json["floats"];
-            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
-                actor.floats.insert(std::make_pair(it.key(), it.value().get<float>()));
+        if (json.contains("ints")) {
+            for (auto& [key, val] : json["ints"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                actor.ints.insert(std::make_pair(mutableKey, val.get<int>()));
             }
         }
 
-        if (json.contains("ints")) {
-            auto& floats = json["ints"];
-            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
-                actor.ints.insert(std::make_pair(it.key(), it.value().get<int>()));
+        if (json.contains("intLists")) {
+            for (auto& [key, val] : json["intLists"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::vector<int> ints;
+                for (auto& entry : val) {
+                    ints.push_back(entry.get<int>());
+                }
+                actor.intLists.insert(std::make_pair(mutableKey, ints));
+            }
+        }
+
+        if (json.contains("floats")) {
+            for (auto& [key, val] : json["floats"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                actor.floats.insert(std::make_pair(mutableKey, val.get<float>()));
+            }
+        }
+
+        if (json.contains("floatLists")) {
+            for (auto& [key, val] : json["floatLists"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::vector<float> floats;
+                for (auto& entry : val) {
+                    floats.push_back(entry.get<float>());
+                }
+                actor.floatLists.insert(std::make_pair(mutableKey, floats));
             }
         }
 
         if (json.contains("strings")) {
-            auto& floats = json["strings"];
-            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
-                actor.strings.insert(std::make_pair(it.key(), it.value().get<std::string>()));
+            auto& strings = json["strings"];
+            for (auto& [key, val] : json["strings"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::string value = val.get<std::string>();
+                StringUtil::toLower(&value);
+                actor.strings.insert(std::make_pair(mutableKey, value));
+            }
+        }
+
+        if (json.contains("stringLists")) {
+            for (auto& [key, val] : json["stringLists"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::vector<std::string> strings;
+                for (auto& entry : val) {
+                    std::string value = entry.get<std::string>();
+                    StringUtil::toLower(&value);
+                    strings.push_back(value);
+                }
+                actor.stringLists.insert(std::make_pair(mutableKey, strings));
             }
         }
     };

@@ -831,6 +831,169 @@ namespace PapyrusMetadata {
         }
         return -1;
     }
+    
+
+    std::vector<std::string> GetActionTags(RE::StaticFunctionTag*, std::string id, int index) {
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->tags;
+            }
+        }
+        return {};
+    }
+
+    std::vector<std::string> GetAllActionTags(RE::StaticFunctionTag*, std::string id) {
+        std::set<std::string> tags;
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                for (std::string tag : action->attributes->tags) {
+                    tags.insert(tag);
+                }
+            }
+        }
+        return VectorUtil::toVector(tags);
+    }
+
+    bool HasActionTag(RE::StaticFunctionTag*, std::string id, int index, std::string tag) {
+        StringUtil::toLower(&tag);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(node->actions[index]->attributes->tags, tag);
+            }
+        }
+        return false;
+    }
+
+    bool HasActionTagOnAny(RE::StaticFunctionTag*, std::string id, std::string tag) {
+        StringUtil::toLower(&tag);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action: node->actions) {
+                if (VectorUtil::contains(action->attributes->tags, tag)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool HasAnyActionTag(RE::StaticFunctionTag*, std::string id, int index, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(node->actions[index]->attributes->tags, tags);
+            }
+        }
+        return false;
+    }
+
+    bool HasAnyActionTagCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string tags) {
+        return HasAnyActionTag(sft, id, index, StringUtil::toTagVector(tags));
+    }
+
+    bool HasAnyActionTagOnAny(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (VectorUtil::containsAny(action->attributes->tags, tags)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool HasAnyActionTagOnAnyCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return HasAnyActionTagOnAny(sft, id, StringUtil::toTagVector(tags));
+    }
+
+    bool HasAllActionTags(RE::StaticFunctionTag*, std::string id, int index, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(node->actions[index]->attributes->tags, tags);
+            }
+        }
+        return false;
+    }
+
+    bool HasAllActionTagsCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string tags) {
+        return HasAllActionTags(sft, id, index, StringUtil::toTagVector(tags));
+    }
+
+    bool HasAllActionTagsOnAny(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (VectorUtil::containsAll(action->attributes->tags, tags)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool HasAllActionTagsOnAnyCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return HasAllActionTagsOnAny(sft, id, StringUtil::toTagVector(tags));
+    }
+
+    bool HasAllActionTagsOverAll(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                std::erase_if(tags, [action](std::string tag) {return VectorUtil::contains(action->attributes->tags, tag);});
+                if (tags.empty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool HasAllActionTagsOverAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return HasAllActionTagsOverAll(sft, id, StringUtil::toTagVector(tags));
+    }
+
+    std::vector<std::string> GetActionTagOverlap(RE::StaticFunctionTag*, std::string id, int index, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        std::vector<std::string> ret;
+
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                for (auto& tag : node->actions[index]->attributes->tags) {
+                    if (VectorUtil::contains(tags, tag)) {
+                        ret.push_back(tag);
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    std::string GetActionTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string tags) {
+        return StringUtil::toTagCSV(GetActionTagOverlap(sft, id, index, StringUtil::toTagVector(tags)));
+    }
+
+    std::vector<std::string> GetActionTagOverlapOverAll(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
+        StringUtil::toLower(&tags);
+        std::set<std::string> ret;
+
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                for (auto& tag : action->attributes->tags) {
+                    if (VectorUtil::contains(tags, tag)) {
+                        ret.insert(tag);
+                    }
+                }
+            }
+        }
+
+        return VectorUtil::toVector(ret);
+    }
+
+    std::string GetActionTagOverlapOverAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return StringUtil::toTagCSV(GetActionTagOverlapOverAll(sft, id, StringUtil::toTagVector(tags)));
+    }
 
 
 	bool Bind(VM* a_vm) {
@@ -986,6 +1149,25 @@ namespace PapyrusMetadata {
         BIND(GetActionTarget);
         BIND(GetActionPerformers);
         BIND(GetActionPerformer);
+
+        BIND(GetActionTags);
+        BIND(GetAllActionTags);
+        BIND(HasActionTag);
+        BIND(HasActionTagOnAny);
+        BIND(HasAnyActionTag);
+        BIND(HasAnyActionTagCSV);
+        BIND(HasAnyActionTagOnAny);
+        BIND(HasAnyActionTagOnAnyCSV);
+        BIND(HasAllActionTags);
+        BIND(HasAllActionTagsCSV);
+        BIND(HasAllActionTagsOnAny);
+        BIND(HasAllActionTagsOnAnyCSV);
+        BIND(HasAllActionTagsOverAll);
+        BIND(HasAllActionTagsOverAllCSV);
+        BIND(GetActionTagOverlap);
+        BIND(GetActionTagOverlapCSV);
+        BIND(GetActionTagOverlapOverAll);
+        BIND(GetActionTagOverlapOverAllCSV);
 
         return true;
 	}
