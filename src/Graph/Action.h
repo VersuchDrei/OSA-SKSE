@@ -5,6 +5,7 @@ namespace Graph {
 	public:
         float stimulation = 0.0;
         float maxStimulation = 100.0;
+        bool fullStrip = false;
 		std::vector<std::string> requirements;
 		uint32_t strippingMask = 0;
 		std::unordered_map<std::string, int> ints;
@@ -33,6 +34,7 @@ namespace Graph {
         int target;
         int performer;
 
-		uint32_t getStrippingMask(int index);
+        bool doFullStrip(int position);
+        uint32_t getStrippingMask(int position);
     };
 }

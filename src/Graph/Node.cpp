@@ -33,6 +33,15 @@ namespace Graph {
         return mask;
     }
 
+    bool Node::doFullStrip(int position) {
+        for (auto& action : actions) {
+            if (action->doFullStrip(position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     std::string Node::getAutoTransitionForActor(int position, std::string type) {
         if (position < 0 || position >= actors.size()) {
             return "";

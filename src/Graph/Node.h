@@ -53,7 +53,8 @@ namespace Graph {
         std::vector<Trait::FacialExpression*>* getFacialExpressions(int position);
         std::vector<Trait::FacialExpression*>* getOverrideExpressions(int position);
 
-        uint32_t getStrippingMask(int index);
+        uint32_t getStrippingMask(int position);
+        bool doFullStrip(int position);
 
         std::string getAutoTransitionForActor(int position, std::string type);
 

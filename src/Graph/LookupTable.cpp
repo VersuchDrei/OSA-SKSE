@@ -117,15 +117,13 @@ namespace Graph {
         if (json.contains("stimulation")) {
             actor.stimulation = json["stimulation"];
         }
-        else {
-            actor.stimulation = 0.0;
-        }
 
         if (json.contains("maxStimulation")) {
             actor.maxStimulation = json["maxStimulation"];
         }
-        else {
-            actor.maxStimulation = 100.0;
+
+        if (json.contains("fullStrip")) {
+            actor.fullStrip = json["fullStrip"];
         }
 
         if (json.contains("requirements")) {
