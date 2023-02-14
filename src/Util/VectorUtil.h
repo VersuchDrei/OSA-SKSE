@@ -30,6 +30,19 @@ namespace VectorUtil {
     }
 
     template <class T>
+    std::vector<T> getOverlap(std::vector<T> a, std::vector<T> b) {
+        std::vector<T> ret;
+
+        for (T element : a) {
+            if (contains(b, element)) {
+                ret.push_back(element);
+            }
+        }
+
+        return ret;
+    }
+
+    template <class T>
     int getIndex(std::vector<T> haystack, T needle) {
         auto it = std::find(haystack.begin(), haystack.end(), needle);
         if (it == haystack.end()) {
@@ -51,6 +64,7 @@ namespace VectorUtil {
 
     bool contains(std::vector<int> haystack, int needle);
     std::vector<int> stoiv(std::string string);
+    std::vector<float> stofv(std::string string);
     std::vector<std::vector<int>> stoim(std::string string);
     std::vector<int> getElementOrEmpty(std::vector<std::vector<int>> matrix, int index);
 }

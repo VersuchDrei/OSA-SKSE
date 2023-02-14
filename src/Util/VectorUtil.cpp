@@ -16,6 +16,17 @@ namespace VectorUtil {
         return ret;
     }
 
+    std::vector<float> stofv(std::string string) {
+        std::vector<float> ret;
+        for (std::string part : stl::string_split(string, ',')) {
+            try {
+                ret.push_back(std::stof(part));
+            } catch (const std::exception& ex) {
+            }
+        }
+        return ret;
+    }
+
     std::vector<std::vector<int>> stoim(std::string string) {
         std::vector<std::vector<int>> ret;
         for (std::string part : stl::string_split(string, ';')) {

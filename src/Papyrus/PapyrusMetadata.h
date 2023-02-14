@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graph/LookupTable.h"
+#include "Util/MapUtil.h"
 #include "Util/StringUtil.h"
 #include "Util/VectorUtil.h"
 #include "Util.h"
@@ -36,9 +37,22 @@ namespace PapyrusMetadata {
     }
 
     // *********************************************************
+    // helper functions specifically for superload
+    // *********************************************************
+    bool checkConditions(std::vector<std::function<bool(Graph::Action)>> &conditions, Graph::Action action) {
+        for (std::function<bool(Graph::Action)> condition : conditions) {
+            if (!condition(action)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // *********************************************************
     // start of papyrus bound functions
     // *********************************************************
 
+#pragma region general
     bool IsTransition(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return node->isTransition;
@@ -82,8 +96,10 @@ namespace PapyrusMetadata {
         }
         return "";
     }
+#pragma endregion
 
-
+#pragma region tags
+#pragma region scene_tags
     std::vector<std::string> GetSceneTags(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return node->tags;
@@ -125,24 +141,19 @@ namespace PapyrusMetadata {
 
     std::vector<std::string> GetSceneTagOverlap(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
-        std::vector<std::string> ret;
-
         if (auto node = Graph::LookupTable::getNodeById(id)) {
-            for (auto& tag : node->tags) {
-                if (VectorUtil::contains(tags, tag)) {
-                    ret.push_back(tag);
-                }
-            }
+            return VectorUtil::getOverlap(node->tags, tags);
         }
 
-        return ret;
+        return {};
     }
 
-    std::string GetSceneTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
-        return StringUtil::toTagCSV(GetSceneTagOverlap(sft, id, StringUtil::toTagVector(tags)));
+    std::vector<std::string> GetSceneTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return GetSceneTagOverlap(sft, id, StringUtil::toTagVector(tags));
     }
+#pragma endregion
 
-
+#pragma region actor_tags
     std::vector<std::string> GetActorTags(RE::StaticFunctionTag*, std::string id, int position) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             if (node->actors.size() > position) {
@@ -192,27 +203,25 @@ namespace PapyrusMetadata {
 
     std::vector<std::string> GetActorTagOverlap(RE::StaticFunctionTag*, std::string id, int position, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
-        std::vector<std::string> ret;
-
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             if (node->actors.size() > position) {
-                for (auto& tag : node->actors[position]->tags) {
-                    if (VectorUtil::contains(tags, tag)) {
-                        ret.push_back(tag);
-                    }
-                }
+                return VectorUtil::getOverlap(node->actors[position]->tags, tags);
             }
             
         }
 
-        return ret;
+        return {};
     }
 
-    std::string GetActorTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, int position, std::string tags) {
-        return StringUtil::toTagCSV(GetActorTagOverlap(sft, id, position, StringUtil::toTagVector(tags)));
+    std::vector<std::string> GetActorTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, int position, std::string tags) {
+        return GetActorTagOverlap(sft, id, position, StringUtil::toTagVector(tags));
     }
+#pragma endregion
+#pragma endregion
 
-
+#pragma region actions
+#pragma region find_action
+#pragma region actions_general
     bool HasActions(RE::StaticFunctionTag*, std::string id) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             return !node->actions.empty();
@@ -247,8 +256,9 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsCSV(RE::StaticFunctionTag* sft, std::string id, std::string types) {
         return FindAllActions(sft, id, StringUtil::toTagVector(types));
     }
+#pragma endregion
 
-
+#pragma region actions_by_actor
     int FindActionForActor(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         StringUtil::toLower(&type);
         return findAction(id, [position, type](Graph::Action action) { return action.actor == position && action.type == type; });
@@ -312,8 +322,9 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsForActorsCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
         return FindAllActionsForActors(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
     }
+#pragma endregion
 
-
+#pragma region actions_by_target
     int FindActionForTarget(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         StringUtil::toLower(&type);
         return findAction(id, [position, type](Graph::Action action) { return action.target == position && action.type == type; });
@@ -377,8 +388,9 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsForTargetsCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
         return FindAllActionsForTargets(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
     }
+#pragma endregion
 
-
+#pragma region actions_by_performer
     int FindActionForPerformer(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         StringUtil::toLower(&type);
         return findAction(id, [position, type](Graph::Action action) { return action.performer == position && action.type == type; });
@@ -442,8 +454,9 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsForPerformersCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
         return FindAllActionsForPerformers(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
     }
+#pragma endregion
     
-
+#pragma region actions_by_actor_and_target
     int FindActionForActorAndTarget(RE::StaticFunctionTag*, std::string id, int actorPosition, int targetPosition, std::string type) {
         StringUtil::toLower(&type);
         return findAction(id, [actorPosition, targetPosition, type](Graph::Action action) { return action.actor == actorPosition && action.target == targetPosition && action.type == type; });
@@ -507,8 +520,9 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsForActorsAndTargetsCSV(RE::StaticFunctionTag* sft, std::string id, std::string actorPositions, std::string targetPositions, std::string types) {
         return FindAllActionsForActorsAndTargets(sft, id, VectorUtil::stoiv(actorPositions), VectorUtil::stoiv(targetPositions), StringUtil::toTagVector(types));
     }
+#pragma endregion
 
-
+#pragma region actions_by_mate
     int FindActionForMate(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         StringUtil::toLower(&type);
         return findAction(id, [position, type](Graph::Action action) { return (action.actor == position || action.target == position) && action.type == type; });
@@ -608,8 +622,9 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsForMatesAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
         return FindAllActionsForMatesAll(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
     }
+#pragma endregion
 
-
+#pragma region actions_by_participant
     int FindActionForParticipant(RE::StaticFunctionTag*, std::string id, int position, std::string type) {
         StringUtil::toLower(&type);
         return findAction(id, [position, type](Graph::Action action) { return (action.actor == position || action.target == position || action.performer == position) && action.type == type; });
@@ -709,53 +724,704 @@ namespace PapyrusMetadata {
     std::vector<int> FindAllActionsForParticipantsAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string positions, std::string types) {
         return FindAllActionsForParticipantsAll(sft, id, VectorUtil::stoiv(positions), StringUtil::toTagVector(types));
     }
+#pragma endregion
+
+#pragma region action_superload
+    int FindActionSuperloadCSVv2(RE::StaticFunctionTag*, std::string id, std::string actorPositions, std::string targetPositions, std::string performerPositions, std::string matePositionsAny, std::string matePositionsAll, std::string participantPositionsAny, std::string participantPositionsAll, std::string types, std::string anyActionTag, std::string allActionTags, std::string actionTagWhitelist, std::string actionTagBlacklist, std::string anyCustomIntRecord, std::string allCustomIntRecords, std::string anyCustomFloatRecord, std::string allCustomFloatRecords, std::string anyCustomStringRecord, std::string allCustomStringRecords, std::string anyCustomIntListRecord, std::string allCustomIntListRecords, std::string anyCustomFloatListRecord, std::string allCustomFloatListRecords, std::string anyCustomStringListRecord, std::string allCustomStringListRecords) {
+        std::vector<std::function<bool(Graph::Action)>> conditions;
+        
+
+        if (!actorPositions.empty()) {
+            std::vector<int> actorPos = VectorUtil::stoiv(actorPositions);
+            conditions.push_back([actorPos](Graph::Action action){return VectorUtil::contains(actorPos, action.actor);});
+        }
+
+        if (!targetPositions.empty()) {
+            std::vector<int> targetPos = VectorUtil::stoiv(targetPositions);
+            conditions.push_back([targetPos](Graph::Action action){return VectorUtil::contains(targetPos, action.target);});
+        }
+
+        if (!performerPositions.empty()) {
+            std::vector<int> performerPos = VectorUtil::stoiv(performerPositions);
+            conditions.push_back([performerPos](Graph::Action action){return VectorUtil::contains(performerPos, action.performer);});
+        }
+
+        if (!matePositionsAny.empty()) {
+            std::vector<int> matePosAny = VectorUtil::stoiv(matePositionsAny);
+            conditions.push_back([matePosAny](Graph::Action action){return VectorUtil::containsAny(matePosAny, {action.actor, action.target});});
+        }
+
+        if (!matePositionsAll.empty()) {
+            std::vector<int> matePosAll = VectorUtil::stoiv(matePositionsAll);
+            conditions.push_back([matePosAll](Graph::Action action){return VectorUtil::containsAll(matePosAll, {action.actor, action.target});});
+        }
+
+        if (!participantPositionsAny.empty()) {
+            std::vector<int> participantPosAny = VectorUtil::stoiv(participantPositionsAny);
+            conditions.push_back([participantPosAny](Graph::Action action){return VectorUtil::containsAny(participantPosAny, {action.actor, action.target, action.performer});});
+        }
+
+        if (!participantPositionsAll.empty()) {
+            std::vector<int> participantPosAll = VectorUtil::stoiv(participantPositionsAll);
+            conditions.push_back([participantPosAll](Graph::Action action){return VectorUtil::containsAll(participantPosAll, {action.actor, action.target, action.performer});});
+        }
+
+        if (!types.empty()) {
+            std::vector<std::string> typesVector = StringUtil::toTagVector(types);
+            conditions.push_back([typesVector](Graph::Action action){return VectorUtil::contains(typesVector, action.type);});
+        }
 
 
-    int FindActionSuperloadCSV(RE::StaticFunctionTag*, std::string id, std::string actorPositions, std::string targetPositions, std::string performerPositions, std::string matePositionsAny, std::string matePositionsAll, std::string participantPositionsAny, std::string participantPositionsAll, std::string types) {
-        std::vector<int> actorPos = VectorUtil::stoiv(actorPositions);
-        std::vector<int> targetPos = VectorUtil::stoiv(targetPositions);
-        std::vector<int> performerPos = VectorUtil::stoiv(performerPositions);
-        std::vector<int> matePosAny = VectorUtil::stoiv(matePositionsAny);
-        std::vector<int> matePosAll = VectorUtil::stoiv(matePositionsAll);
-        std::vector<int> participantPosAny = VectorUtil::stoiv(participantPositionsAny);
-        std::vector<int> participantPosAll = VectorUtil::stoiv(participantPositionsAll);
-        std::vector<std::string> typeVector = StringUtil::toTagVector(types);
+        if (!anyActionTag.empty()) {
+            std::vector<std::string> AnyActionTagVector = StringUtil::toTagVector(anyActionTag);
+            conditions.push_back([AnyActionTagVector](Graph::Action action){return VectorUtil::containsAny(action.attributes->tags, AnyActionTagVector);});
+        }
 
-        return findAction(id, [actorPos, targetPos, performerPos, matePosAny, matePosAll, participantPosAny, participantPosAll, typeVector](Graph::Action action) {
-                return (actorPos.empty() || VectorUtil::contains(actorPos, action.actor)) &&
-                    (targetPos.empty() || VectorUtil::contains(targetPos, action.target)) &&
-                    (performerPos.empty() || VectorUtil::contains(performerPos, action.performer)) &&
-                    (matePosAny.empty() || VectorUtil::containsAny(matePosAny, {action.actor, action.target})) &&
-                    (matePosAll.empty() || VectorUtil::containsAll(matePosAll, {action.actor, action.target})) &&
-                    (participantPosAny.empty() || VectorUtil::containsAny(participantPosAny, {action.actor, action.target, action.performer})) &&
-                    (participantPosAll.empty() || VectorUtil::containsAll(participantPosAll, {action.actor, action.target, action.performer})) &&
-                    (typeVector.empty() || VectorUtil::contains(typeVector, action.type));
-            });
+        if (!allActionTags.empty()) {
+            std::vector<std::string> AllActionTagsVector = StringUtil::toTagVector(allActionTags);
+            conditions.push_back([AllActionTagsVector](Graph::Action action){return VectorUtil::containsAll(action.attributes->tags, AllActionTagsVector);});
+        }
+
+        if (!actionTagWhitelist.empty()) {
+            std::vector<std::string> actionTagWhitelistVector = StringUtil::toTagVector(actionTagWhitelist);
+            conditions.push_back([actionTagWhitelistVector](Graph::Action action){return VectorUtil::containsAll(actionTagWhitelistVector, action.attributes->tags);});
+        }
+
+        if (!actionTagBlacklist.empty()) {
+            std::vector<std::string> actionTagBlacklistVector = StringUtil::toTagVector(actionTagBlacklist);
+            conditions.push_back([actionTagBlacklistVector](Graph::Action action){return !VectorUtil::containsAny(actionTagBlacklistVector, action.attributes->tags);});
+        }
+
+
+        if (!anyCustomIntRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomIntRecordMatrix = StringUtil::toTagMatrix(anyCustomIntRecord);
+
+            std::vector<std::string> actorKeys = anyCustomIntRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.ints, actorKeys);});
+            }
+
+            if (anyCustomIntRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomIntRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.ints, targetKeys);});
+                }
+            }
+
+            if (anyCustomIntRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomIntRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.ints, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomIntRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomIntRecordsMatrix = StringUtil::toTagMatrix(allCustomIntRecords);
+
+            std::vector<std::string> actorKeys = allCustomIntRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.ints, actorKeys);});
+            }
+
+            if (allCustomIntRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomIntRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.ints, targetKeys);});
+                }
+            }
+
+            if (allCustomIntRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomIntRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.ints, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomFloatRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomFloatRecordMatrix = StringUtil::toTagMatrix(anyCustomFloatRecord);
+
+            std::vector<std::string> actorKeys = anyCustomFloatRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.floats, actorKeys);});
+            }
+
+            if (anyCustomFloatRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomFloatRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.floats, targetKeys);});
+                }
+            }
+
+            if (anyCustomFloatRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomFloatRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.floats, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomFloatRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomFloatRecordsMatrix = StringUtil::toTagMatrix(allCustomFloatRecords);
+
+            std::vector<std::string> actorKeys = allCustomFloatRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.floats, actorKeys);});
+            }
+
+            if (allCustomFloatRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomFloatRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.floats, targetKeys);});
+                }
+            }
+
+            if (allCustomFloatRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomFloatRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.floats, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomStringRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomStringRecordMatrix = StringUtil::toTagMatrix(anyCustomStringRecord);
+
+            std::vector<std::string> actorKeys = anyCustomStringRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.strings, actorKeys);});
+            }
+
+            if (anyCustomStringRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomStringRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.strings, targetKeys);});
+                }
+            }
+
+            if (anyCustomStringRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomStringRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.strings, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomStringRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomStringRecordsMatrix = StringUtil::toTagMatrix(allCustomStringRecords);
+
+            std::vector<std::string> actorKeys = allCustomStringRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.strings, actorKeys);});
+            }
+
+            if (allCustomStringRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomStringRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.strings, targetKeys);});
+                }
+            }
+
+            if (allCustomStringRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomStringRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.strings, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomIntListRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomIntListRecordMatrix = StringUtil::toTagMatrix(anyCustomIntListRecord);
+
+            std::vector<std::string> actorKeys = anyCustomIntListRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.intLists, actorKeys);});
+            }
+
+            if (anyCustomIntListRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomIntListRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.intLists, targetKeys);});
+                }
+            }
+
+            if (anyCustomIntListRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomIntListRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.intLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomIntListRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomIntListRecordsMatrix = StringUtil::toTagMatrix(allCustomIntListRecords);
+
+            std::vector<std::string> actorKeys = allCustomIntListRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.intLists, actorKeys);});
+            }
+
+            if (allCustomIntListRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomIntListRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.intLists, targetKeys);});
+                }
+            }
+
+            if (allCustomIntListRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomIntListRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.intLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomFloatListRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomFloatListRecordMatrix = StringUtil::toTagMatrix(anyCustomFloatListRecord);
+
+            std::vector<std::string> actorKeys = anyCustomFloatListRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.floatLists, actorKeys);});
+            }
+
+            if (anyCustomFloatListRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomFloatListRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.floatLists, targetKeys);});
+                }
+            }
+
+            if (anyCustomFloatListRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomFloatListRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.floatLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomFloatListRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomFloatListRecordsMatrix = StringUtil::toTagMatrix(allCustomFloatListRecords);
+
+            std::vector<std::string> actorKeys = allCustomFloatListRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.floatLists, actorKeys);});
+            }
+
+            if (allCustomFloatListRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomFloatListRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.floatLists, targetKeys);});
+                }
+            }
+
+            if (allCustomFloatListRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomFloatListRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.floatLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomStringListRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomStringListRecordMatrix = StringUtil::toTagMatrix(anyCustomStringListRecord);
+
+            std::vector<std::string> actorKeys = anyCustomStringListRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.stringLists, actorKeys);});
+            }
+
+            if (anyCustomStringListRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomStringListRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.stringLists, targetKeys);});
+                }
+            }
+
+            if (anyCustomStringListRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomStringListRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.stringLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomStringListRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomStringListRecordsMatrix = StringUtil::toTagMatrix(allCustomStringListRecords);
+
+            std::vector<std::string> actorKeys = allCustomStringListRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.stringLists, actorKeys);});
+            }
+
+            if (allCustomStringListRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomStringListRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.stringLists, targetKeys);});
+                }
+            }
+
+            if (allCustomStringListRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomStringListRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.stringLists, performerKeys);});
+                }
+            }
+        }
+
+
+        return findAction(id, [&conditions](Graph::Action action) {return checkConditions(conditions, action);});
     }
 
-    std::vector<int> FindActionsSuperloadCSV(RE::StaticFunctionTag*, std::string id, std::string actorPositions, std::string targetPositions, std::string performerPositions, std::string matePositionsAny, std::string matePositionsAll, std::string participantPositionsAny, std::string participantPositionsAll, std::string types) {
-        std::vector<int> actorPos = VectorUtil::stoiv(actorPositions);
-        std::vector<int> targetPos = VectorUtil::stoiv(targetPositions);
-        std::vector<int> performerPos = VectorUtil::stoiv(performerPositions);
-        std::vector<int> matePosAny = VectorUtil::stoiv(matePositionsAny);
-        std::vector<int> matePosAll = VectorUtil::stoiv(matePositionsAll);
-        std::vector<int> participantPosAny = VectorUtil::stoiv(participantPositionsAny);
-        std::vector<int> participantPosAll = VectorUtil::stoiv(participantPositionsAll);
-        std::vector<std::string> typeVector = StringUtil::toTagVector(types);
+    std::vector<int> FindActionsSuperloadCSVv2(RE::StaticFunctionTag*, std::string id, std::string actorPositions, std::string targetPositions, std::string performerPositions, std::string matePositionsAny, std::string matePositionsAll, std::string participantPositionsAny, std::string participantPositionsAll, std::string types, std::string anyActionTag, std::string allActionTags, std::string actionTagWhitelist, std::string actionTagBlacklist, std::string anyCustomIntRecord, std::string allCustomIntRecords, std::string anyCustomFloatRecord, std::string allCustomFloatRecords, std::string anyCustomStringRecord, std::string allCustomStringRecords, std::string anyCustomIntListRecord, std::string allCustomIntListRecords, std::string anyCustomFloatListRecord, std::string allCustomFloatListRecords, std::string anyCustomStringListRecord, std::string allCustomStringListRecords) {
+        std::vector<std::function<bool(Graph::Action)>> conditions;
+        
 
-        return findActions(id, [actorPos, targetPos, performerPos, matePosAny, matePosAll, participantPosAny, participantPosAll, typeVector](Graph::Action action) {
-                return (actorPos.empty() || VectorUtil::contains(actorPos, action.actor)) &&
-                    (targetPos.empty() || VectorUtil::contains(targetPos, action.target)) &&
-                    (performerPos.empty() || VectorUtil::contains(performerPos, action.performer)) &&
-                    (matePosAny.empty() || VectorUtil::containsAny(matePosAny, {action.actor, action.target})) &&
-                    (matePosAll.empty() || VectorUtil::containsAll(matePosAll, {action.actor, action.target})) &&
-                    (participantPosAny.empty() || VectorUtil::containsAny(participantPosAny, {action.actor, action.target, action.performer})) &&
-                    (participantPosAll.empty() || VectorUtil::containsAll(participantPosAll, {action.actor, action.target, action.performer})) &&
-                    (typeVector.empty() || VectorUtil::contains(typeVector, action.type));
-            });
+        if (!actorPositions.empty()) {
+            std::vector<int> actorPos = VectorUtil::stoiv(actorPositions);
+            conditions.push_back([actorPos](Graph::Action action){return VectorUtil::contains(actorPos, action.actor);});
+        }
+
+        if (!targetPositions.empty()) {
+            std::vector<int> targetPos = VectorUtil::stoiv(targetPositions);
+            conditions.push_back([targetPos](Graph::Action action){return VectorUtil::contains(targetPos, action.target);});
+        }
+
+        if (!performerPositions.empty()) {
+            std::vector<int> performerPos = VectorUtil::stoiv(performerPositions);
+            conditions.push_back([performerPos](Graph::Action action){return VectorUtil::contains(performerPos, action.performer);});
+        }
+
+        if (!matePositionsAny.empty()) {
+            std::vector<int> matePosAny = VectorUtil::stoiv(matePositionsAny);
+            conditions.push_back([matePosAny](Graph::Action action){return VectorUtil::containsAny(matePosAny, {action.actor, action.target});});
+        }
+
+        if (!matePositionsAll.empty()) {
+            std::vector<int> matePosAll = VectorUtil::stoiv(matePositionsAll);
+            conditions.push_back([matePosAll](Graph::Action action){return VectorUtil::containsAll(matePosAll, {action.actor, action.target});});
+        }
+
+        if (!participantPositionsAny.empty()) {
+            std::vector<int> participantPosAny = VectorUtil::stoiv(participantPositionsAny);
+            conditions.push_back([participantPosAny](Graph::Action action){return VectorUtil::containsAny(participantPosAny, {action.actor, action.target, action.performer});});
+        }
+
+        if (!participantPositionsAll.empty()) {
+            std::vector<int> participantPosAll = VectorUtil::stoiv(participantPositionsAll);
+            conditions.push_back([participantPosAll](Graph::Action action){return VectorUtil::containsAll(participantPosAll, {action.actor, action.target, action.performer});});
+        }
+
+        if (!types.empty()) {
+            std::vector<std::string> typeVector = StringUtil::toTagVector(types);
+            conditions.push_back([typeVector](Graph::Action action){return VectorUtil::contains(typeVector, action.type);});
+        }
+
+
+        if (!anyActionTag.empty()) {
+            std::vector<std::string> AnyActionTagVector = StringUtil::toTagVector(anyActionTag);
+            conditions.push_back([AnyActionTagVector](Graph::Action action){return VectorUtil::containsAny(action.attributes->tags, AnyActionTagVector);});
+        }
+
+        if (!allActionTags.empty()) {
+            std::vector<std::string> AllActionTagsVector = StringUtil::toTagVector(allActionTags);
+            conditions.push_back([AllActionTagsVector](Graph::Action action){return VectorUtil::containsAll(action.attributes->tags, AllActionTagsVector);});
+        }
+
+        if (!actionTagWhitelist.empty()) {
+            std::vector<std::string> actionTagWhitelistVector = StringUtil::toTagVector(actionTagWhitelist);
+            conditions.push_back([actionTagWhitelistVector](Graph::Action action){return VectorUtil::containsAll(actionTagWhitelistVector, action.attributes->tags);});
+        }
+
+        if (!actionTagBlacklist.empty()) {
+            std::vector<std::string> actionTagBlacklistVector = StringUtil::toTagVector(actionTagBlacklist);
+            conditions.push_back([actionTagBlacklistVector](Graph::Action action){return !VectorUtil::containsAny(actionTagBlacklistVector, action.attributes->tags);});
+        }
+
+
+        if (!anyCustomIntRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomIntRecordMatrix = StringUtil::toTagMatrix(anyCustomIntRecord);
+
+            std::vector<std::string> actorKeys = anyCustomIntRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.ints, actorKeys);});
+            }
+
+            if (anyCustomIntRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomIntRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.ints, targetKeys);});
+                }
+            }
+
+            if (anyCustomIntRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomIntRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.ints, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomIntRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomIntRecordsMatrix = StringUtil::toTagMatrix(allCustomIntRecords);
+
+            std::vector<std::string> actorKeys = allCustomIntRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.ints, actorKeys);});
+            }
+
+            if (allCustomIntRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomIntRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.ints, targetKeys);});
+                }
+            }
+
+            if (allCustomIntRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomIntRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.ints, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomFloatRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomFloatRecordMatrix = StringUtil::toTagMatrix(anyCustomFloatRecord);
+
+            std::vector<std::string> actorKeys = anyCustomFloatRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.floats, actorKeys);});
+            }
+
+            if (anyCustomFloatRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomFloatRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.floats, targetKeys);});
+                }
+            }
+
+            if (anyCustomFloatRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomFloatRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.floats, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomFloatRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomFloatRecordsMatrix = StringUtil::toTagMatrix(allCustomFloatRecords);
+
+            std::vector<std::string> actorKeys = allCustomFloatRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.floats, actorKeys);});
+            }
+
+            if (allCustomFloatRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomFloatRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.floats, targetKeys);});
+                }
+            }
+
+            if (allCustomFloatRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomFloatRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.floats, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomStringRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomStringRecordMatrix = StringUtil::toTagMatrix(anyCustomStringRecord);
+
+            std::vector<std::string> actorKeys = anyCustomStringRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.strings, actorKeys);});
+            }
+
+            if (anyCustomStringRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomStringRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.strings, targetKeys);});
+                }
+            }
+
+            if (anyCustomStringRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomStringRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.strings, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomStringRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomStringRecordsMatrix = StringUtil::toTagMatrix(allCustomStringRecords);
+
+            std::vector<std::string> actorKeys = allCustomStringRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.strings, actorKeys);});
+            }
+
+            if (allCustomStringRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomStringRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.strings, targetKeys);});
+                }
+            }
+
+            if (allCustomStringRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomStringRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.strings, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomIntListRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomIntListRecordMatrix = StringUtil::toTagMatrix(anyCustomIntListRecord);
+
+            std::vector<std::string> actorKeys = anyCustomIntListRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.intLists, actorKeys);});
+            }
+
+            if (anyCustomIntListRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomIntListRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.intLists, targetKeys);});
+                }
+            }
+
+            if (anyCustomIntListRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomIntListRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.intLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomIntListRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomIntListRecordsMatrix = StringUtil::toTagMatrix(allCustomIntListRecords);
+
+            std::vector<std::string> actorKeys = allCustomIntListRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.intLists, actorKeys);});
+            }
+
+            if (allCustomIntListRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomIntListRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.intLists, targetKeys);});
+                }
+            }
+
+            if (allCustomIntListRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomIntListRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.intLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomFloatListRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomFloatListRecordMatrix = StringUtil::toTagMatrix(anyCustomFloatListRecord);
+
+            std::vector<std::string> actorKeys = anyCustomFloatListRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.floatLists, actorKeys);});
+            }
+
+            if (anyCustomFloatListRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomFloatListRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.floatLists, targetKeys);});
+                }
+            }
+
+            if (anyCustomFloatListRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomFloatListRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.floatLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomFloatListRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomFloatListRecordsMatrix = StringUtil::toTagMatrix(allCustomFloatListRecords);
+
+            std::vector<std::string> actorKeys = allCustomFloatListRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.floatLists, actorKeys);});
+            }
+
+            if (allCustomFloatListRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomFloatListRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.floatLists, targetKeys);});
+                }
+            }
+
+            if (allCustomFloatListRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomFloatListRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.floatLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!anyCustomStringListRecord.empty()) {
+            std::vector<std::vector<std::string>> anyCustomStringListRecordMatrix = StringUtil::toTagMatrix(anyCustomStringListRecord);
+
+            std::vector<std::string> actorKeys = anyCustomStringListRecordMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->actor.stringLists, actorKeys);});
+            }
+
+            if (anyCustomStringListRecordMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = anyCustomStringListRecordMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->target.stringLists, targetKeys);});
+                }
+            }
+
+            if (anyCustomStringListRecordMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = anyCustomStringListRecordMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAnyKey(action.attributes->performer.stringLists, performerKeys);});
+                }
+            }
+        }
+
+        if (!allCustomStringListRecords.empty()) {
+            std::vector<std::vector<std::string>> allCustomStringListRecordsMatrix = StringUtil::toTagMatrix(allCustomStringListRecords);
+
+            std::vector<std::string> actorKeys = allCustomStringListRecordsMatrix[0];
+            if (actorKeys.size() > 0) {
+                conditions.push_back([&actorKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->actor.stringLists, actorKeys);});
+            }
+
+            if (allCustomStringListRecordsMatrix.size() > 1) {
+                std::vector<std::string> targetKeys = allCustomStringListRecordsMatrix[1];
+                if (targetKeys.size() > 0) {
+                    conditions.push_back([&targetKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->target.stringLists, targetKeys);});
+                }
+            }
+
+            if (allCustomStringListRecordsMatrix.size() > 2) {
+                std::vector<std::string> performerKeys = allCustomStringListRecordsMatrix[2];
+                if (performerKeys.size() > 0) {
+                    conditions.push_back([&performerKeys](Graph::Action action) { return MapUtil::containsAllKeys(action.attributes->performer.stringLists, performerKeys);});
+                }
+            }
+        }
+
+
+        return findActions(id, [&conditions](Graph::Action action) {return checkConditions(conditions, action);});
     }
+#pragma endregion
+#pragma endregion
 
-
+#pragma region action_properties
     std::vector<std::string> GetActionTypes(RE::StaticFunctionTag*, std::string id) {
         std::vector<std::string> ret;
         if (auto node = Graph::LookupTable::getNodeById(id)) {
@@ -831,8 +1497,9 @@ namespace PapyrusMetadata {
         }
         return -1;
     }
+#pragma endregion
     
-
+#pragma region action_tags
     std::vector<std::string> GetActionTags(RE::StaticFunctionTag*, std::string id, int index) {
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             if (index < node->actions.size()) {
@@ -955,23 +1622,17 @@ namespace PapyrusMetadata {
 
     std::vector<std::string> GetActionTagOverlap(RE::StaticFunctionTag*, std::string id, int index, std::vector<std::string> tags) {
         StringUtil::toLower(&tags);
-        std::vector<std::string> ret;
-
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             if (index < node->actions.size()) {
-                for (auto& tag : node->actions[index]->attributes->tags) {
-                    if (VectorUtil::contains(tags, tag)) {
-                        ret.push_back(tag);
-                    }
-                }
+                return VectorUtil::getOverlap(node->actions[index]->attributes->tags, tags);
             }
         }
 
-        return ret;
+        return {};
     }
 
-    std::string GetActionTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string tags) {
-        return StringUtil::toTagCSV(GetActionTagOverlap(sft, id, index, StringUtil::toTagVector(tags)));
+    std::vector<std::string> GetActionTagOverlapCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string tags) {
+        return GetActionTagOverlap(sft, id, index, StringUtil::toTagVector(tags));
     }
 
     std::vector<std::string> GetActionTagOverlapOverAll(RE::StaticFunctionTag*, std::string id, std::vector<std::string> tags) {
@@ -991,9 +1652,976 @@ namespace PapyrusMetadata {
         return VectorUtil::toVector(ret);
     }
 
-    std::string GetActionTagOverlapOverAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
-        return StringUtil::toTagCSV(GetActionTagOverlapOverAll(sft, id, StringUtil::toTagVector(tags)));
+    std::vector<std::string> GetActionTagOverlapOverAllCSV(RE::StaticFunctionTag* sft, std::string id, std::string tags) {
+        return GetActionTagOverlapOverAll(sft, id, StringUtil::toTagVector(tags));
     }
+#pragma endregion
+
+#pragma region custom_action_data
+#pragma region custom_action_actor_data
+#pragma region custom_action_actor_single_data
+    bool HasCustomActionActorInt(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->actor.ints.contains(record);
+            }
+        }
+        return false;
+    }
+
+    int GetCustomActionActorInt(RE::StaticFunctionTag*, std::string id, int index, std::string record, int fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->actor.ints, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionActorInt(RE::StaticFunctionTag*, std::string id, int index, std::string record, int value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->actor.ints, record, value);
+            }
+        }
+        return false;
+    }
+
+    bool HasCustomActionActorFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->actor.floats.contains(record);
+            }
+        }
+        return false;
+    }
+
+    float GetCustomActionActorFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record, float fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->actor.floats, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionActorFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record, float value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->actor.floats, record, value);
+            }
+        }
+        return false;
+    }
+
+    bool HasCustomActionActorString(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->actor.strings.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::string GetCustomActionActorString(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->actor.strings, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionActorString(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string value) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&value);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->actor.strings, record, value);
+            }
+        }
+        return false;
+    }
+#pragma endregion
+
+#pragma region custom_action_actor_int_lists
+    bool HasCustomActionActorIntList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->actor.intLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<int> GetCustomActionActorIntList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->actor.intLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionActorIntListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, int value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->actor.intLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorIntListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->actor.intLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorIntListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionActorIntListContainsAny(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+
+    bool CustomActionActorIntListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->actor.intLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorIntListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionActorIntListContainsAll(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+
+    std::vector<int> GetCustomActionActorIntListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->actor.intLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<int> GetCustomActionActorIntListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionActorIntListOverlap(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+#pragma endregion
+
+#pragma region custom_action_actor_float_lists
+    bool HasCustomActionActorFloatList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->actor.floatLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<float> GetCustomActionActorFloatList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->actor.floatLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionActorFloatListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, float value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->actor.floatLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorFloatListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->actor.floatLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorFloatListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionActorFloatListContainsAny(sft, id, index, record, VectorUtil::stofv(values));
+    }
+
+    bool CustomActionActorFloatListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->actor.floatLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorFloatListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionActorFloatListContainsAll(sft, id, index, record, VectorUtil::stofv(values));
+    }
+
+    std::vector<float> GetCustomActionActorFloatListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->actor.floatLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<float> GetCustomActionActorFloatListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionActorFloatListOverlap(sft, id, index, record, VectorUtil::stofv(values));
+    }
+#pragma endregion
+
+#pragma region custom_action_actor_string_lists
+    bool HasCustomActionActorStringList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->actor.stringLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<std::string> GetCustomActionActorStringList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->actor.stringLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionActorStringListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string value) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&value);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->actor.stringLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorStringListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->actor.stringLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorStringListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionActorStringListContainsAny(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+
+    bool CustomActionActorStringListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->actor.stringLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionActorStringListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionActorStringListContainsAll(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+
+    std::vector<std::string> GetCustomActionActorStringListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->actor.stringLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<std::string> GetCustomActionActorStringListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionActorStringListOverlap(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+#pragma endregion
+#pragma endregion
+
+#pragma region custom_action_target_data
+#pragma region custom_action_target_single_data
+    bool HasCustomActionTargetInt(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->target.ints.contains(record);
+            }
+        }
+        return false;
+    }
+
+    int GetCustomActionTargetInt(RE::StaticFunctionTag*, std::string id, int index, std::string record, int fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->target.ints, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionTargetInt(RE::StaticFunctionTag*, std::string id, int index, std::string record, int value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->target.ints, record, value);
+            }
+        }
+        return false;
+    }
+
+    bool HasCustomActionTargetFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->target.floats.contains(record);
+            }
+        }
+        return false;
+    }
+
+    float GetCustomActionTargetFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record, float fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->target.floats, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionTargetFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record, float value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->target.floats, record, value);
+            }
+        }
+        return false;
+    }
+
+    bool HasCustomActionTargetString(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->target.strings.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::string GetCustomActionTargetString(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->target.strings, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionTargetString(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string value) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&value);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->target.strings, record, value);
+            }
+        }
+        return false;
+    }
+#pragma endregion
+
+#pragma region custom_action_target_int_lists
+    bool HasCustomActionTargetIntList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->target.intLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<int> GetCustomActionTargetIntList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->target.intLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionTargetIntListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, int value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->target.intLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetIntListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->target.intLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetIntListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionTargetIntListContainsAny(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+
+    bool CustomActionTargetIntListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->target.intLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetIntListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionTargetIntListContainsAll(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+
+    std::vector<int> GetCustomActionTargetIntListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->target.intLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<int> GetCustomActionTargetIntListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionTargetIntListOverlap(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+#pragma endregion
+
+#pragma region custom_action_target_float_lists
+    bool HasCustomActionTargetFloatList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->target.floatLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<float> GetCustomActionTargetFloatList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->target.floatLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionTargetFloatListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, float value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->target.floatLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetFloatListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->target.floatLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetFloatListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionTargetFloatListContainsAny(sft, id, index, record, VectorUtil::stofv(values));
+    }
+
+    bool CustomActionTargetFloatListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->target.floatLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetFloatListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionTargetFloatListContainsAll(sft, id, index, record, VectorUtil::stofv(values));
+    }
+
+    std::vector<float> GetCustomActionTargetFloatListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->target.floatLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<float> GetCustomActionTargetFloatListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionTargetFloatListOverlap(sft, id, index, record, VectorUtil::stofv(values));
+    }
+#pragma endregion
+
+#pragma region custom_action_target_string_lists
+    bool HasCustomActionTargetStringList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->target.stringLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<std::string> GetCustomActionTargetStringList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->target.stringLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionTargetStringListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string value) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&value);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->target.stringLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetStringListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->target.stringLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetStringListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionTargetStringListContainsAny(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+
+    bool CustomActionTargetStringListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->target.stringLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionTargetStringListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionTargetStringListContainsAll(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+
+    std::vector<std::string> GetCustomActionTargetStringListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->target.stringLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<std::string> GetCustomActionTargetStringListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionTargetStringListOverlap(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+#pragma endregion
+#pragma endregion
+
+#pragma region custom_action_performer_data
+#pragma region custom_action_performer_single_data
+    bool HasCustomActionPerformerInt(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->performer.ints.contains(record);
+            }
+        }
+        return false;
+    }
+
+    int GetCustomActionPerformerInt(RE::StaticFunctionTag*, std::string id, int index, std::string record, int fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->performer.ints, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionPerformerInt(RE::StaticFunctionTag*, std::string id, int index, std::string record, int value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->performer.ints, record, value);
+            }
+        }
+        return false;
+    }
+
+    bool HasCustomActionPerformerFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->performer.floats.contains(record);
+            }
+        }
+        return false;
+    }
+
+    float GetCustomActionPerformerFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record, float fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->performer.floats, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionPerformerFloat(RE::StaticFunctionTag*, std::string id, int index, std::string record, float value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->performer.floats, record, value);
+            }
+        }
+        return false;
+    }
+
+    bool HasCustomActionPerformerString(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->performer.strings.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::string GetCustomActionPerformerString(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string fallback) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->performer.strings, record, fallback);
+            }
+        }
+        return fallback;
+    }
+
+    bool IsCustomActionPerformerString(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string value) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&value);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::isValue(node->actions[index]->attributes->performer.strings, record, value);
+            }
+        }
+        return false;
+    }
+#pragma endregion
+
+#pragma region custom_action_performer_int_lists
+    bool HasCustomActionPerformerIntList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->performer.intLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<int> GetCustomActionPerformerIntList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->performer.intLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionPerformerIntListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, int value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->performer.intLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerIntListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->performer.intLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerIntListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionPerformerIntListContainsAny(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+
+    bool CustomActionPerformerIntListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->performer.intLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerIntListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionPerformerIntListContainsAll(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+
+    std::vector<int> GetCustomActionPerformerIntListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<int> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->performer.intLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<int> GetCustomActionPerformerIntListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionPerformerIntListOverlap(sft, id, index, record, VectorUtil::stoiv(values));
+    }
+#pragma endregion
+
+#pragma region custom_action_performer_float_lists
+    bool HasCustomActionPerformerFloatList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->performer.floatLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<float> GetCustomActionPerformerFloatList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->performer.floatLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionPerformerFloatListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, float value) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->performer.floatLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerFloatListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->performer.floatLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerFloatListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionPerformerFloatListContainsAny(sft, id, index, record, VectorUtil::stofv(values));
+    }
+
+    bool CustomActionPerformerFloatListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->performer.floatLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerFloatListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionPerformerFloatListContainsAll(sft, id, index, record, VectorUtil::stofv(values));
+    }
+
+    std::vector<float> GetCustomActionPerformerFloatListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<float> values) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->performer.floatLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<float> GetCustomActionPerformerFloatListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionPerformerFloatListOverlap(sft, id, index, record, VectorUtil::stofv(values));
+    }
+#pragma endregion
+
+#pragma region custom_action_performer_string_lists
+    bool HasCustomActionPerformerStringList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return node->actions[index]->attributes->performer.stringLists.contains(record);
+            }
+        }
+        return false;
+    }
+
+    std::vector<std::string> GetCustomActionPerformerStringList(RE::StaticFunctionTag*, std::string id, int index, std::string record) {
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return MapUtil::getOrFallback(node->actions[index]->attributes->performer.stringLists, record, {});
+            }
+        }
+        return {};
+    }
+
+    bool CustomActionPerformerStringListContains(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::string value) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&value);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::contains(MapUtil::getOrFallback(node->actions[index]->attributes->performer.stringLists, record, {}), value);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerStringListContainsAny(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAny(MapUtil::getOrFallback(node->actions[index]->attributes->performer.stringLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerStringListContainsAnyCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionPerformerStringListContainsAny(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+
+    bool CustomActionPerformerStringListContainsAll(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::containsAll(MapUtil::getOrFallback(node->actions[index]->attributes->performer.stringLists, record, {}), values);
+            }
+        }
+        return false;
+    }
+
+    bool CustomActionPerformerStringListContainsAllCSV(RE::StaticFunctionTag* sft, std::string id, int index, std::string record, std::string values) {
+        return CustomActionPerformerStringListContainsAll(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+
+    std::vector<std::string> GetCustomActionPerformerStringListOverlap(RE::StaticFunctionTag*, std::string id, int index, std::string record, std::vector<std::string> values) {
+        StringUtil::toLower(&record);
+        StringUtil::toLower(&values);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            if (index < node->actions.size()) {
+                return VectorUtil::getOverlap(MapUtil::getOrFallback(node->actions[index]->attributes->performer.stringLists, record, {}), values);
+            }
+        }
+        return {};
+    }
+
+    std::vector<std::string> GetCustomActionPerformerStringListOverlapCSV(RE::StaticFunctionTag*sft , std::string id, int index, std::string record, std::string values) {
+        return GetCustomActionPerformerStringListOverlap(sft, id, index, record, StringUtil::toTagVector(values));
+    }
+#pragma endregion
+#pragma endregion
+#pragma endregion
+#pragma endregion
 
 
 	bool Bind(VM* a_vm) {
@@ -1138,8 +2766,8 @@ namespace PapyrusMetadata {
         BIND(FindAllActionsForParticipantsAll);
         BIND(FindAllActionsForParticipantsAllCSV);
 
-        BIND(FindActionSuperloadCSV);
-        BIND(FindActionsSuperloadCSV);
+        BIND(FindActionSuperloadCSVv2);
+        BIND(FindActionsSuperloadCSVv2);
 
         BIND(GetActionTypes);
         BIND(GetActionType);
@@ -1168,6 +2796,126 @@ namespace PapyrusMetadata {
         BIND(GetActionTagOverlapCSV);
         BIND(GetActionTagOverlapOverAll);
         BIND(GetActionTagOverlapOverAllCSV);
+
+        BIND(HasCustomActionActorInt);
+        BIND(GetCustomActionActorInt);
+        BIND(IsCustomActionActorInt);
+        BIND(HasCustomActionActorFloat);
+        BIND(GetCustomActionActorFloat);
+        BIND(IsCustomActionActorFloat);
+        BIND(HasCustomActionActorString);
+        BIND(GetCustomActionActorString);
+        BIND(IsCustomActionActorString);
+
+        BIND(HasCustomActionActorIntList);
+        BIND(GetCustomActionActorIntList);
+        BIND(CustomActionActorIntListContains);
+        BIND(CustomActionActorIntListContainsAny);
+        BIND(CustomActionActorIntListContainsAnyCSV);
+        BIND(CustomActionActorIntListContainsAll);
+        BIND(CustomActionActorIntListContainsAllCSV);
+        BIND(GetCustomActionActorIntListOverlap);
+        BIND(GetCustomActionActorIntListOverlapCSV);
+
+        BIND(HasCustomActionActorFloatList);
+        BIND(GetCustomActionActorFloatList);
+        BIND(CustomActionActorFloatListContains);
+        BIND(CustomActionActorFloatListContainsAny);
+        BIND(CustomActionActorFloatListContainsAnyCSV);
+        BIND(CustomActionActorFloatListContainsAll);
+        BIND(CustomActionActorFloatListContainsAllCSV);
+        BIND(GetCustomActionActorFloatListOverlap);
+        BIND(GetCustomActionActorFloatListOverlapCSV);
+
+        BIND(HasCustomActionActorStringList);
+        BIND(GetCustomActionActorStringList);
+        BIND(CustomActionActorStringListContains);
+        BIND(CustomActionActorStringListContainsAny);
+        BIND(CustomActionActorStringListContainsAnyCSV);
+        BIND(CustomActionActorStringListContainsAll);
+        BIND(CustomActionActorStringListContainsAllCSV);
+        BIND(GetCustomActionActorStringListOverlap);
+        BIND(GetCustomActionActorStringListOverlapCSV);
+
+        BIND(HasCustomActionTargetInt);
+        BIND(GetCustomActionTargetInt);
+        BIND(IsCustomActionTargetInt);
+        BIND(HasCustomActionTargetFloat);
+        BIND(GetCustomActionTargetFloat);
+        BIND(IsCustomActionTargetFloat);
+        BIND(HasCustomActionTargetString);
+        BIND(GetCustomActionTargetString);
+        BIND(IsCustomActionTargetString);
+
+        BIND(HasCustomActionTargetIntList);
+        BIND(GetCustomActionTargetIntList);
+        BIND(CustomActionTargetIntListContains);
+        BIND(CustomActionTargetIntListContainsAny);
+        BIND(CustomActionTargetIntListContainsAnyCSV);
+        BIND(CustomActionTargetIntListContainsAll);
+        BIND(CustomActionTargetIntListContainsAllCSV);
+        BIND(GetCustomActionTargetIntListOverlap);
+        BIND(GetCustomActionTargetIntListOverlapCSV);
+
+        BIND(HasCustomActionTargetFloatList);
+        BIND(GetCustomActionTargetFloatList);
+        BIND(CustomActionTargetFloatListContains);
+        BIND(CustomActionTargetFloatListContainsAny);
+        BIND(CustomActionTargetFloatListContainsAnyCSV);
+        BIND(CustomActionTargetFloatListContainsAll);
+        BIND(CustomActionTargetFloatListContainsAllCSV);
+        BIND(GetCustomActionTargetFloatListOverlap);
+        BIND(GetCustomActionTargetFloatListOverlapCSV);
+
+        BIND(HasCustomActionTargetStringList);
+        BIND(GetCustomActionTargetStringList);
+        BIND(CustomActionTargetStringListContains);
+        BIND(CustomActionTargetStringListContainsAny);
+        BIND(CustomActionTargetStringListContainsAnyCSV);
+        BIND(CustomActionTargetStringListContainsAll);
+        BIND(CustomActionTargetStringListContainsAllCSV);
+        BIND(GetCustomActionTargetStringListOverlap);
+        BIND(GetCustomActionTargetStringListOverlapCSV);
+
+        BIND(HasCustomActionPerformerInt);
+        BIND(GetCustomActionPerformerInt);
+        BIND(IsCustomActionPerformerInt);
+        BIND(HasCustomActionPerformerFloat);
+        BIND(GetCustomActionPerformerFloat);
+        BIND(IsCustomActionPerformerFloat);
+        BIND(HasCustomActionPerformerString);
+        BIND(GetCustomActionPerformerString);
+        BIND(IsCustomActionPerformerString);
+
+        BIND(HasCustomActionPerformerIntList);
+        BIND(GetCustomActionPerformerIntList);
+        BIND(CustomActionPerformerIntListContains);
+        BIND(CustomActionPerformerIntListContainsAny);
+        BIND(CustomActionPerformerIntListContainsAnyCSV);
+        BIND(CustomActionPerformerIntListContainsAll);
+        BIND(CustomActionPerformerIntListContainsAllCSV);
+        BIND(GetCustomActionPerformerIntListOverlap);
+        BIND(GetCustomActionPerformerIntListOverlapCSV);
+
+        BIND(HasCustomActionPerformerFloatList);
+        BIND(GetCustomActionPerformerFloatList);
+        BIND(CustomActionPerformerFloatListContains);
+        BIND(CustomActionPerformerFloatListContainsAny);
+        BIND(CustomActionPerformerFloatListContainsAnyCSV);
+        BIND(CustomActionPerformerFloatListContainsAll);
+        BIND(CustomActionPerformerFloatListContainsAllCSV);
+        BIND(GetCustomActionPerformerFloatListOverlap);
+        BIND(GetCustomActionPerformerFloatListOverlapCSV);
+
+        BIND(HasCustomActionPerformerStringList);
+        BIND(GetCustomActionPerformerStringList);
+        BIND(CustomActionPerformerStringListContains);
+        BIND(CustomActionPerformerStringListContainsAny);
+        BIND(CustomActionPerformerStringListContainsAnyCSV);
+        BIND(CustomActionPerformerStringListContainsAll);
+        BIND(CustomActionPerformerStringListContainsAllCSV);
+        BIND(GetCustomActionPerformerStringListOverlap);
+        BIND(GetCustomActionPerformerStringListOverlapCSV);
 
         return true;
 	}

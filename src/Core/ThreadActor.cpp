@@ -324,6 +324,10 @@ namespace OStim {
                     if (updater.delay > 0) {
                         updater.delay -= Constants::LOOP_TIME_MILLISECONDS;
                     } else {
+                        if (key >= faceData->modifierKeyFrame.count) {
+                            continue;
+                        }
+
                         faceData->modifierKeyFrame.values[key] = updater.step() / 100.0f;
                         if (updater.isDone()) {
                             toDelete.push_back(key);
@@ -344,6 +348,10 @@ namespace OStim {
                     if (updater.delay > 0) {
                         updater.delay -= Constants::LOOP_TIME_MILLISECONDS;
                     } else {
+                        if (key >= faceData->phenomeKeyFrame.count) {
+                            continue;
+                        }
+
                         faceData->phenomeKeyFrame.values[key] = updater.step() / 100.0f;
                         if (updater.isDone()) {
                             toDelete.push_back(key);
@@ -647,6 +655,11 @@ namespace OStim {
 
     void ThreadActor::applyEyeballOverride() {
         auto faceData = actor->GetFaceGenAnimationData();
+
+        if (!faceData) {
+            return;
+        }
+
         for (int i : Trait::eyeballModifierTypes) {
             if (i >= faceData->modifierKeyFrame.count) {
                 continue;
