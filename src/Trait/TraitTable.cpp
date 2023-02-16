@@ -148,6 +148,12 @@ namespace Trait {
             }
             genderExpression->typeMask |= ExpressionType::PHONEME;
         }
+
+        if (json.contains("phonemeObjects")) {
+            for (auto& object : json["phonemeObjects"]) {
+                genderExpression->phonemeObjects.push_back(object);
+            }
+        }
     }
 
     FaceModifier TraitTable::parseModifier(nlohmann::json json) {
@@ -231,5 +237,15 @@ namespace Trait {
             }
         }
         return 0;
+    }
+
+    EquipObject* TraitTable::getEquipObject(RE::Actor* actor, std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            auto iter2 = iter->second.begin();
+            std::advance(iter2, std::uniform_int_distribution<>(0, iter->second.size() - 1)(Constants::RNG));
+            return iter2->second;
+        }
+        return nullptr;
     }
 }

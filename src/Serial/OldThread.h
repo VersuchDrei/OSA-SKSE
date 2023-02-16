@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Furniture/Furniture.h"
+#include "Util/ActorUtil.h"
 #include "Util/ObjectRefUtil.h"
 
 namespace Serialization {
@@ -85,7 +87,9 @@ namespace Serialization {
         inline void free() {
             OStim::freeActor(actor, true);
             for (RE::TESObjectARMO* equipObject : equipObjects) {
+                ActorUtil::unequipItem(actor, equipObject);
                 ObjectRefUtil::removeItem(actor, equipObject);
+                ActorUtil::queueNiNodeUpdate(actor);
             }
         }
     };
@@ -170,6 +174,10 @@ namespace Serialization {
             if (vehicle) {
                 vehicle->Disable();
                 vehicle->SetDelete(true);
+            }
+
+            if (furniture) {
+                Furniture::freeFurniture(furniture);   
             }
 
             for (OldThreadActor actor : actors) {

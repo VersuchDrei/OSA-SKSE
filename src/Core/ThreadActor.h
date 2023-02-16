@@ -1,8 +1,10 @@
 #pragma once
 
+#include "EquipObjectHandler.h"
 #include "ExpressionUpdater.h"
 
 #include "Graph/Node.h"
+#include "Trait/EquipObject.h"
 #include "Serial/OldThread.h"
 
 namespace OStim {
@@ -35,6 +37,9 @@ namespace OStim {
 
         void setEventExpression(Trait::FacialExpression* expression);
         void clearEventExpression();
+
+        void equipObject(std::string type);
+        void unequipObject(std::string type);
 
         void loop();
 
@@ -133,6 +138,9 @@ namespace OStim {
         int overwriteExpressionCooldown = 0;
         std::unordered_map<int, ExpressionUpdater> modifierUpdaters;
         std::unordered_map<int, ExpressionUpdater> phonemeUpdaters;
+
+        std::unordered_map<std::string, EquipObjectHandler> equipObjects;
+        std::vector<std::string> phonemeObjects;
 
         void scale();
         void checkHeelOffset();

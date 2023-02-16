@@ -42,6 +42,7 @@ namespace Trait {
         std::unordered_map<int, FaceModifier> eyebrowModifiers;
         std::unordered_map<int, FaceModifier> eyeballModifiers;
         std::unordered_map<int, FaceModifier> phonemes;
+        std::vector<std::string> phonemeObjects;
     };
 
     struct FacialExpression {

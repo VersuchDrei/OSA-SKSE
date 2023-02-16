@@ -51,6 +51,14 @@ namespace ObjectRefUtil {
         return id.find("luxurysuite") != std::string::npos;
     }
 
+    void ObjectRefUtil::addItem(RE::TESObjectREFR* object, RE::TESForm* itemToAdd, int count, bool silent) {
+        AddItem(nullptr, 0, object, itemToAdd, count, silent);
+    }
+
+    void ObjectRefUtil::addItem(RE::TESObjectREFR* object, RE::TESForm* itemToAdd) {
+        addItem(object, itemToAdd, 1, true);
+    }
+
     void ObjectRefUtil::removeItem(RE::TESObjectREFR* object, RE::TESForm* itemToRemove, int count, bool silent, RE::TESObjectREFR* otherContainer) {
         RemoveItem(nullptr, 0, object, itemToRemove, count, silent, otherContainer);
     }

@@ -1,12 +1,20 @@
 #include "ActorUtil.h"
 
 namespace ActorUtil {
+    void equipItem(RE::Actor* actor, RE::TESForm* item, bool preventRemoval, bool silent) {
+        EquipItem(nullptr, 0, actor, item, preventRemoval, silent);
+    }
+
+    void equipItem(RE::Actor* actor, RE::TESForm* item) {
+        EquipItem(nullptr, 0, actor, item, false, true);
+    }
+
     void unequipItem(RE::Actor* actor, RE::TESForm* item, bool preventEquip, bool silent) {
         UnequipItem(nullptr, 0, actor, item, preventEquip, silent);
     }
 
     void unequipItem(RE::Actor* actor, RE::TESForm* item) {
-        UnequipItem(nullptr, 0, actor, item, false, false);
+        UnequipItem(nullptr, 0, actor, item, false, true);
     }
 
     void equipItemEx(RE::Actor* actor, RE::TESForm* item, int slotId, bool preventUnequip, bool equipSound) {
@@ -27,6 +35,17 @@ namespace ActorUtil {
 
     void equipItemEx(RE::Actor* actor, RE::TESForm* item) {
         equipItemEx(actor, item, 0, false, true);
+    }
+
+    void queueNiNodeUpdate(RE::Actor* actor) {
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+        if (vm) {
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+            auto args = RE::MakeFunctionArguments();
+            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
+            vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
+        }
     }
 
     float getHeelOffset(RE::Actor* actor, RE::TESObjectARMO** heelArmor) {

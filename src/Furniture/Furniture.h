@@ -18,6 +18,9 @@ namespace Furniture {
     RE::BSTArray<RE::BSFurnitureMarker> getMarkers(RE::TESObjectREFR* object);
     bool isFurnitureInUse(RE::TESObjectREFR* object, bool ignoreReserved);
 
+    void lockFurniture(RE::TESObjectREFR* furniture, RE::Actor* actor);
+    void freeFurniture(RE::TESObjectREFR* furniture);
+
     void resetClutter(RE::TESObjectREFR* centerRef, float radius);
 
     inline bool IsFurnitureInUse(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* self, bool ignoreReserved) {

@@ -1,4 +1,5 @@
 #include <Core/Thread.h>
+#include "Furniture/Furniture.h"
 #include <Graph/LookupTable.h>
 #include <Graph/Node.h>
 #include <Messaging/IMessages.h>
@@ -10,6 +11,13 @@ namespace OStim {
     Thread::Thread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) : m_threadId{id}, furniture{furniture} {
         RE::TESObjectREFR* center = furniture ? furniture : actors[0];
         vehicle = center->PlaceObjectAtMe(Graph::LookupTable::OStimVehicle, false).get();
+
+        if (furniture) {
+            if (!Furniture::isFurnitureInUse(furniture, false)) {
+                Furniture::lockFurniture(furniture, actors[0]);
+                furnitureLocked = true;
+            }
+        }
 
         for (int i = 0; i < actors.size(); i++) {
             addActorSink(actors[i]);
@@ -280,7 +288,9 @@ namespace OStim {
         Serialization::OldThread oldThread;
 
         oldThread.vehicle = vehicle;
-        oldThread.furniture = furniture;
+        if (furnitureLocked) {
+            oldThread.furniture = furniture;
+        }
 
         for (auto& actorIt : m_actors) {
             oldThread.actors.push_back(actorIt.second.serialize());

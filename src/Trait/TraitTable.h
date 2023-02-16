@@ -24,6 +24,8 @@ namespace Trait {
         static void setExcitement(RE::Actor* actor, float excitement);
         static float getExcitement(RE::Actor* actor);
 
+        static EquipObject* getEquipObject(RE::Actor* actor, std::string type);
+
         inline static bool areFacialExpressionsBlocked(RE::Actor* actor) {
             return actor->IsInFaction(noFacialExpressionsFaction);
         }

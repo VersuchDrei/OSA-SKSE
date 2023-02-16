@@ -82,14 +82,7 @@ namespace OStim {
             }
         }
 
-        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-        if (vm) {
-            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-            auto args = RE::MakeFunctionArguments();
-            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
-            vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
-        }
+        ActorUtil::queueNiNodeUpdate(actor);
 
         undressed = true;
     }
@@ -134,16 +127,7 @@ namespace OStim {
             }
         }
 
-        if ((undressedMask & filteredMask) != 0) {
-            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-            if (vm) {
-                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                auto args = RE::MakeFunctionArguments();
-                auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
-                vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
-            }
-        }
+        ActorUtil::queueNiNodeUpdate(actor);
 
         // some slots might not have any items equipped in them
         // so to not check them over and over again we add those to the undressedMask
@@ -624,7 +608,7 @@ namespace OStim {
                 if (current == goal) {
                     modifierUpdaters.erase(i);
                 } else {
-                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = 5};
                 }
             }
         }
@@ -650,6 +634,20 @@ namespace OStim {
                     phonemeUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
                 }
             }
+
+            for (std::string object : phonemeObjects) {
+                if (!VectorUtil::contains(expression->phonemeObjects, object)) {
+                    unequipObject(object);
+                }
+            }
+
+            for (std::string object : expression->phonemeObjects) {
+                if (!VectorUtil::contains(phonemeObjects, object)) {
+                    equipObject(object);
+                }
+            }
+
+            phonemeObjects = expression->phonemeObjects;
         }
     }
 
@@ -676,8 +674,29 @@ namespace OStim {
             if (current == goal) {
                 modifierUpdaters.erase(i);
             } else {
-                modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = 1};
+                modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = 5};
             }
+        }
+    }
+
+    void ThreadActor::equipObject(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            iter->second.equip();
+            return;
+        }
+        
+        Trait::EquipObject* object = Trait::TraitTable::getEquipObject(actor, type);
+        if (object) {
+            equipObjects[type] = {.actor = actor, .object = object};
+            equipObjects[type].equip();
+        }
+    }
+
+    void ThreadActor::unequipObject(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            iter->second.unequip();
         }
     }
 
@@ -709,6 +728,9 @@ namespace OStim {
         }
         updateHeelOffset(false);
         ActorUtil::setScale(actor, scaleBefore);
+        for (auto& [key, value] : equipObjects) {
+            value.unequip();
+        }
         
         freeActor(actor, false);
 
@@ -752,7 +774,11 @@ namespace OStim {
 
         oldThreadActor.actor = actor;
 
-        //TODO equipobjects
+        for (auto& [key, object] : equipObjects) {
+            if (object.equipped) {
+                oldThreadActor.equipObjects.push_back(object.equipped);
+            }
+        }
 
         return oldThreadActor;
     }
