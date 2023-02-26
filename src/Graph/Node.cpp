@@ -10,6 +10,20 @@
 #include "SKEE.h"
 
 namespace Graph {
+    void Node::mergeActionRequirementsIntoActors() {
+        for (Action* action : actions) {
+            if (action->actor < actors.size()) {
+                actors[action->actor]->requirements |= action->attributes->actor.requirements;
+            }
+            if (action->target < actors.size()) {
+                actors[action->target]->requirements |= action->attributes->target.requirements;
+            }
+            if (action->performer < actors.size()) {
+                actors[action->performer]->requirements |= action->attributes->performer.requirements;
+            }
+        }
+    }
+
     bool Node::fulfilledBy(std::vector<Trait::ActorConditions> conditions) {
         int size = actors.size();
         if (size < conditions.size()) {
@@ -54,6 +68,7 @@ namespace Graph {
         }
         return "";
     }
+
 
     bool Node::hasActorTag(int position, std::string tag) {
         if (position < 0 || position >= actors.size()) {

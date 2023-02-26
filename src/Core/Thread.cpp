@@ -275,8 +275,12 @@ namespace OStim {
             GetActor(actor)->redressPartial(mask);
         } else if (tag == "OStimRemoveWeapons") {
             GetActor(actor)->removeWeapons();
-        } else if (tag == "OStimAddWeapons"){
+        } else if (tag == "OStimAddWeapons") {
             GetActor(actor)->addWeapons();
+        } else if (tag == "OStimEquipObject"){
+            GetActor(actor)->equipObject(a_event->payload.c_str());
+        } else if (tag == "OStimUnequipObject") {
+            GetActor(actor)->unequipObject(a_event->payload.c_str());
         } else if (tag == "OStimEvent") {
             
         }

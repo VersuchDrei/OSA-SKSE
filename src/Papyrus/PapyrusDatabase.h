@@ -275,6 +275,8 @@ namespace PapyrusDatabase {
                     node->actions.push_back(actionObj);
                 }
 
+                node->mergeActionRequirementsIntoActors();
+
                 isOldFormat = false;
             }
         }

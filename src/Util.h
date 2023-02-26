@@ -7,6 +7,7 @@ namespace stl {
 namespace util {
     std::optional<fs::path> documents_path();
     std::optional<fs::path> database_path();
+    std::optional<fs::path> settings_path();
 
     bool within_radius(const RE::NiPoint3& a_origin, const RE::NiPoint3& a_obj, float a_radius);
 

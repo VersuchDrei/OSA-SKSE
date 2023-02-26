@@ -1,5 +1,8 @@
 #include "MCMTable.h"
 
+#include "Serial/Manager.h"
+#include "Util.h"
+
 namespace MCM {
     void MCMTable::setupForms() {
         auto dataHandler = RE::TESDataHandler::GetSingleton();
@@ -22,6 +25,10 @@ namespace MCM {
 
         OStimExpressionDurationMin = dataHandler->LookupForm<RE::TESGlobal>(0xDB2, "OStim.esp");
         OStimExpressionDurationMax = dataHandler->LookupForm<RE::TESGlobal>(0xDB3, "OStim.esp");
+
+        OStimEquipStrapOnIfNeeded = dataHandler->LookupForm<RE::TESGlobal>(0xDDB, "OStim.esp");
+        OStimUnequipStrapOnIfNotNeeded = dataHandler->LookupForm<RE::TESGlobal>(0xDDC, "OStim.esp");
+        OStimUnequipStrapOnIfInWay = dataHandler->LookupForm<RE::TESGlobal>(0xDDD, "OStim.esp");
     }
 
     void MCMTable::resetDefaults() {
@@ -107,5 +114,57 @@ namespace MCM {
 
     int MCMTable::getExpressionDurationMax() {
         return OStimExpressionDurationMax->value;
+    }
+
+
+    bool MCMTable::equipStrapOnIfNeeded() {
+        return OStimEquipStrapOnIfNeeded->value != 0;
+    }
+
+    bool MCMTable::unequipStrapOnIfNotNeeded() {
+        return OStimUnequipStrapOnIfNotNeeded->value != 0;
+    }
+
+    bool MCMTable::unequipStrapOnIfInWay() {
+        return OStimUnequipStrapOnIfInWay->value != 0;
+    }
+
+    void MCMTable::exportSettings() {
+        const auto settings_path = util::settings_path();
+        if (!fs::exists(*settings_path)) {
+            logger::warn("settings file doesn't exist or no access");
+            return;
+        }
+
+        std::ifstream ifs(*settings_path);
+        json json = json::parse(ifs, nullptr, false);
+
+        if (json.is_discarded()) {
+            logger::warn("settings file is malformed");
+            return;
+        }
+
+        Serialization::exportSettings(json);
+
+        std::ofstream db_file(*settings_path);
+        db_file << std::setw(2) << json << std::endl;
+    }
+
+    void MCMTable::importSettings() {
+        const auto settings_path = util::settings_path();
+        if (!fs::exists(*settings_path)) {
+            logger::warn("settings file doesn't exist or no access");
+            return;
+        }
+
+        std::ifstream ifs(*settings_path);
+        json json = json::parse(ifs, nullptr, false);
+
+        if (json.is_discarded()) {
+            logger::warn("settings file is malformed");
+            return;
+        }
+
+        Serialization::importSettings(json);
     }
 }

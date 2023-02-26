@@ -38,4 +38,11 @@ namespace MapUtil {
         }
         return true;
     }
+
+    template <class T, class V>
+    V randomValue(std::unordered_map<T, V>& map) {
+        auto iter = map.begin();
+        std::advance(iter, std::uniform_int_distribution<>(0, map.size() - 1)(Constants::RNG));
+        return iter->second;
+    }
 }

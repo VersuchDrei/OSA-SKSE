@@ -15,6 +15,7 @@ namespace OStim {
     ThreadActor::ThreadActor(int threadId, RE::Actor* actor) : threadId{threadId}, actor{actor} {
         scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0f;
         isFemale = actor->GetActorBase()->GetSex() == RE::SEX::kFemale;
+        hasSchlong = Trait::TraitTable::hasSchlong(actor);
         isPlayer = actor == RE::PlayerCharacter::GetSingleton();
         Trait::TraitTable::addToExcitementFaction(actor);
 
@@ -262,6 +263,21 @@ namespace OStim {
             applyEyeballOverride();
         }
         updateUnderlyingExpression();
+
+        // strap-ons
+        if (!hasSchlong) {
+            if ((graphActor->requirements & Graph::Requirement::PENIS) == Graph::Requirement::PENIS) {
+                if (MCM::MCMTable::equipStrapOnIfNeeded()) {
+                    equipObject("strapon");
+                }
+            } else {
+                if (MCM::MCMTable::unequipStrapOnIfNotNeeded()) {
+                    unequipObject("strapon");
+                } else if ((graphActor->requirements & Graph::Requirement::VAGINA) == Graph::Requirement::VAGINA && MCM::MCMTable::unequipStrapOnIfInWay()) {
+                    unequipObject("strapon");
+                }
+            }
+        }
     }
 
     void ThreadActor::changeSpeed(int speed) {
@@ -353,7 +369,15 @@ namespace OStim {
             logger::warn("no face data on actor {}", actor->GetDisplayFullName());
         }
 
-        
+        // equip objects
+        for (auto& [type, object] : equipObjects) {
+            if (object.variantDuration > 0) {
+                object.variantDuration -= Constants::LOOP_TIME_MILLISECONDS;
+                if (object.variantDuration <= 0) {
+                    object.unsetVariant(actor);
+                }
+            }
+        }
     }
 
     void ThreadActor::bendSchlong() {
@@ -679,28 +703,67 @@ namespace OStim {
         }
     }
 
-    void ThreadActor::equipObject(std::string type) {
+    bool ThreadActor::equipObject(std::string type) {
         auto iter = equipObjects.find(type);
         if (iter != equipObjects.end()) {
-            iter->second.equip();
-            return;
+            iter->second.equip(actor);
+            return true;
         }
         
         Trait::EquipObject* object = Trait::TraitTable::getEquipObject(actor, type);
         if (object) {
             equipObjects[type] = {.actor = actor, .object = object};
-            equipObjects[type].equip();
+            equipObjects[type].equip(actor);
+
+            return true;
         }
+
+        return false;
     }
 
     void ThreadActor::unequipObject(std::string type) {
         auto iter = equipObjects.find(type);
         if (iter != equipObjects.end()) {
-            iter->second.unequip();
+            iter->second.unequip(actor);
+        }
+    }
+
+    bool ThreadActor::isObjectEquipped(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            return iter->second.equipped;
+        }
+        return false;
+    }
+
+    bool ThreadActor::setObjectVariant(std::string type, std::string variant, int duration) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            return iter->second.setVariant(actor, variant, duration);
+        }
+
+        Trait::EquipObject* object = Trait::TraitTable::getEquipObject(actor, type);
+        if (object) {
+            equipObjects[type] = {.actor = actor, .object = object};
+            return equipObjects[type].setVariant(actor, variant, duration);
+        }
+
+        return false;
+    }
+
+    void ThreadActor::unsetObjectVariant(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            iter->second.unsetVariant(actor);
         }
     }
 
     void ThreadActor::free() {
+        for (auto& [type, object] : equipObjects) {
+            object.unequip(actor);
+            object.removeItems(actor);
+        }
+
         if (MCM::MCMTable::animateRedress() && !isPlayer) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
@@ -728,9 +791,6 @@ namespace OStim {
         }
         updateHeelOffset(false);
         ActorUtil::setScale(actor, scaleBefore);
-        for (auto& [key, value] : equipObjects) {
-            value.unequip();
-        }
         
         freeActor(actor, false);
 
@@ -774,9 +834,9 @@ namespace OStim {
 
         oldThreadActor.actor = actor;
 
-        for (auto& [key, object] : equipObjects) {
-            if (object.equipped) {
-                oldThreadActor.equipObjects.push_back(object.equipped);
+        for (auto& [type, object] : equipObjects) {
+            for (RE::TESObjectARMO* item : object.toRemove) {
+                oldThreadActor.equipObjects.push_back(item);
             }
         }
 

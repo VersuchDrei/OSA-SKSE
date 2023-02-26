@@ -128,7 +128,7 @@ namespace Graph {
 
         if (json.contains("requirements")) {
             for (auto& req : json["requirements"]) {
-                actor.requirements.push_back(req.get<std::string>());
+                actor.requirements |= LookupTable::getRequirement(req);
             }
         }
 
@@ -242,5 +242,14 @@ namespace Graph {
             logger::warn("No action found for {} using default", type);
             return &actions.at("default");
         }
+    }
+
+    Requirement LookupTable::getRequirement(std::string string) {
+        auto iter = requirements.find(string);
+        if (iter != requirements.end()) {
+            return iter->second;
+        }
+
+        return Requirement::NONE;
     }
 }

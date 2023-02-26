@@ -55,6 +55,7 @@ set(sources
     src/Util/FormUtil.cpp
     src/Util/MCMTable.cpp
     src/Util/ObjectRefUtil.cpp
+    src/Util/SerializationUtil.cpp
     src/Util/StringUtil.cpp
     src/Util/VectorUtil.cpp
 	src/Util.cpp

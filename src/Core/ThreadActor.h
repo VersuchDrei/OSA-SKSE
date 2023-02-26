@@ -38,8 +38,15 @@ namespace OStim {
         void setEventExpression(Trait::FacialExpression* expression);
         void clearEventExpression();
 
-        void equipObject(std::string type);
+        bool equipObject(std::string type);
         void unequipObject(std::string type);
+        bool isObjectEquipped(std::string type);
+        bool setObjectVariant(std::string type, std::string variant, int duration);
+        void unsetObjectVariant(std::string type);
+
+        inline bool setObjectVariant(std::string type, std::string variant) {
+            return setObjectVariant(type, variant, 0);
+        }
 
         void loop();
 
@@ -108,9 +115,10 @@ namespace OStim {
 
         int threadId;
 		RE::Actor* actor;
-        float scaleBefore = 1;
+        float scaleBefore;
         bool isPlayer;
         bool isFemale;
+        bool hasSchlong;
 
         Graph::Actor* graphActor = nullptr;
         int speed = 0;

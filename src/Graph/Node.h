@@ -14,7 +14,7 @@ namespace Graph {
 
     struct Actor {
     public:
-        std::string position;
+        uint32_t requirements;
         int penisAngle;
         float scale = 1.0;
         float scaleHeight = 120.748;
@@ -47,6 +47,8 @@ namespace Graph {
         // maybe remove this in a later iteration?
         std::string sourceModule;
         std::string animClass;
+
+        void mergeActionRequirementsIntoActors();
 
         bool fulfilledBy(std::vector<Trait::ActorConditions> conditions);
 

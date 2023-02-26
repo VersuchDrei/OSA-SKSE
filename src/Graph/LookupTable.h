@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Requirement.h"
+
 #include "Furniture/Furniture.h"
 #include "Graph/Node.h"
 #include "Trait/Condition.h"
@@ -25,12 +27,26 @@ namespace Graph{
 
         static void SetupActions();
         static ActionAttributes* GetActionAttributesByType(std::string type);
+
+        static Requirement getRequirement(std::string string);
     private:
 
         inline static std::unordered_map<std::string, Node*> nodes;
         inline static std::unordered_map<std::string, Node*> animationNodeTable;
         inline static std::unordered_map<Furniture::FurnitureType, std::unordered_map<int, std::vector<Node*>*>*> nodeList;
         inline static std::unordered_map<std::string, ActionAttributes> actions;
+
+        inline static std::unordered_map<std::string, Requirement> requirements = {
+            {"anus", Requirement::ANUS},
+            {"breast", Requirement::BREAST},
+            {"foot", Requirement::FOOT},
+            {"hand", Requirement::HAND},
+            {"mouth", Requirement::MOUTH},
+            {"nipple", Requirement::NIPPLE},
+            {"penis", Requirement::PENIS},
+            {"testicles", Requirement::TESTICLES},
+            {"vagina", Requirement::VAGINA}
+        };
 
         inline static SKEE::INiTransformInterface* niTransformInterface;
     };

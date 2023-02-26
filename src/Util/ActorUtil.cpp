@@ -59,7 +59,7 @@ namespace ActorUtil {
                     RE::TESForm* bipedArmor = data.item;
 
                     // some, but not all, weapon meshes CTD if you check them for "HH_OFFSET", so we skip those
-                    if (bipedArmor->formType == RE::TESObjectWEAP::FORMTYPE || bipedArmor->formType == RE::TESAmmo::FORMTYPE || bipedArmor->As<RE::BGSKeywordForm>()->HasKeywordString("ArmorShield")){
+                    if (bipedArmor->formType == RE::TESObjectWEAP::FORMTYPE || bipedArmor->formType == RE::TESAmmo::FORMTYPE || bipedArmor->formType == RE::TESObjectLIGH::FORMTYPE || bipedArmor->As<RE::BGSKeywordForm>()->HasKeywordString("ArmorShield")){
                         continue;
                     }
 

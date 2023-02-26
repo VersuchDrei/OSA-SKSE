@@ -30,6 +30,13 @@ namespace MCM {
         static int getExpressionDurationMin();
         static int getExpressionDurationMax();
 
+        static bool equipStrapOnIfNeeded();
+        static bool unequipStrapOnIfNotNeeded();
+        static bool unequipStrapOnIfInWay();
+
+        static void exportSettings();
+        static void importSettings();
+
     private:
         inline static RE::TESGlobal* maleExcitementMultSetting;
         inline static RE::TESGlobal* femaleExcitementMultSetting;
@@ -52,5 +59,9 @@ namespace MCM {
 
         inline static RE::TESGlobal* OStimExpressionDurationMin;
         inline static RE::TESGlobal* OStimExpressionDurationMax;
+
+        inline static RE::TESGlobal* OStimEquipStrapOnIfNeeded;
+        inline static RE::TESGlobal* OStimUnequipStrapOnIfNotNeeded;
+        inline static RE::TESGlobal* OStimUnequipStrapOnIfInWay;
     };
 }

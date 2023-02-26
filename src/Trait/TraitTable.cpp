@@ -1,10 +1,13 @@
 #include "TraitTable.h"
 
 #include "FacialExpression.h"
+#include "Serial/Manager.h"
 #include "Util/ActorUtil.h"
+#include "Util/MapUtil.h"
 #include "Util/VectorUtil.h"
 #include "Util/JsonFileLoader.h"
 #include "Util/JsonUtil.h"
+#include "Util/StringUtil.h"
 
 namespace Trait {
     const char* EXPRESSION_FILE_PATH{"Data/SKSE/Plugins/OStim/facial expressions"};
@@ -64,15 +67,26 @@ namespace Trait {
     }
 
     void TraitTable::setupForms() {
-        excitementFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D93, "OStim.esp");
-        noFacialExpressionsFaction = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESFaction>(0x00000D92, "OStim.esp");
+        RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
+        excitementFaction = handler->LookupForm<RE::TESFaction>(0xD93, "OStim.esp");
+        noFacialExpressionsFaction = handler->LookupForm<RE::TESFaction>(0xD92, "OStim.esp");
+
+        if (handler->GetModIndex("Schlongs of Skyrim - Core.esm")) {
+            SOS_SchlongifiedFaction = handler->LookupForm<RE::TESFaction>(0x00Aff8, "Schlongs of Skyrim - Core.esm");
+        } else {
+            logger::warn("SoS not installed!");
+        }
 
         // this needs to go in setupForms because it requires the kDataLoaded event
-        Util::JsonFileLoader::LoadFilesInFolder(EQUIP_OBJECT_FILE_PATH, [&](std::string path, std::string, json json) {
-            if (!json.contains("id")) {
-                logger::info("file {} does not have field 'id' defined", path);
+        Util::JsonFileLoader::LoadFilesInFolder(EQUIP_OBJECT_FILE_PATH, [&](std::string path, std::string filename, json json) {
+            std::string id = filename;
+            StringUtil::toLower(&id);
+
+            if (id == "default" || id == "random") {
+                logger::info("illegal equip object id: {}, this id is reserved by OStim", id);
                 return;
             }
+
             if (!json.contains("type")) {
                 logger::info("file {} does not have field 'type' defined", path);
                 return;
@@ -100,12 +114,12 @@ namespace Trait {
                 }
             }
 
-            std::string id = json["id"];
             std::string type = json["type"];
+            StringUtil::toLower(&type);
             auto iter = equipObjects.find(type);
             if (iter != equipObjects.end()) {
                 if (iter->second.contains(id)) {
-                    logger::info("duplicate equip object id {} for type {}", id, type);
+                    logger::info("duplicate equip object {} for type {}", id, type);
                 } else {
                     iter->second.emplace(id, object);
                 }
@@ -180,6 +194,7 @@ namespace Trait {
     }
 
     void TraitTable::addToTable(std::unordered_map<std::string, std::vector<FacialExpression*>*>* table, std::string key, FacialExpression* expression) {
+        StringUtil::toLower(&key);
         auto iter = table->find(key);
         if (iter != table->end()) {
             iter->second->push_back(expression);
@@ -239,13 +254,90 @@ namespace Trait {
         return 0;
     }
 
-    EquipObject* TraitTable::getEquipObject(RE::Actor* actor, std::string type) {
+    EquipObject* TraitTable::getRandomEquipObject(std::string type) {
         auto iter = equipObjects.find(type);
         if (iter != equipObjects.end()) {
-            auto iter2 = iter->second.begin();
-            std::advance(iter2, std::uniform_int_distribution<>(0, iter->second.size() - 1)(Constants::RNG));
-            return iter2->second;
+            return MapUtil::randomValue(iter->second);
         }
         return nullptr;
+    }
+
+    EquipObject* TraitTable::getEquipObject(RE::Actor* actor, std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter == equipObjects.end()) {
+            return nullptr;
+        }
+
+        RE::TESNPC* base = actor->GetActorBase();
+        std::string id = Serialization::getEquipObject(base->GetFormID(), type);
+        if (id == "random") {
+            return MapUtil::randomValue(iter->second);
+        } else if (id != "" && id != "default") {
+            auto iter2 = iter->second.find(id);
+            if (iter2 != iter->second.end()) {
+                return iter2->second;
+            }
+        }
+
+        id = Serialization::getEquipObject(base->GetSex() == RE::SEX::kMale ? 0x0 : 0x1, type);
+        if (id != "" && id != "random") {
+            auto iter2 = iter->second.find(id);
+            if (iter2 != iter->second.end()) {
+                return iter2->second;
+            }
+        }
+
+        return MapUtil::randomValue(iter->second);
+    }
+
+    std::vector<std::string> TraitTable::getEquipObjectPairs(RE::FormID formID, std::string type) {
+        std::vector<std::string> ret;
+        if (formID > 1) {
+            ret.push_back("default");
+            ret.push_back("default");
+        }
+        ret.push_back("random");
+        ret.push_back("random");
+
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            for (auto& [id, object] : iter->second) {
+                ret.push_back(id);
+                ret.push_back(object->name);
+            }
+        }
+
+        return ret;
+    }
+
+    std::string TraitTable::getEquipObjectName(RE::FormID formID, std::string type) {
+        std::string id = Serialization::getEquipObject(formID, type);
+        if (id == "") {
+            return formID >= 1 ? "default" : "random";
+        } else if (id == "default") {
+            return "default";
+        } else if (id == "random") {
+            return "random";
+        }
+
+        auto iter = equipObjects.find(type);
+        if (iter == equipObjects.end()) {
+            return "-invalid-";
+        }
+
+        auto iter2 = iter->second.find(id);
+        if (iter2 != iter->second.end()) {
+            return iter2->second->name;
+        }
+
+        return "-invalid-";
+    }
+
+    void TraitTable::setEquipObjectID(RE::FormID formID, std::string type, std::string id) {
+        Serialization::setEquipObject(formID, type, id);
+    }
+
+    bool TraitTable::hasSchlong(RE::Actor* actor) {
+        return SOS_SchlongifiedFaction && actor->IsInFaction(SOS_SchlongifiedFaction);
     }
 }
