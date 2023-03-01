@@ -1,6 +1,7 @@
 #pragma once
 #include "Core/Singleton.h"
 #include "Core/Thread.h"
+#include "Serial/OldThread.h"
 #include <shared_mutex>
 
 namespace OStim {    
@@ -9,13 +10,15 @@ namespace OStim {
         
     public:
         ThreadManager();
-        void TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors);
+        void TrackThread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors);
         Thread* GetThread(ThreadId a_id);
         void UnTrackThread(ThreadId a_id);
         void UntrackAllThreads();
         bool AnySceneRunning();
 
         ThreadActor* findActor(RE::Actor* actor);
+
+        std::vector<Serialization::OldThread> serialize();
 
     private:
         using ThreadMap = std::unordered_map<ThreadId, Thread*>;

@@ -11,7 +11,6 @@
 #include "SKEE.h"
 #include "Serial/Manager.h"
 #include "Trait/TraitTable.h"
-#include "Util/CompatibilityTable.h"
 #include "Util/MCMTable.h"
 
 using namespace RE::BSScript;
@@ -54,7 +53,8 @@ namespace {
     void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {        
         switch (a_msg->type) {
             case SKSE::MessagingInterface::kPostLoad: {
-                RE::ScriptEventSourceHolder::GetSingleton()->AddEventSink(Events::EventListener::GetSingleton());
+                RE::ScriptEventSourceHolder::GetSingleton()->AddEventSink<RE::TESLoadGameEvent>(Events::EventListener::GetSingleton());
+                SKSE::GetNiNodeUpdateEventSource()->AddEventSink(Events::EventListener::GetSingleton());
 
                 auto message = SKSE::GetMessagingInterface();
                 if (message) {
@@ -64,7 +64,6 @@ namespace {
             case SKSE::MessagingInterface::kDataLoaded: {
                 Graph::LookupTable::setupForms();
                 Trait::TraitTable::setupForms();
-                Compatibility::CompatibilityTable::setupForms();
                 MCM::MCMTable::setupForms();
                 Furniture::FurnitureTable::setupForms();
             } break;

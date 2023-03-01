@@ -2,6 +2,7 @@
 
 #include "Graph/Node.h"
 #include "Trait/Condition.h"
+#include "Util/Constants.h"
 #include "Util/StringUtil.h"
 #include "Util/JsonFileLoader.h"
 #include "SKEE.h"
@@ -13,9 +14,7 @@ namespace Graph {
     void LookupTable::setupForms() {
         auto handler = RE::TESDataHandler::GetSingleton();
         OSexIntegrationMainQuest = handler->LookupForm<RE::TESQuest>(0x801, "OStim.esp");
-        OStimNoStrip = handler->LookupForm<RE::BGSKeyword>(0xDB1, "OStim.esp");
-
-        noStripKeywords.push_back(OStimNoStrip);
+        OStimVehicle = handler->LookupForm<RE::TESObjectSTAT>(0xDD6, "OStim.esp");
     }
 
     void LookupTable::addNode(Node* node) {
@@ -95,7 +94,7 @@ namespace Graph {
         // the copy is to prevent race conditions if several scripts try to call this at once
         std::vector<Node*> copy = *iter2->second;
 
-        std::shuffle(std::begin(copy), std::end(copy), rng);
+        std::shuffle(std::begin(copy), std::end(copy), Constants::RNG);
 
         for (auto& node : copy) {
             if (!node->isTransition && !node->noRandomSelection && node->fulfilledBy(actorConditions) && nodeCondition(node)) {
@@ -118,20 +117,18 @@ namespace Graph {
         if (json.contains("stimulation")) {
             actor.stimulation = json["stimulation"];
         }
-        else {
-            actor.stimulation = 0.0;
-        }
 
         if (json.contains("maxStimulation")) {
             actor.maxStimulation = json["maxStimulation"];
         }
-        else {
-            actor.maxStimulation = 100.0;
+
+        if (json.contains("fullStrip")) {
+            actor.fullStrip = json["fullStrip"];
         }
 
         if (json.contains("requirements")) {
             for (auto& req : json["requirements"]) {
-                actor.requirements.push_back(req.get<std::string>());
+                actor.requirements |= LookupTable::getRequirement(req);
             }
         }
 
@@ -141,31 +138,74 @@ namespace Graph {
             }
         }
 
-        if (json.contains("floats")) {
-            auto& floats = json["floats"];
-            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
-                actor.floats.insert(std::make_pair(it.key(), it.value().get<float>()));
+        if (json.contains("ints")) {
+            for (auto& [key, val] : json["ints"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                actor.ints.insert(std::make_pair(mutableKey, val.get<int>()));
             }
         }
 
-        if (json.contains("ints")) {
-            auto& floats = json["ints"];
-            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
-                actor.ints.insert(std::make_pair(it.key(), it.value().get<int>()));
+        if (json.contains("intLists")) {
+            for (auto& [key, val] : json["intLists"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::vector<int> ints;
+                for (auto& entry : val) {
+                    ints.push_back(entry.get<int>());
+                }
+                actor.intLists.insert(std::make_pair(mutableKey, ints));
+            }
+        }
+
+        if (json.contains("floats")) {
+            for (auto& [key, val] : json["floats"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                actor.floats.insert(std::make_pair(mutableKey, val.get<float>()));
+            }
+        }
+
+        if (json.contains("floatLists")) {
+            for (auto& [key, val] : json["floatLists"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::vector<float> floats;
+                for (auto& entry : val) {
+                    floats.push_back(entry.get<float>());
+                }
+                actor.floatLists.insert(std::make_pair(mutableKey, floats));
             }
         }
 
         if (json.contains("strings")) {
-            auto& floats = json["strings"];
-            for (json::iterator it = floats.begin(); it != floats.end(); it++) {
-                actor.strings.insert(std::make_pair(it.key(), it.value().get<std::string>()));
+            auto& strings = json["strings"];
+            for (auto& [key, val] : json["strings"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::string value = val.get<std::string>();
+                StringUtil::toLower(&value);
+                actor.strings.insert(std::make_pair(mutableKey, value));
+            }
+        }
+
+        if (json.contains("stringLists")) {
+            for (auto& [key, val] : json["stringLists"].items()) {
+                std::string mutableKey = key;
+                StringUtil::toLower(&mutableKey);
+                std::vector<std::string> strings;
+                for (auto& entry : val) {
+                    std::string value = entry.get<std::string>();
+                    StringUtil::toLower(&value);
+                    strings.push_back(value);
+                }
+                actor.stringLists.insert(std::make_pair(mutableKey, strings));
             }
         }
     };
 
-    void LookupTable::SetupActions(){        
-    
-        Util::JsonFileLoader::LoadFilesInFolder(ACTION_FILE_PATH, [&](std::string filename, json json) {
+    void LookupTable::SetupActions(){
+        Util::JsonFileLoader::LoadFilesInFolder(ACTION_FILE_PATH, [&](std::string, std::string filename, json json) {
             Graph::ActionAttributes attr;
             if(json.contains("actor")){
                 Graph::ActionActor actor;
@@ -202,5 +242,14 @@ namespace Graph {
             logger::warn("No action found for {} using default", type);
             return &actions.at("default");
         }
+    }
+
+    Requirement LookupTable::getRequirement(std::string string) {
+        auto iter = requirements.find(string);
+        if (iter != requirements.end()) {
+            return iter->second;
+        }
+
+        return Requirement::NONE;
     }
 }

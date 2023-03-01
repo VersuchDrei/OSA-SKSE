@@ -4,7 +4,7 @@ namespace Util {
 
 	class JsonFileLoader {
 	public:
-		inline static void LoadFilesInFolder(std::string path, std::function<void(std::string, json)> callback) {
+		inline static void LoadFilesInFolder(std::string path, std::function<void(std::string, std::string, json)> callback) {
 			fs::path rootPath{ path };
 			if (!fs::exists(rootPath)) {
 				logger::warn("path ({}) does not exist", path);
@@ -21,7 +21,7 @@ namespace Util {
 						logger::warn("file {} is malformed", pathStr);
 						continue;
 					}
-					callback(path.filename().replace_extension("").string(), json);
+					callback(pathStr, path.filename().replace_extension("").string(), json);
 				}
 			}
 		}

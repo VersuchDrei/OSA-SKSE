@@ -1,18 +1,26 @@
 #include "ThreadActor.h"
 
+#include "Core.h"
 #include "Graph/LookupTable.h"
+#include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
 #include "Util/FormUtil.h"
-#include "Util/Globals.h"
+#include "Util/Constants.h"
 #include "Util/MCMTable.h"
 #include "Util/ObjectRefUtil.h"
+#include "Trait/TraitTable.h"
 #include "Util/VectorUtil.h"
 
 namespace OStim {
     ThreadActor::ThreadActor(int threadId, RE::Actor* actor) : threadId{threadId}, actor{actor} {
-        scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0;
+        scaleBefore = actor->GetReferenceRuntimeData().refScale / 100.0f;
         isFemale = actor->GetActorBase()->GetSex() == RE::SEX::kFemale;
+        hasSchlong = Trait::TraitTable::hasSchlong(actor);
         isPlayer = actor == RE::PlayerCharacter::GetSingleton();
+        Trait::TraitTable::addToExcitementFaction(actor);
+
+        baseExcitementMultiplier = isFemale ? MCM::MCMTable::getFemaleSexExcitementMult() : MCM::MCMTable::getMaleSexExcitementMult();
+        loopExcitementDecay = MCM::MCMTable::getExcitementDecayRate() * Constants::LOOP_TIME_SECONDS;
     }
 
     void ThreadActor::initContinue() {
@@ -59,7 +67,7 @@ namespace OStim {
             if (!entry->IsWorn() || !obj->IsArmor() || !FormUtil::canUndress(obj)) {
                 continue;
             }
-
+            
             auto armor = obj->As<RE::TESObjectARMO>();
             if (FormUtil::isWig(actor, armor)) {
                 continue;
@@ -75,14 +83,7 @@ namespace OStim {
             }
         }
 
-        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-        if (vm) {
-            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-            auto args = RE::MakeFunctionArguments();
-            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
-            vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
-        }
+        ActorUtil::queueNiNodeUpdate(actor);
 
         undressed = true;
     }
@@ -127,16 +128,7 @@ namespace OStim {
             }
         }
 
-        if ((undressedMask & filteredMask) != 0) {
-            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-            if (vm) {
-                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                auto args = RE::MakeFunctionArguments();
-                auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
-                vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
-            }
-        }
+        ActorUtil::queueNiNodeUpdate(actor);
 
         // some slots might not have any items equipped in them
         // so to not check them over and over again we add those to the undressedMask
@@ -253,31 +245,150 @@ namespace OStim {
         weaponsRemoved = false;
     }
 
-    void ThreadActor::changeNode(Graph::Actor* graphActor) {
+    void ThreadActor::changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions) {
         this->graphActor = graphActor;
-        if (!MCM::MCMTable::isSchlongBendingDisabled()) {
-            actor->NotifyAnimationGraph("SOSBend" + std::to_string(graphActor->penisAngle));
-        }
+        bendSchlong();
 
+        // heel stuff
         checkHeelOffset();
         scale();
-    }
 
-    void ThreadActor::loop() {
-        if (graphActor) {
-            if (!MCM::MCMTable::isSchlongBendingDisabled()) {
-                // calling NotifyAnimationGraph directly here causes a CTD
-                // probably because you cannot access the animation graph from subthreads
-                // so we queue this action for the main thread
-                RE::Actor* tempActor = actor;
-                int angle = graphActor->penisAngle;
-                SKSE::GetTaskInterface()->AddTask([tempActor, angle]() { tempActor->NotifyAnimationGraph("SOSBend" + std::to_string(angle)); });
+        // facial expressions
+        this->nodeExpressions = nodeExpressions;
+        this->overrideExpressions = overrideExpressions;
+        updateOverrideExpression();
+        eyeballModifierOverride = graphActor->eyeballModifierOverride;
+        if (!eyeballModifierOverride.empty() &&
+            (!overrideExpression || (overrideExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0) &&
+            (!eventExpression || (eventExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0)){
+            applyEyeballOverride();
+        }
+        updateUnderlyingExpression();
+
+        // strap-ons
+        if (isFemale && !hasSchlong) {
+            if ((graphActor->requirements & Graph::Requirement::PENIS) == Graph::Requirement::PENIS) {
+                if (MCM::MCMTable::equipStrapOnIfNeeded()) {
+                    equipObject("strapon");
+                }
+            } else {
+                if (MCM::MCMTable::unequipStrapOnIfNotNeeded()) {
+                    unequipObject("strapon");
+                } else if ((graphActor->requirements & Graph::Requirement::VAGINA) == Graph::Requirement::VAGINA && MCM::MCMTable::unequipStrapOnIfInWay()) {
+                    unequipObject("strapon");
+                }
             }
         }
     }
 
+    void ThreadActor::changeSpeed(int speed) {
+        this->speed = speed;
+    }
+
+    void ThreadActor::loop() {
+        if (excitement > maxExcitement) {
+            if (excitementDecayCooldown > 0) {
+                excitementDecayCooldown -= Constants::LOOP_TIME_MILLISECONDS;
+            } else {
+                excitement -= loopExcitementDecay;
+                if (excitement < maxExcitement) {
+                    excitement = maxExcitement;
+                }
+                Trait::TraitTable::setExcitement(actor, excitement);
+            }
+        } else {  // increase excitement
+            excitement += loopExcitementInc;
+            if (excitement > maxExcitement) {
+                excitement = maxExcitement;
+            }
+            Trait::TraitTable::setExcitement(actor, excitement);
+            excitementDecayCooldown = MCM::MCMTable::getExcitementDecayGracePeriod();
+        }
+
+        // expressions
+        if (overwriteExpressionCooldown > 0) {
+            overwriteExpressionCooldown -= Constants::LOOP_TIME_MILLISECONDS;
+            if (overwriteExpressionCooldown <= 0) {
+                updateOverrideExpression();
+            }
+        }
+        if ((underlyingExpressionCooldown -= Constants::LOOP_TIME_MILLISECONDS) < 0) {
+            updateUnderlyingExpression();
+        }
+
+        auto faceData = actor->GetFaceGenAnimationData();
+
+        if (faceData) {
+            if (!modifierUpdaters.empty()) {
+                std::vector<int> toDelete;
+                for (auto& [key, updater] : modifierUpdaters) {
+                    if (updater.delay > 0) {
+                        updater.delay -= Constants::LOOP_TIME_MILLISECONDS;
+                    } else {
+                        if (key >= faceData->modifierKeyFrame.count) {
+                            continue;
+                        }
+
+                        faceData->modifierKeyFrame.values[key] = updater.step() / 100.0f;
+                        if (updater.isDone()) {
+                            toDelete.push_back(key);
+                        }
+                    }
+                }
+
+                for (int i : toDelete) {
+                    modifierUpdaters.erase(i);
+                }
+
+                faceData->modifierKeyFrame.isUpdated = false;
+            }
+
+            if (!phonemeUpdaters.empty()) {
+                std::vector<int> toDelete;
+                for (auto& [key, updater] : phonemeUpdaters) {
+                    if (updater.delay > 0) {
+                        updater.delay -= Constants::LOOP_TIME_MILLISECONDS;
+                    } else {
+                        if (key >= faceData->phenomeKeyFrame.count) {
+                            continue;
+                        }
+
+                        faceData->phenomeKeyFrame.values[key] = updater.step() / 100.0f;
+                        if (updater.isDone()) {
+                            toDelete.push_back(key);
+                        }
+                    }
+                }
+
+                for (int i : toDelete) {
+                    phonemeUpdaters.erase(i);
+                }
+
+                faceData->phenomeKeyFrame.isUpdated = false;
+            }
+        } else {
+            logger::warn("no face data on actor {}", actor->GetDisplayFullName());
+        }
+
+        // equip objects
+        for (auto& [type, object] : equipObjects) {
+            if (object.variantDuration > 0) {
+                object.variantDuration -= Constants::LOOP_TIME_MILLISECONDS;
+                if (object.variantDuration <= 0) {
+                    object.unsetVariant(actor);
+                }
+            }
+        }
+    }
+
+    void ThreadActor::bendSchlong() {
+        if (!MCM::MCMTable::isSchlongBendingDisabled()) {
+            actor->NotifyAnimationGraph("SOSBend" + std::to_string(graphActor ? graphActor->penisAngle : 0));
+        }
+    }
+
     void ThreadActor::scale() {
-        if (MCM::MCMTable::isScalingDisabled()) {
+        if (MCM::MCMTable::isScalingDisabled() || !graphActor) {
             return;
         }
 
@@ -353,7 +464,337 @@ namespace OStim {
         }
     }
 
+    void ThreadActor::updateUnderlyingExpression() {
+        if (!Trait::TraitTable::areFacialExpressionsBlocked(actor)) {
+            int mask = 0;
+            if (underlyingExpression) {
+                mask = underlyingExpression->typeMask;
+            }
+            underlyingExpression = VectorUtil::randomElement(nodeExpressions)->getGenderExpression(isFemale);
+            mask |= underlyingExpression->typeMask;
+            if (!eyeballModifierOverride.empty()) {
+                mask &= ~Trait::ExpressionType::BALL_MODIFIER;
+            }
+            if (eventExpression) {
+                mask &= ~eventExpression->typeMask;
+            }
+            if (overrideExpression) {
+                mask &= ~overrideExpression->typeMask;
+            }
+            applyExpression(underlyingExpression, mask, 1);
+        }
+        underlyingExpressionCooldown = std::uniform_int_distribution<>(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax())(Constants::RNG);
+    }
+
+    void ThreadActor::updateOverrideExpression() {
+        int mask = 0;
+        if (overrideExpression) {
+            mask = overrideExpression->typeMask;
+        }
+        if (overrideExpressions) {
+            overrideExpression = VectorUtil::randomElement(overrideExpressions)->getGenderExpression(isFemale);
+            mask &= ~overrideExpression->typeMask;
+            applyExpression(overrideExpression, overrideExpression->typeMask, 5);
+            overwriteExpressionCooldown = std::uniform_int_distribution<>(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax())(Constants::RNG);
+        } else {
+            overrideExpression = nullptr;
+            overwriteExpressionCooldown = -1;
+        }
+        
+        wakeExpressions(mask);
+    }
+
+    void ThreadActor::setEventExpression(Trait::FacialExpression* expression) {
+        int mask = 0;
+        if (eventExpression) {
+            mask = eventExpression->typeMask;
+        }
+        eventExpression = expression->getGenderExpression(isFemale);
+        if (overrideExpression) {
+            applyExpression(eventExpression, eventExpression->typeMask & ~overrideExpression->typeMask, 3);
+            mask &= ~eventExpression->typeMask & ~overrideExpression->typeMask;
+        } else {
+            applyExpression(eventExpression, eventExpression->typeMask, 3);
+            mask &= ~eventExpression->typeMask;
+        }
+        
+        wakeExpressions(mask);
+    }
+
+    void ThreadActor::clearEventExpression() {
+        if (eventExpression) {
+            int mask = eventExpression->typeMask;
+            if (overrideExpression) {
+                mask &= ~overrideExpression->typeMask;
+            }
+            eventExpression = nullptr;
+            wakeExpressions(mask);
+        }
+    }
+
+    void ThreadActor::setLooking(std::unordered_map<int, Trait::FaceModifier> eyeballOverride) {
+        eyeballModifierOverride = eyeballOverride;
+        checkForEyeballOverride();
+    }
+
+    void ThreadActor::unsetLooking() {
+        eyeballModifierOverride.clear();
+        checkForEyeballOverride();
+    }
+
+    void ThreadActor::resetLooking() {
+        if (graphActor) {
+            eyeballModifierOverride = graphActor->eyeballModifierOverride;
+        } else {
+            eyeballModifierOverride.clear();
+        }
+        checkForEyeballOverride();
+    }
+
+    void ThreadActor::wakeExpressions(int mask) {
+        if (mask == 0) {
+            return;
+        }
+
+        if (eventExpression) {
+            applyExpression(eventExpression, mask & eventExpression->typeMask, 3);
+            mask &= ~eventExpression->typeMask;
+        }
+
+        if ((mask & Trait::ExpressionType::BALL_MODIFIER) == Trait::ExpressionType::BALL_MODIFIER && graphActor && !eyeballModifierOverride.empty()) {
+            applyEyeballOverride();
+            mask &= ~Trait::ExpressionType::BALL_MODIFIER;
+        }
+        
+        if (underlyingExpression) {
+            applyExpression(underlyingExpression, mask, 1);
+        }
+    }
+
+    void ThreadActor::applyExpression(Trait::GenderExpression* expression, int mask, int updateSpeed) {
+        if (mask == 0) {
+            return;
+        }
+
+        auto faceData = actor->GetFaceGenAnimationData();
+        if (!faceData) {
+            return;
+        }
+
+        // expression
+        if ((mask & Trait::ExpressionType::EXPRESSION) == Trait::ExpressionType::EXPRESSION) {
+            if (auto value = expression->expression.calculate(speed, excitement)) {
+                faceData->exprOverride = false;
+                faceData->SetExpressionOverride(expression->expression.type, static_cast<float>(value) / 100.0f);
+                faceData->exprOverride = true;
+            }
+        }
+
+        // modifiers
+        if ((mask & Trait::ExpressionType::LID_MODIFIER) == Trait::ExpressionType::LID_MODIFIER) {
+            for (int i : Trait::eyelidModifierTypes) {
+                if (i >= faceData->modifierKeyFrame.count) {
+                    continue;
+                }
+                
+                int current = faceData->modifierKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->eyelidModifiers.find(i);
+                if (iter != expression->eyelidModifiers.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    modifierUpdaters.erase(i);
+                } else {
+                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                }
+            }
+        }
+
+        if ((mask & Trait::ExpressionType::BROW_MODIFIER) == Trait::ExpressionType::BROW_MODIFIER) {
+            for (int i : Trait::eyebrowModifierTypes) {
+                if (i >= faceData->modifierKeyFrame.count) {
+                    continue;
+                }
+
+                int current = faceData->modifierKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->eyebrowModifiers.find(i);
+                if (iter != expression->eyebrowModifiers.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    modifierUpdaters.erase(i);
+                } else {
+                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                }
+            }
+        }
+
+        if ((mask & Trait::ExpressionType::BALL_MODIFIER) == Trait::ExpressionType::BALL_MODIFIER) {
+            for (int i : Trait::eyeballModifierTypes) {
+                if (i >= faceData->modifierKeyFrame.count) {
+                    continue;
+                }
+
+                int current = faceData->modifierKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->eyeballModifiers.find(i);
+                if (iter != expression->eyeballModifiers.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    modifierUpdaters.erase(i);
+                } else {
+                    modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = 5};
+                }
+            }
+        }
+
+        // phonemes
+        if ((mask & Trait::ExpressionType::PHONEME) == Trait::ExpressionType::PHONEME) {
+            for (int i = 0; i < 14; i++) {
+                if (i >= faceData->phenomeKeyFrame.count) {
+                    continue;
+                }
+
+                int current = faceData->phenomeKeyFrame.values[i] * 100;
+                int goal = 0;
+                int delay = 0;
+                auto iter = expression->phonemes.find(i);
+                if (iter != expression->phonemes.end()) {
+                    goal = iter->second.calculate(speed, excitement);
+                    delay = iter->second.randomizeDelay();
+                }
+                if (current == goal) {
+                    phonemeUpdaters.erase(i);
+                } else {
+                    phonemeUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = updateSpeed};
+                }
+            }
+
+            for (std::string object : phonemeObjects) {
+                if (!VectorUtil::contains(expression->phonemeObjects, object)) {
+                    unequipObject(object);
+                }
+            }
+
+            for (std::string object : expression->phonemeObjects) {
+                if (!VectorUtil::contains(phonemeObjects, object)) {
+                    equipObject(object);
+                }
+            }
+
+            phonemeObjects = expression->phonemeObjects;
+        }
+    }
+
+    void ThreadActor::checkForEyeballOverride() {
+        if ((!overrideExpression || (overrideExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0) &&
+            (!eventExpression || (eventExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0)) {
+            if (eyeballModifierOverride.empty()) {
+                wakeExpressions(Trait::ExpressionType::BALL_MODIFIER);
+            } else {
+                applyEyeballOverride();
+            }
+        }
+    }
+
+    void ThreadActor::applyEyeballOverride() {
+        auto faceData = actor->GetFaceGenAnimationData();
+
+        if (!faceData) {
+            return;
+        }
+
+        for (int i : Trait::eyeballModifierTypes) {
+            if (i >= faceData->modifierKeyFrame.count) {
+                continue;
+            }
+
+            int current = faceData->modifierKeyFrame.values[i] * 100;
+            int goal = 0;
+            int delay = 0;
+            auto iter = eyeballModifierOverride.find(i);
+            if (iter != eyeballModifierOverride.end()) {
+                goal = iter->second.calculate(speed, excitement);
+                delay = iter->second.randomizeDelay();
+            }
+            if (current == goal) {
+                modifierUpdaters.erase(i);
+            } else {
+                modifierUpdaters[i] = {.delay = delay, .current = current, .goal = goal, .speed = 5};
+            }
+        }
+    }
+
+    bool ThreadActor::equipObject(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            iter->second.equip(actor);
+            return true;
+        }
+        
+        Trait::EquipObject* object = Trait::TraitTable::getEquipObject(actor, type);
+        if (object) {
+            equipObjects[type] = {.actor = actor, .object = object};
+            equipObjects[type].equip(actor);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void ThreadActor::unequipObject(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            iter->second.unequip(actor);
+        }
+    }
+
+    bool ThreadActor::isObjectEquipped(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            return iter->second.equipped;
+        }
+        return false;
+    }
+
+    bool ThreadActor::setObjectVariant(std::string type, std::string variant, int duration) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            return iter->second.setVariant(actor, variant, duration);
+        }
+
+        Trait::EquipObject* object = Trait::TraitTable::getEquipObject(actor, type);
+        if (object) {
+            equipObjects[type] = {.actor = actor, .object = object};
+            return equipObjects[type].setVariant(actor, variant, duration);
+        }
+
+        return false;
+    }
+
+    void ThreadActor::unsetObjectVariant(std::string type) {
+        auto iter = equipObjects.find(type);
+        if (iter != equipObjects.end()) {
+            iter->second.unsetVariant(actor);
+        }
+    }
+
     void ThreadActor::free() {
+        for (auto& [type, object] : equipObjects) {
+            object.unequip(actor);
+            object.removeItems(actor);
+        }
+
         if (MCM::MCMTable::animateRedress() && !isPlayer) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
@@ -381,6 +822,15 @@ namespace OStim {
         }
         updateHeelOffset(false);
         ActorUtil::setScale(actor, scaleBefore);
+        
+        freeActor(actor, false);
+
+        // no need to do this in ActorUtil::free since facedata isn't written into the savefile anyways
+        auto faceData = actor->GetFaceGenAnimationData();
+        if (faceData) {
+            faceData->ClearExpressionOverride();
+            faceData->Reset(0.0, true, true, true, false);
+        }
     }
 
     void ThreadActor::papyrusUndressCallback(std::vector<RE::TESObjectARMO*> items) {
@@ -406,7 +856,21 @@ namespace OStim {
 
     void ThreadActor::GetRmHeightCallbackFunctor::setRmHeight(float height) {
         threadActor->rmHeight = height;
-        float currentScale = threadActor->actor->GetReferenceRuntimeData().refScale / 100.0;
+        float currentScale = threadActor->actor->GetReferenceRuntimeData().refScale / 100.0f;
         ActorUtil::setScale(threadActor->actor, currentScale / height);
+    }
+
+    Serialization::OldThreadActor ThreadActor::serialize() {
+        Serialization::OldThreadActor oldThreadActor;
+
+        oldThreadActor.actor = actor;
+
+        for (auto& [type, object] : equipObjects) {
+            for (RE::TESObjectARMO* item : object.toRemove) {
+                oldThreadActor.equipObjects.push_back(item);
+            }
+        }
+
+        return oldThreadActor;
     }
 }

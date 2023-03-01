@@ -1,12 +1,20 @@
 #include "ActorUtil.h"
 
 namespace ActorUtil {
+    void equipItem(RE::Actor* actor, RE::TESForm* item, bool preventRemoval, bool silent) {
+        EquipItem(nullptr, 0, actor, item, preventRemoval, silent);
+    }
+
+    void equipItem(RE::Actor* actor, RE::TESForm* item) {
+        EquipItem(nullptr, 0, actor, item, false, true);
+    }
+
     void unequipItem(RE::Actor* actor, RE::TESForm* item, bool preventEquip, bool silent) {
         UnequipItem(nullptr, 0, actor, item, preventEquip, silent);
     }
 
     void unequipItem(RE::Actor* actor, RE::TESForm* item) {
-        UnequipItem(nullptr, 0, actor, item, false, false);
+        UnequipItem(nullptr, 0, actor, item, false, true);
     }
 
     void equipItemEx(RE::Actor* actor, RE::TESForm* item, int slotId, bool preventUnequip, bool equipSound) {
@@ -29,6 +37,17 @@ namespace ActorUtil {
         equipItemEx(actor, item, 0, false, true);
     }
 
+    void queueNiNodeUpdate(RE::Actor* actor) {
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+        if (vm) {
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+            auto args = RE::MakeFunctionArguments();
+            auto handle = skyrimVM->handlePolicy.GetHandleForObject(static_cast<RE::VMTypeID>(actor->FORMTYPE), actor);
+            vm->DispatchMethodCall2(handle, "Actor", "QueueNiNodeUpdate", args, callback);
+        }
+    }
+
     float getHeelOffset(RE::Actor* actor, RE::TESObjectARMO** heelArmor) {
         auto& weightModel = actor->GetBiped(0);
         if (weightModel) {
@@ -40,7 +59,7 @@ namespace ActorUtil {
                     RE::TESForm* bipedArmor = data.item;
 
                     // some, but not all, weapon meshes CTD if you check them for "HH_OFFSET", so we skip those
-                    if (bipedArmor->formType == RE::TESObjectWEAP::FORMTYPE || bipedArmor->formType == RE::TESAmmo::FORMTYPE){
+                    if (bipedArmor->formType == RE::TESObjectWEAP::FORMTYPE || bipedArmor->formType == RE::TESAmmo::FORMTYPE || bipedArmor->formType == RE::TESObjectLIGH::FORMTYPE || bipedArmor->As<RE::BGSKeywordForm>()->HasKeywordString("ArmorShield")){
                         continue;
                     }
 
@@ -64,8 +83,17 @@ namespace ActorUtil {
                                     auto sdta = child->GetExtraData<RE::NiStringExtraData>("SDTA");
                                     if (sdta) {
                                         json json = json::parse(sdta->value, nullptr, false);
-                                        if (!json.is_discarded() && json.contains("name") && json["name"] == "NPC" && json.contains("pos")) {
-                                            return json["pos"][2];
+
+                                        if (!json.is_discarded()) {
+                                            for (auto& element : json) {
+                                                if (element.contains("name") && element["name"] == "NPC" && element.contains("pos")) {
+                                                    if (bipedArmor->formType == RE::TESObjectARMO::FORMTYPE) {
+                                                        RE::TESObjectARMO* armor = bipedArmor->As<RE::TESObjectARMO>();
+                                                        *heelArmor = armor;
+                                                    }
+                                                    return element["pos"][2];
+                                                }
+                                            }
                                         }
                                     }
                                 }

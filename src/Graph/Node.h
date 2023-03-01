@@ -14,7 +14,7 @@ namespace Graph {
 
     struct Actor {
     public:
-        std::string position;
+        uint32_t requirements;
         int penisAngle;
         float scale = 1.0;
         float scaleHeight = 120.748;
@@ -48,13 +48,15 @@ namespace Graph {
         std::string sourceModule;
         std::string animClass;
 
+        void mergeActionRequirementsIntoActors();
+
         bool fulfilledBy(std::vector<Trait::ActorConditions> conditions);
 
-        void updateActors(std::vector<RE::Actor*> actors, std::vector<float> rmheights, std::vector<float> offsets);
-        void updateFacialExpressions(int position, RE::Actor* actor);
-        float playExpressionEvent(int position, RE::Actor* actor, std::string eventName);
+        std::vector<Trait::FacialExpression*>* getFacialExpressions(int position);
+        std::vector<Trait::FacialExpression*>* getOverrideExpressions(int position);
 
-        uint32_t getStrippingMask(int index);
+        uint32_t getStrippingMask(int position);
+        bool doFullStrip(int position);
 
         std::string getAutoTransitionForActor(int position, std::string type);
 
@@ -76,9 +78,5 @@ namespace Graph {
         int findAnyActionForTarget(int position, std::vector<std::string> types);
         int findActionForActorAndTarget(int actorPosition, int targetPosition, std::string type);
         int findAnyActionForActorAndTarget(int actorPosition, int targetPosition, std::vector<std::string> types);
-
-    private:
-        Trait::PhonemeOverrideType getOverrideType(int position);
-        std::unordered_map<int, Trait::FaceModifier> getEyeballModifierOverride(int position);
     };
 }

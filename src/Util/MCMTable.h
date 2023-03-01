@@ -6,6 +6,11 @@ namespace MCM {
         static void setupForms();
         static void resetDefaults();
 
+        static float getMaleSexExcitementMult();
+        static float getFemaleSexExcitementMult();
+        static float getExcitementDecayRate();
+        static int getExcitementDecayGracePeriod();
+
         static bool isScalingDisabled();
         static bool isSchlongBendingDisabled();
 
@@ -22,10 +27,22 @@ namespace MCM {
         static void setPapyusUndressing(bool doPapyrus);
         static bool usePapyrusUndressing();
 
-        static float getMaleSexExcitementMult();
-        static float getFemaleSexExcitementMult();
+        static int getExpressionDurationMin();
+        static int getExpressionDurationMax();
+
+        static bool equipStrapOnIfNeeded();
+        static bool unequipStrapOnIfNotNeeded();
+        static bool unequipStrapOnIfInWay();
+
+        static void exportSettings();
+        static void importSettings();
 
     private:
+        inline static RE::TESGlobal* maleExcitementMultSetting;
+        inline static RE::TESGlobal* femaleExcitementMultSetting;
+        inline static RE::TESGlobal* OStimExcitementDecayRate;
+        inline static RE::TESGlobal* OStimExcitementDecayGracePeriod;
+
         inline static RE::TESGlobal* disableScalingSetting;
         inline static RE::TESGlobal* disableSchlongBendingSetting;
 
@@ -40,7 +57,11 @@ namespace MCM {
         inline static bool doPapyrusUndressing = false;
         inline static RE::TESGlobal* OStimUsePapyrusUndressing;
 
-        inline static RE::TESGlobal* maleExcitementMultSetting;
-        inline static RE::TESGlobal* femaleExcitementMultSetting;
+        inline static RE::TESGlobal* OStimExpressionDurationMin;
+        inline static RE::TESGlobal* OStimExpressionDurationMax;
+
+        inline static RE::TESGlobal* OStimEquipStrapOnIfNeeded;
+        inline static RE::TESGlobal* OStimUnequipStrapOnIfNotNeeded;
+        inline static RE::TESGlobal* OStimUnequipStrapOnIfInWay;
     };
 }

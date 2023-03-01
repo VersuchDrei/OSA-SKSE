@@ -200,25 +200,6 @@ namespace PapyrusActor {
         return result;
     }
 
-    void UpdateForScene(RE::StaticFunctionTag*, std::string id, std::vector<RE::Actor*> actors, std::vector<float> rmheights, std::vector<float> offsets) {
-        if (auto node = Graph::LookupTable::getNodeById(id)) {
-            node->updateActors(actors, rmheights, offsets);
-        }
-    }
-
-    void UpdateExpression(RE::StaticFunctionTag*, std::string id, int position, RE::Actor* actor) {
-        if (auto node = Graph::LookupTable::getNodeById(id)) {
-            node->updateFacialExpressions(position, actor);
-        }
-    }
-
-    float PlayExpressionEvent(RE::StaticFunctionTag*, std::string id, int position, RE::Actor* actor, std::string eventName){
-        if (auto node = Graph::LookupTable::getNodeById(id)) {
-            return node->playExpressionEvent(position, actor, eventName);
-        }
-        return -1;
-    }
-
     bool IsWig(RE::StaticFunctionTag*, RE::Actor* actor, RE::TESObjectARMO* armor) {
         return FormUtil::isWig(actor, armor);
     }
@@ -239,9 +220,6 @@ namespace PapyrusActor {
         BIND(LookupRelationshipPartners, true);
         BIND(ToggleCombat);
         BIND(DetectionActive);
-        BIND(UpdateForScene);
-        BIND(UpdateExpression);
-        BIND(PlayExpressionEvent);
         BIND(IsWig);
 
         return true;

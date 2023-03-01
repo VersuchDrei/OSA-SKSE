@@ -5,11 +5,15 @@ namespace Graph {
 	public:
         float stimulation = 0.0;
         float maxStimulation = 100.0;
-		std::vector<std::string> requirements;
+        bool fullStrip = false;
+        uint32_t requirements = 0;
 		uint32_t strippingMask = 0;
 		std::unordered_map<std::string, int> ints;
-		std::unordered_map<std::string, float> floats;
-		std::unordered_map<std::string, std::string> strings;
+        std::unordered_map<std::string, std::vector<int>> intLists;
+        std::unordered_map<std::string, float> floats;
+        std::unordered_map<std::string, std::vector<float>> floatLists;
+        std::unordered_map<std::string, std::string> strings;
+        std::unordered_map<std::string, std::vector<std::string>> stringLists;
 	};
 
 	struct ActionAttributes {
@@ -30,6 +34,7 @@ namespace Graph {
         int target;
         int performer;
 
-		uint32_t getStrippingMask(int index);
+        bool doFullStrip(int position);
+        uint32_t getStrippingMask(int position);
     };
 }

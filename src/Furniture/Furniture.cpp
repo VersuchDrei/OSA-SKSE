@@ -8,12 +8,21 @@
 
 namespace Furniture {
     FurnitureType getFurnitureType(RE::TESObjectREFR* object, bool inUseCheck) {
-        if (!object || object->IsDisabled()) {
+        if (!object || object->IsDisabled() || object->IsMarkedForDeletion() || object->IsDeleted()) {
             return FurnitureType::NONE;
         }
 
-        if (object->GetBaseObject()->Is(RE::FormType::Furniture)) {
+        RE::TESBoundObject* base = object->GetBaseObject();
+        if (!base) {
+            return FurnitureType::NONE;
+        }
+
+        if (base->Is(RE::FormType::Furniture)) {
             if (inUseCheck && isFurnitureInUse(object, false)) {
+                return FurnitureType::NONE;
+            }
+
+            if (object->HasKeyword(FurnitureTable::WICraftingSmithing)) {
                 return FurnitureType::NONE;
             }
 
@@ -30,7 +39,7 @@ namespace Furniture {
                 return FurnitureType::NONE;
             }
 
-            if (object->GetBaseObject() == FurnitureTable::WallLeanMarker) {
+            if (base == FurnitureTable::WallLeanMarker) {
                 return FurnitureType::WALL;
             }
 
@@ -44,7 +53,7 @@ namespace Furniture {
 
             for (auto& marker : markers) {
                 if (marker.animationType.all(RE::BSFurnitureMarker::AnimationType::kSleep)) {
-                    if (object->GetBaseObject() == FurnitureTable::BYOHVampireCoffinVert01 || object->HasKeyword(FurnitureTable::isVampireCoffin) || object->HasKeyword(FurnitureTable::DLC1isVampireCoffinHorizontal) || object->HasKeyword(FurnitureTable::DLC1isVampireCoffinVertical)) {
+                    if (base == FurnitureTable::BYOHVampireCoffinVert01 || object->HasKeyword(FurnitureTable::isVampireCoffin) || object->HasKeyword(FurnitureTable::DLC1isVampireCoffinHorizontal) || object->HasKeyword(FurnitureTable::DLC1isVampireCoffinVertical)) {
                         // check for coffins
                         return FurnitureType::NONE;
                     }
@@ -55,13 +64,7 @@ namespace Furniture {
             }
 
             if (chairMarkers == 1) {
-                std::string id = object->GetBaseObject()->GetFormEditorID();
-                StringUtil::toLower(&id);
-                if (id.find("bench") != std::string::npos) {
-                    return FurnitureType::BENCH;
-                } else {
-                    return FurnitureType::CHAIR;
-                }
+                return FurnitureType::CHAIR;
             } else if (chairMarkers > 1) {
                 return FurnitureType::BENCH;
             }
@@ -153,6 +156,13 @@ namespace Furniture {
                 default:
                     break;
             }
+
+            float refScale = object->GetReferenceRuntimeData().refScale / 100.0f;
+            if (refScale != 1) {
+                ret[0] *= refScale;
+                ret[1] *= refScale;
+                ret[2] *= refScale;
+            }
         }
 
         return ret;
@@ -181,14 +191,43 @@ namespace Furniture {
         return IsFurnitureInUse(nullptr, 0, object, ignoreReserved);
     }
 
+    void Furniture::lockFurniture(RE::TESObjectREFR* furniture, RE::Actor* actor) {
+        furniture->SetActivationBlocked(true);
+
+        auto size = getMarkers(furniture).size();
+        auto markers = furniture->extraList.GetByType<RE::ExtraUsedMarkers>();
+        if (!markers) {
+            return;
+        }
+
+        for (uint32_t i = 0; i < size; i++) {
+            RE::MarkerUsedData data{.actorinMarker = RE::BSPointerHandleManagerInterface<RE::Actor>::GetHandle(actor), .markerID = i, .expiration = {.timeStamp=FLT_MAX}};
+            markers->usedMarkers.push_back(data);
+        }
+    }
+
+    void Furniture::freeFurniture(RE::TESObjectREFR* furniture) {
+        furniture->SetActivationBlocked(false);
+
+        auto markers = furniture->extraList.GetByType<RE::ExtraUsedMarkers>();
+        if (!markers) {
+            return;
+        }
+        markers->usedMarkers.clear();
+    }
+
     void Furniture::resetClutter(RE::TESObjectREFR* centerRef, float radius) {
         if (auto TES = RE::TES::GetSingleton(); TES) {
             TES->ForEachReferenceInRange(centerRef, radius, [&](RE::TESObjectREFR& ref) {
-                if (!ref.Is3DLoaded() || ref.IsDynamicForm() || ObjectRefUtil::getMotionType(&ref) == 4) {
+                if (!ref.Is3DLoaded() || ref.IsDynamicForm() || ref.IsDisabled() || ref.IsMarkedForDeletion() || ref.IsDeleted() || ObjectRefUtil::getMotionType(&ref) == 4) {
                     return RE::BSContainer::ForEachResult::kContinue;
                 }
 
                 auto base = ref.GetBaseObject();
+                if (!base) {
+                    return RE::BSContainer::ForEachResult::kContinue;
+                }
+
                 for (auto type : FurnitureTable::clutterForms) {
                     if (ref.Is(type) || base->Is(type)) {
                         const auto skyrimVM = RE::SkyrimVM::GetSingleton();

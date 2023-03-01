@@ -24,6 +24,9 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Core/Core.cpp
+    src/Core/EquipObjectHandler.cpp
+    src/Core/ExpressionUpdater.cpp
     src/Core/Singleton.h
     src/Core/Thread.cpp
     src/Core/ThreadActor.cpp
@@ -49,10 +52,10 @@ set(sources
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
     src/Util/ActorUtil.cpp
-    src/Util/CompatibilityTable.cpp
     src/Util/FormUtil.cpp
     src/Util/MCMTable.cpp
     src/Util/ObjectRefUtil.cpp
+    src/Util/SerializationUtil.cpp
     src/Util/StringUtil.cpp
     src/Util/VectorUtil.cpp
 	src/Util.cpp

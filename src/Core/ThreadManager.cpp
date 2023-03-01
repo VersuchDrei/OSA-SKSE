@@ -1,35 +1,31 @@
 #include "Core/ThreadManager.h"
 
-#include "Util/Globals.h"
+#include "Util/Constants.h"
 
 namespace OStim {
 
     ThreadManager::ThreadManager() {
         m_excitementThread = std::thread([&]() {
-            auto calendar = RE::Calendar::GetSingleton();
-            auto previousTime = calendar->GetCurrentGameTime();
             while (true) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(Globals::LOOP_TIME));
-                auto currentTime = calendar->GetCurrentGameTime(); 
-                if (previousTime < currentTime) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(Constants::LOOP_TIME_MILLISECONDS));
+                if (!RE::UI::GetSingleton()->GameIsPaused()) {
                     std::shared_lock<std::shared_mutex> lock(m_threadMapMtx);
                     for (auto& it : m_threadMap) {
                         it.second->loop();
                     }
                 }
-                previousTime = currentTime;
             }
         });
         m_excitementThread.detach();
     }
 
-    void ThreadManager::TrackThread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
-        Thread* t = new Thread(a_id, a_actors);
+    void ThreadManager::TrackThread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) {
+        Thread* t = new Thread(id, furniture, actors);
         std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
-        m_threadMap.insert(std::make_pair(a_id, t));
+        m_threadMap.insert(std::make_pair(id, t));
         auto log = RE::ConsoleLog::GetSingleton();
         if (log) {
-            log->Print(("Tracking " + std::to_string(a_id)).c_str());
+            log->Print(("Tracking " + std::to_string(id)).c_str());
         }
     }
 
@@ -46,7 +42,7 @@ namespace OStim {
         std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
         auto it = m_threadMap.find(a_id);
         if (it != m_threadMap.end()) {
-            it->second->free();
+            it->second->close();
             delete it->second;
             m_threadMap.erase(a_id);
             auto log = RE::ConsoleLog::GetSingleton();
@@ -79,5 +75,16 @@ namespace OStim {
         }
 
         return nullptr;
+    }
+
+    // serialized the currently running threads so that the actors can be properly set free on game load
+    std::vector<Serialization::OldThread> ThreadManager::serialize() {
+        std::vector<Serialization::OldThread> oldThreads;
+
+        for (auto& it : m_threadMap) {
+            oldThreads.push_back(it.second->serialize());
+        }
+
+        return oldThreads;
     }
 }  // namespace OStim

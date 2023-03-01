@@ -43,7 +43,8 @@ namespace FormUtil {
             }
         }
 
-        if (form->HasKeywordInArray(Graph::LookupTable::noStripKeywords, false)) {
+        RE::BGSKeywordForm* keywordForm = form->As<RE::BGSKeywordForm>();
+        if (keywordForm->ContainsKeywordString("NoStrip")) {
             return false;
         }
 

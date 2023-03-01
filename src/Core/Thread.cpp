@@ -1,16 +1,28 @@
 #include <Core/Thread.h>
+#include "Furniture/Furniture.h"
 #include <Graph/LookupTable.h>
 #include <Graph/Node.h>
 #include <Messaging/IMessages.h>
+#include "Util/Constants.h"
 #include <Util/MCMTable.h>
 #include <Util/StringUtil.h>
+#include "Util.h"
 
 namespace OStim {
-    Thread::Thread(ThreadId a_id, std::vector<RE::Actor*> a_actors) {
-        m_threadId = a_id;
-        for (int i = 0; i < a_actors.size(); i++) {
-            addActorSink(a_actors[i]);
-            m_actors.insert(std::make_pair(i, ThreadActor(a_id, a_actors[i])));
+    Thread::Thread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) : m_threadId{id}, furniture{furniture} {
+        RE::TESObjectREFR* center = furniture ? furniture : actors[0];
+        vehicle = center->PlaceObjectAtMe(Graph::LookupTable::OStimVehicle, false).get();
+
+        if (furniture) {
+            if (!Furniture::isFurnitureInUse(furniture, false)) {
+                Furniture::lockFurniture(furniture, actors[0]);
+                furnitureLocked = true;
+            }
+        }
+
+        for (int i = 0; i < actors.size(); i++) {
+            addActorSink(actors[i]);
+            m_actors.insert(std::make_pair(i, ThreadActor(id, actors[i])));
             ThreadActor* actor = GetActor(i);
             actor->initContinue();
             if (MCM::MCMTable::undressAtStart()) {
@@ -57,12 +69,6 @@ namespace OStim {
                 }
             }
 
-            if (actorIt.second.getActor()->GetActorBase()->GetSex() == RE::SEX::kMale) {
-                actorIt.second.baseExcitementMultiplier = MCM::MCMTable::getMaleSexExcitementMult();
-            } else {
-                actorIt.second.baseExcitementMultiplier = MCM::MCMTable::getFemaleSexExcitementMult();
-            }
-
             switch (excitementVals.size()) {
                 case 0:
                     excitementInc = 0;
@@ -79,32 +85,34 @@ namespace OStim {
                 } break;
             }
 
-            actorIt.second.nodeExcitementTick = excitementInc;
+            actorIt.second.baseExcitementInc = excitementInc;
+            if (excitementInc <= 0) {
+                actorIt.second.maxExcitement = 0;
+            }
 
 
             // --- undressing --- //
-            if (MCM::MCMTable::undressMidScene() && m_currentNode->hasActionTag("sexual")) {
-                actorIt.second.undress();
-                actorIt.second.removeWeapons();
-                // it is intended that the else fires if undressMidScene is checked but the action is not tagged as sexual
-                // because some non sexual actions still have slots for partial stripping
-                // for example kissing undresses helmets without being sexual
-            } else if (MCM::MCMTable::partialUndressing()) {
-                uint32_t slotMask = 0;
-                for (auto& action : m_currentNode->actions) {
-                    slotMask |= action->getStrippingMask(actorIt.first);
-                }
-                if (slotMask != 0) {
-                    actorIt.second.undressPartial(slotMask);
-                    if ((slotMask & MCM::MCMTable::removeWeaponsWithSlot()) != 0) {
-                        actorIt.second.removeWeapons();
+            if (!m_currentNode->hasActorTag(actorIt.first, "nostrip")) {
+                if (MCM::MCMTable::undressMidScene() && m_currentNode->doFullStrip(actorIt.first)) {
+                    actorIt.second.undress();
+                    actorIt.second.removeWeapons();
+                    // it is intended that the else fires if undressMidScene is checked but the action is not tagged as
+                    // sexual because some non sexual actions still have slots for partial stripping for example kissing
+                    // undresses helmets without being sexual
+                } else if (MCM::MCMTable::partialUndressing()) {
+                    uint32_t slotMask = m_currentNode->getStrippingMask(actorIt.first);
+                    if (slotMask != 0) {
+                        actorIt.second.undressPartial(slotMask);
+                        if ((slotMask & MCM::MCMTable::removeWeaponsWithSlot()) != 0) {
+                            actorIt.second.removeWeapons();
+                        }
                     }
                 }
             }
 
-            // --- scaling / heel offsets --- //
+            // --- scaling / heel offsets / facial expressions --- //
             if (actorIt.first < m_currentNode->actors.size()) {
-                actorIt.second.changeNode(m_currentNode->actors[actorIt.first]);
+                actorIt.second.changeNode(m_currentNode->actors[actorIt.first], m_currentNode->getFacialExpressions(actorIt.first), m_currentNode->getOverrideExpressions(actorIt.first));
             }
         }
 
@@ -120,10 +128,11 @@ namespace OStim {
         return m_currentNode;
     }
 
-    void Thread::AddThirdActor(RE::Actor* a_actor) {
+    void Thread::AddActor(RE::Actor* a_actor) {
         addActorSink(a_actor);
-        m_actors.insert(std::make_pair(2, ThreadActor(m_threadId, a_actor)));
-        ThreadActor* actor = GetActor(2);
+        int index = m_actors.size();
+        m_actors.insert(std::make_pair(index, ThreadActor(m_threadId, a_actor)));
+        ThreadActor* actor = GetActor(index);
         actor->initContinue();
         if (MCM::MCMTable::undressAtStart()) {
             actor->undress();
@@ -133,12 +142,13 @@ namespace OStim {
         }
     }
 
-    void Thread::RemoveThirdActor() {
-        ThreadActor* actor = GetActor(2);
+    void Thread::RemoveActor() {
+        int index = m_actors.size() - 1;
+        ThreadActor* actor = GetActor(index);
         removeActorSink(actor->getActor());
         actor->free();
 
-        m_actors.erase(2);
+        m_actors.erase(index);
     }
 
     void Thread::loop() {
@@ -149,34 +159,7 @@ namespace OStim {
         }
 
         for (auto& actorIt : m_actors) {
-            auto speedMod = (m_currentNodeSpeed - ceil(m_currentNode->speeds.size() / 2)) * 0.2;
-            auto& actorRef = actorIt.second;
-            auto excitementInc = (actorIt.second.nodeExcitementTick + speedMod);
-            auto finalExcitementInc = actorRef.baseExcitementMultiplier * excitementInc;
-            if (finalExcitementInc <= 0) {  // Decay from previous scene with higher max
-                auto excitementDecay = 0.5;
-                if (actorRef.excitement - excitementDecay < 0) {
-                    actorRef.excitement = 0;
-                } else {
-                    actorRef.excitement -= excitementDecay;
-                }
-
-            } else if (actorRef.excitement > actorRef.maxExcitement) {
-                auto excitementDecay = 0.5;
-                if (actorRef.excitement - excitementDecay < actorRef.maxExcitement) {
-                    actorRef.excitement = actorRef.maxExcitement;
-                } else {
-                    actorRef.excitement -= excitementDecay;
-                }
-            } else { // increase excitement
-                if (finalExcitementInc + actorRef.excitement > actorRef.maxExcitement) {                          
-                    actorRef.excitement = actorRef.maxExcitement;
-                } else {
-                    actorRef.excitement += finalExcitementInc;
-                }
-            }
-
-            actorRef.loop();
+            actorIt.second.loop();
         }
     }
 
@@ -203,16 +186,26 @@ namespace OStim {
 
     void Thread::SetSpeed(int speed) {
         m_currentNodeSpeed = speed;
-        if (m_currentNode && m_currentNode->speeds.size() > speed) {
-            for (auto& actorIt : m_actors) {
-                RE::Actor* actor = actorIt.second.getActor();
-                actor->SetGraphVariableFloat("OStimSpeed", m_currentNode->speeds[speed].playbackSpeed);
-                actor->NotifyAnimationGraph(m_currentNode->speeds[speed].animation + "_" + std::to_string(actorIt.first));
+        for (auto& actorIt : m_actors) {
+            if (m_currentNode) {
+                if (m_currentNode->speeds.size() > speed) {
+                    RE::Actor* actor = actorIt.second.getActor();
+                    actor->SetGraphVariableFloat("OStimSpeed", m_currentNode->speeds[speed].playbackSpeed);
+                    actor->NotifyAnimationGraph(m_currentNode->speeds[speed].animation + "_" + std::to_string(actorIt.first));
+                }
+
+                float speedMod = 1 + speed / m_currentNode->speeds.size();
+                actorIt.second.loopExcitementInc = actorIt.second.baseExcitementInc * actorIt.second.baseExcitementMultiplier * speedMod * Constants::LOOP_TIME_SECONDS;
             }
+
+            actorIt.second.changeSpeed(speed);
         }
     }
 
-    void Thread::free() {
+    void Thread::close() {
+        vehicle->Disable();
+        vehicle->SetDelete(true);
+
         for (auto& actorIt : m_actors) {
             actorIt.second.free();
         }
@@ -283,13 +276,58 @@ namespace OStim {
             GetActor(actor)->redressPartial(mask);
         } else if (tag == "OStimRemoveWeapons") {
             GetActor(actor)->removeWeapons();
-        } else if (tag == "OStimAddWeapons"){
+        } else if (tag == "OStimAddWeapons") {
             GetActor(actor)->addWeapons();
+        } else if (tag == "OStimEquipObject"){
+            GetActor(actor)->equipObject(a_event->payload.c_str());
+        } else if (tag == "OStimUnequipObject") {
+            GetActor(actor)->unequipObject(a_event->payload.c_str());
+        } else if (tag == "OStimSetLooking") {
+            std::vector<std::string> payloadVec = stl::string_split(a_event->payload.c_str(), ',');
+            std::unordered_map<int, Trait::FaceModifier> eyeballOverride;
+            if (!payloadVec.empty()) {
+                float value = std::stoi(payloadVec[0]);
+                int type = 9;
+                if (value < 0) {
+                    value *= -1;
+                    type = 10;
+                }
+                eyeballOverride.insert({type, {.type = type, .baseValue = value}});
+            }
+            if (payloadVec.size() == 2){
+                float value = std::stoi(payloadVec[1]);
+                int type = 11;
+                if (value < 0) {
+                    value *= -1;
+                    type = 8;
+                }
+                eyeballOverride.insert({type, {.type = type, .baseValue = value}});
+            }
+            GetActor(actor)->setLooking(eyeballOverride);
+        } else if (tag == "OStimUnsetLooking") {
+            GetActor(actor)->unsetLooking();
+        } else if (tag == "OStimResetLooking") {
+            GetActor(actor)->resetLooking();
         } else if (tag == "OStimEvent") {
             
         }
 
         return RE::BSEventNotifyControl::kContinue;
+    }
+
+    Serialization::OldThread Thread::serialize() {
+        Serialization::OldThread oldThread;
+
+        oldThread.vehicle = vehicle;
+        if (furnitureLocked) {
+            oldThread.furniture = furniture;
+        }
+
+        for (auto& actorIt : m_actors) {
+            oldThread.actors.push_back(actorIt.second.serialize());
+        }
+
+        return oldThread;
     }
 
 }  // namespace OStim

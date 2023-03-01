@@ -73,7 +73,11 @@ namespace util {
         }
 
         fs::path path = knownPath.get();
-        path /= "My Games/Skyrim Special Edition"sv;
+        if (REL::Module::get().version().patch() == 659) {
+            path /= "My Games/Skyrim Special Edition GOG"sv;
+        } else {
+            path /= "My Games/Skyrim Special Edition"sv;
+        }
 
         return path;
     }
@@ -83,6 +87,15 @@ namespace util {
         if (!path) return std::nullopt;
 
         *path /= "JCUser/ODatabase.json"sv;
+
+        return path;
+    }
+
+    std::optional<fs::path> settings_path() {
+        auto path = documents_path();
+        if (!path) return std::nullopt;
+
+        *path /= "JCUser/OstimMCMSettings.json"sv;
 
         return path;
     }
