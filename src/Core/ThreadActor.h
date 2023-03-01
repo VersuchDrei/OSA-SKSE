@@ -37,6 +37,9 @@ namespace OStim {
 
         void setEventExpression(Trait::FacialExpression* expression);
         void clearEventExpression();
+        void setLooking(std::unordered_map<int, Trait::FaceModifier> eyeballOverride);
+        void unsetLooking();
+        void resetLooking();
 
         bool equipObject(std::string type);
         void unequipObject(std::string type);
@@ -140,6 +143,7 @@ namespace OStim {
         std::vector<Trait::FacialExpression*>* nodeExpressions = nullptr;
         Trait::GenderExpression* underlyingExpression = nullptr;
         int underlyingExpressionCooldown = 999999;
+        std::unordered_map<int, Trait::FaceModifier> eyeballModifierOverride;
         Trait::GenderExpression* eventExpression = nullptr;
         std::vector<Trait::FacialExpression*>* overrideExpressions = nullptr;
         Trait::GenderExpression* overrideExpression = nullptr;
@@ -159,6 +163,7 @@ namespace OStim {
         void updateOverrideExpression();
         void wakeExpressions(int mask);
         void applyExpression(Trait::GenderExpression* expression, int mask, int updateSpeed);
+        void checkForEyeballOverride();
         void applyEyeballOverride();
 
         void papyrusUndressCallback(std::vector<RE::TESObjectARMO*> items);

@@ -6,6 +6,7 @@
 #include "Util/Constants.h"
 #include <Util/MCMTable.h>
 #include <Util/StringUtil.h>
+#include "Util.h"
 
 namespace OStim {
     Thread::Thread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) : m_threadId{id}, furniture{furniture} {
@@ -281,6 +282,32 @@ namespace OStim {
             GetActor(actor)->equipObject(a_event->payload.c_str());
         } else if (tag == "OStimUnequipObject") {
             GetActor(actor)->unequipObject(a_event->payload.c_str());
+        } else if (tag == "OStimSetLooking") {
+            std::vector<std::string> payloadVec = stl::string_split(a_event->payload.c_str(), ',');
+            std::unordered_map<int, Trait::FaceModifier> eyeballOverride;
+            if (!payloadVec.empty()) {
+                float value = std::stoi(payloadVec[0]);
+                int type = 9;
+                if (value < 0) {
+                    value *= -1;
+                    type = 10;
+                }
+                eyeballOverride.insert({type, {.type = type, .baseValue = value}});
+            }
+            if (payloadVec.size() == 2){
+                float value = std::stoi(payloadVec[1]);
+                int type = 11;
+                if (value < 0) {
+                    value *= -1;
+                    type = 8;
+                }
+                eyeballOverride.insert({type, {.type = type, .baseValue = value}});
+            }
+            GetActor(actor)->setLooking(eyeballOverride);
+        } else if (tag == "OStimUnsetLooking") {
+            GetActor(actor)->unsetLooking();
+        } else if (tag == "OStimResetLooking") {
+            GetActor(actor)->resetLooking();
         } else if (tag == "OStimEvent") {
             
         }

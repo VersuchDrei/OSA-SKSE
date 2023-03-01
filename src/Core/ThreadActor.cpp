@@ -257,7 +257,8 @@ namespace OStim {
         this->nodeExpressions = nodeExpressions;
         this->overrideExpressions = overrideExpressions;
         updateOverrideExpression();
-        if (!graphActor->eyeballModifierOverride.empty() &&
+        eyeballModifierOverride = graphActor->eyeballModifierOverride;
+        if (!eyeballModifierOverride.empty() &&
             (!overrideExpression || (overrideExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0) &&
             (!eventExpression || (eventExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0)){
             applyEyeballOverride();
@@ -265,7 +266,7 @@ namespace OStim {
         updateUnderlyingExpression();
 
         // strap-ons
-        if (!hasSchlong) {
+        if (isFemale && !hasSchlong) {
             if ((graphActor->requirements & Graph::Requirement::PENIS) == Graph::Requirement::PENIS) {
                 if (MCM::MCMTable::equipStrapOnIfNeeded()) {
                     equipObject("strapon");
@@ -471,7 +472,7 @@ namespace OStim {
             }
             underlyingExpression = VectorUtil::randomElement(nodeExpressions)->getGenderExpression(isFemale);
             mask |= underlyingExpression->typeMask;
-            if (graphActor && !graphActor->eyeballModifierOverride.empty()) {
+            if (!eyeballModifierOverride.empty()) {
                 mask &= ~Trait::ExpressionType::BALL_MODIFIER;
             }
             if (eventExpression) {
@@ -531,6 +532,25 @@ namespace OStim {
         }
     }
 
+    void ThreadActor::setLooking(std::unordered_map<int, Trait::FaceModifier> eyeballOverride) {
+        eyeballModifierOverride = eyeballOverride;
+        checkForEyeballOverride();
+    }
+
+    void ThreadActor::unsetLooking() {
+        eyeballModifierOverride.clear();
+        checkForEyeballOverride();
+    }
+
+    void ThreadActor::resetLooking() {
+        if (graphActor) {
+            eyeballModifierOverride = graphActor->eyeballModifierOverride;
+        } else {
+            eyeballModifierOverride.clear();
+        }
+        checkForEyeballOverride();
+    }
+
     void ThreadActor::wakeExpressions(int mask) {
         if (mask == 0) {
             return;
@@ -541,7 +561,7 @@ namespace OStim {
             mask &= ~eventExpression->typeMask;
         }
 
-        if ((mask & Trait::ExpressionType::BALL_MODIFIER) == Trait::ExpressionType::BALL_MODIFIER && graphActor && !graphActor->eyeballModifierOverride.empty()) {
+        if ((mask & Trait::ExpressionType::BALL_MODIFIER) == Trait::ExpressionType::BALL_MODIFIER && graphActor && !eyeballModifierOverride.empty()) {
             applyEyeballOverride();
             mask &= ~Trait::ExpressionType::BALL_MODIFIER;
         }
@@ -675,6 +695,17 @@ namespace OStim {
         }
     }
 
+    void ThreadActor::checkForEyeballOverride() {
+        if ((!overrideExpression || (overrideExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0) &&
+            (!eventExpression || (eventExpression->typeMask & Trait::ExpressionType::BALL_MODIFIER) == 0)) {
+            if (eyeballModifierOverride.empty()) {
+                wakeExpressions(Trait::ExpressionType::BALL_MODIFIER);
+            } else {
+                applyEyeballOverride();
+            }
+        }
+    }
+
     void ThreadActor::applyEyeballOverride() {
         auto faceData = actor->GetFaceGenAnimationData();
 
@@ -690,8 +721,8 @@ namespace OStim {
             int current = faceData->modifierKeyFrame.values[i] * 100;
             int goal = 0;
             int delay = 0;
-            auto iter = graphActor->eyeballModifierOverride.find(i);
-            if (iter != graphActor->eyeballModifierOverride.end()) {
+            auto iter = eyeballModifierOverride.find(i);
+            if (iter != eyeballModifierOverride.end()) {
                 goal = iter->second.calculate(speed, excitement);
                 delay = iter->second.randomizeDelay();
             }
