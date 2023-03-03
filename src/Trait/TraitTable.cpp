@@ -71,10 +71,10 @@ namespace Trait {
         excitementFaction = handler->LookupForm<RE::TESFaction>(0xD93, "OStim.esp");
         noFacialExpressionsFaction = handler->LookupForm<RE::TESFaction>(0xD92, "OStim.esp");
 
-        if (handler->GetModIndex("Schlongs of Skyrim - Core.esm")) {
-            SOS_SchlongifiedFaction = handler->LookupForm<RE::TESFaction>(0x00Aff8, "Schlongs of Skyrim - Core.esm");
+        if (handler->GetModIndex("Schlongs of Skyrim.esp")) {
+            SOS_SchlongifiedFaction = handler->LookupForm<RE::TESFaction>(0x00Aff8, "Schlongs of Skyrim.esp");
         } else {
-            logger::warn("SoS not installed!");
+            logger::info("SoS full is not installed.");
         }
 
         // this needs to go in setupForms because it requires the kDataLoaded event
@@ -338,6 +338,10 @@ namespace Trait {
     }
 
     bool TraitTable::hasSchlong(RE::Actor* actor) {
-        return SOS_SchlongifiedFaction && actor->IsInFaction(SOS_SchlongifiedFaction);
+        if (SOS_SchlongifiedFaction) {
+            return actor->IsInFaction(SOS_SchlongifiedFaction);
+        } else {
+            return actor->GetActorBase()->GetSex() == RE::SEX::kMale;
+        }
     }
 }

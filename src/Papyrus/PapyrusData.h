@@ -12,20 +12,19 @@ namespace PapyrusData {
 	}
 
 	void SetUndressingSlotMask(RE::StaticFunctionTag*, uint32_t mask) {
-		MCM::MCMTable::setUndressingMask(mask);
-	}
+		MCM::MCMTable::setUndressingMask(mask); }
+
+    std::vector<std::string> PairsToNames(RE::StaticFunctionTag*, std::vector<std::string> pairs) {
+        std::vector<std::string> names;
+        for (int i = 1; i < pairs.size(); i += 2) {
+            names.push_back(pairs[i]);
+        }
+        return names;
+    }
 
 	std::vector<std::string> GetEquipObjectPairs(RE::StaticFunctionTag*, int formID, std::string type) {
         StringUtil::toLower(&type);
         return Trait::TraitTable::getEquipObjectPairs(formID, type);
-	}
-
-	std::vector<std::string> ToEquipObjectNames(RE::StaticFunctionTag*, std::vector<std::string> pairs) {
-        std::vector<std::string> names;
-        for (int i = 1; i < pairs.size(); i += 2) {
-            names.push_back(pairs[i]);
-		}
-        return names;
 	}
 
 	std::string GetEquipObjectName(RE::StaticFunctionTag*, int formID, std::string type) {
@@ -53,8 +52,9 @@ namespace PapyrusData {
 		BIND(GetUndressingSlotMask);
         BIND(SetUndressingSlotMask);
 
+        BIND(PairsToNames);
+
 		BIND(GetEquipObjectPairs);
-        BIND(ToEquipObjectNames);
         BIND(GetEquipObjectName);
         BIND(SetEquipObjectID);
 
