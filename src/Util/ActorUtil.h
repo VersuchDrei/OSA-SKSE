@@ -37,5 +37,6 @@ namespace ActorUtil {
 
     void queueNiNodeUpdate(RE::Actor* actor);
 
-    float getHeelOffset(RE::Actor* actor, RE::TESObjectARMO** heelArmor);
+    float getHeelOffset(RE::Actor* actor);
+    float getHeelOffset(RE::NiAVObject* object);
 }  // namespace ActorUtil

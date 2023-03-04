@@ -30,10 +30,10 @@ namespace OStim {
         void redressPartial(uint32_t mask);
         void addWeapons();
 
-        void bendSchlong();
-
         void changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions);
         void changeSpeed(int speed);
+
+        void handleNiNodeUpdate();
 
         void setEventExpression(Trait::FacialExpression* expression);
         void clearEventExpression();
@@ -137,8 +137,6 @@ namespace OStim {
         float rmHeight = 1;
         float heelOffset = 0;
         bool heelOffsetRemoved = false;
-        RE::TESObjectARMO* heelArmor = nullptr;
-        bool heelArmorRemoved = false;
 
         std::vector<Trait::FacialExpression*>* nodeExpressions = nullptr;
         Trait::GenderExpression* underlyingExpression = nullptr;
@@ -155,9 +153,10 @@ namespace OStim {
         std::vector<std::string> phonemeObjects;
 
         void scale();
+        void bendSchlong();
         void checkHeelOffset();
-        void updateHeelOffset(bool remove);
-        void updateHeelArmor(bool remove);
+        void applyHeelOffset(bool remove);
+        void updateHeelOffset();
 
         void updateUnderlyingExpression();
         void updateOverrideExpression();

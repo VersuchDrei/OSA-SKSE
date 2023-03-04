@@ -25,7 +25,7 @@ namespace Events {
             RE::Actor* actor = a_event->reference->As<RE::Actor>();
             OStim::ThreadActor* threadActor = OStim::ThreadManager::GetSingleton()->findActor(actor);
             if (threadActor) {
-                threadActor->bendSchlong();
+                threadActor->handleNiNodeUpdate();
             }
         }
 

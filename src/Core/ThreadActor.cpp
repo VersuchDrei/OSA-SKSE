@@ -41,7 +41,7 @@ namespace OStim {
             }
         }
 
-        heelOffset = ActorUtil::getHeelOffset(actor, &heelArmor);
+        heelOffset = ActorUtil::getHeelOffset(actor);
     }
 
     void ThreadActor::undress() {
@@ -77,10 +77,6 @@ namespace OStim {
 
             undressedItems.push_back(armor);
             ActorUtil::unequipItem(actor, obj);
-
-            if (armor == heelArmor) {
-                updateHeelArmor(true);
-            }
         }
 
         ActorUtil::queueNiNodeUpdate(actor);
@@ -122,10 +118,6 @@ namespace OStim {
             undressedMask |= armorMask;
             undressedItems.push_back(armor);
             ActorUtil::unequipItem(actor, obj);
-
-            if (armor == heelArmor) {
-                updateHeelArmor(true);
-            }
         }
 
         ActorUtil::queueNiNodeUpdate(actor);
@@ -175,10 +167,6 @@ namespace OStim {
 
         for (auto& armor : undressedItems) {
             ActorUtil::equipItemEx(actor, armor);
-
-            if (armor == heelArmor) {
-                updateHeelArmor(false);
-            }
         }
         undressedItems.clear();
         undressedMask = 0;
@@ -212,10 +200,6 @@ namespace OStim {
             } else {
                 undressedMask &= ~armorMask;
                 ActorUtil::equipItemEx(actor, armor);
-
-                if (armor == heelArmor) {
-                    updateHeelArmor(false);
-                }
 
                 undressedItems.erase(it);
             }
@@ -266,7 +250,7 @@ namespace OStim {
         updateUnderlyingExpression();
 
         // strap-ons
-        if (isFemale && !hasSchlong) {
+        if (!hasSchlong) {
             if ((graphActor->requirements & Graph::Requirement::PENIS) == Graph::Requirement::PENIS) {
                 if (MCM::MCMTable::equipStrapOnIfNeeded()) {
                     equipObject("strapon");
@@ -283,6 +267,11 @@ namespace OStim {
 
     void ThreadActor::changeSpeed(int speed) {
         this->speed = speed;
+    }
+
+    void ThreadActor::handleNiNodeUpdate() {
+        bendSchlong();
+        updateHeelOffset();
     }
 
     void ThreadActor::loop() {
@@ -393,7 +382,7 @@ namespace OStim {
         }
 
         float newScale = graphActor->scale / (actor->GetActorBase()->GetHeight() * rmHeight);
-        if (!heelArmorRemoved && !heelOffsetRemoved && heelOffset != 0) {
+        if (!heelOffsetRemoved && heelOffset != 0) {
             newScale *= graphActor->scaleHeight / (graphActor->scaleHeight + heelOffset);
         }
 
@@ -404,15 +393,20 @@ namespace OStim {
     }
 
     void ThreadActor::checkHeelOffset() {
-        if (heelOffset == 0 || heelArmorRemoved || !graphActor || graphActor->feetOnGround != heelOffsetRemoved) {
+        if (!graphActor) {
             return;
         }
 
-        updateHeelOffset(!graphActor->feetOnGround);
+        applyHeelOffset(!graphActor->feetOnGround);
     }
 
-    void ThreadActor::updateHeelOffset(bool remove) {
-        if (heelOffsetRemoved == remove) {
+    void ThreadActor::applyHeelOffset(bool remove) {
+        if (remove == heelOffsetRemoved) {
+            return;
+        }
+
+        if (heelOffset == 0) {
+            heelOffsetRemoved = remove;
             return;
         }
 
@@ -421,7 +415,8 @@ namespace OStim {
         if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
             auto nioInterface = Graph::LookupTable::getNiTransformInterface();
             if (remove) {
-                // we are adding a second node transform with a different key to counter out the existing one, thereby "removing" the heel offset
+                // we are adding a second node transform with a different key to counter out the existing one, thereby
+                // "removing" the heel offset
                 SKEE::INiTransformInterface::Position offset{};
                 offset.z = -heelOffset;
                 nioInterface->AddNodeTransformPosition(actor, false, isFemale, "NPC", "OStim", offset);
@@ -434,7 +429,7 @@ namespace OStim {
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
             if (vm) {
                 RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                auto args = RE::MakeFunctionArguments(std::move(actor), std::move(heelOffset), std::move(remove), std::move(isFemale));
+                auto args = RE::MakeFunctionArguments(std::move(actor), std::move(heelOffset), std::move(!remove), std::move(remove), std::move(isFemale));
                 vm->DispatchStaticCall("OSKSE", "UpdateHeelOffset", args, callback);
             }
         }
@@ -442,24 +437,37 @@ namespace OStim {
         heelOffsetRemoved = remove;
     }
 
-    void ThreadActor::updateHeelArmor(bool remove) {
-        if (heelArmorRemoved == remove) {
+    void ThreadActor::updateHeelOffset() {
+        int oldOffset = heelOffset;
+        heelOffset = ActorUtil::getHeelOffset(actor);
+
+        if (oldOffset == heelOffset) {
             return;
         }
 
-        heelArmorRemoved = remove;
+        if (!heelOffsetRemoved) {
+            scale();
+            return;
+        }
 
-        if (remove) {
-            if (heelOffsetRemoved) {
-                updateHeelOffset(false);
-            } else {
-                scale();
+        if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
+            auto nioInterface = Graph::LookupTable::getNiTransformInterface();
+            if (oldOffset != 0) {
+                nioInterface->RemoveNodeTransformPosition(actor, false, isFemale, "NPC", "OStim");
             }
+            if (heelOffset != 0) {
+                SKEE::INiTransformInterface::Position offset{};
+                offset.z = -heelOffset;
+                nioInterface->AddNodeTransformPosition(actor, false, isFemale, "NPC", "OStim", offset);
+            }
+            nioInterface->UpdateNodeTransforms(actor, false, isFemale, "NPC");
         } else {
-            if (graphActor->feetOnGround) {
-                scale();
-            } else {
-                updateHeelOffset(remove);
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                auto args = RE::MakeFunctionArguments(std::move(actor), std::move(heelOffset), std::move(oldOffset != 0), std::move(heelOffset != 0), std::move(isFemale));
+                vm->DispatchStaticCall("OSKSE", "UpdateHeelOffset", args, callback);
             }
         }
     }
@@ -820,7 +828,7 @@ namespace OStim {
             }
             addWeapons();
         }
-        updateHeelOffset(false);
+        applyHeelOffset(false);
         ActorUtil::setScale(actor, scaleBefore);
         
         freeActor(actor, false);
@@ -840,17 +848,10 @@ namespace OStim {
             }
 
             undressedItems.push_back(item);
-            if (item == heelArmor) {
-                updateHeelArmor(true);
-            }
         }
     }
 
     void ThreadActor::papyrusRedressCallback(std::vector<RE::TESObjectARMO*> items) {
-        if (VectorUtil::contains(items, heelArmor) && VectorUtil::contains(undressedItems, heelArmor)) {
-            updateHeelArmor(false);
-        }
-
         std::erase_if(undressedItems, [items](RE::TESObjectARMO* item){return VectorUtil::contains(items, item);});
     }
 

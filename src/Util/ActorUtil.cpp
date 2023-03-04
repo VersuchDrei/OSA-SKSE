@@ -48,7 +48,7 @@ namespace ActorUtil {
         }
     }
 
-    float getHeelOffset(RE::Actor* actor, RE::TESObjectARMO** heelArmor) {
+    float getHeelOffset(RE::Actor* actor) {
         auto& weightModel = actor->GetBiped(0);
         if (weightModel) {
             std::set<RE::NiAVObject*> touched;
@@ -66,36 +66,22 @@ namespace ActorUtil {
                     RE::NiAVObject* object = data.partClone.get();
                     
                     if (!touched.count(object)) {
-                        RE::NiNode* node = data.partClone.get()->AsNode();
+                        auto clone = data.partClone.get();
 
+                        RE::BSTriShape* shape = clone->AsTriShape();
+                        if (shape) {
+                            float offset = getHeelOffset(shape);
+                            if (offset != 0) {
+                                return offset;
+                            }
+                        }
+
+                        RE::NiNode* node = clone->AsNode();
                         if (node) {
                             for (auto& child : node->GetChildren()) {
-                                if (child->HasExtraData("HH_OFFSET")) {
-                                    auto hh_offset = child->GetExtraData<RE::NiFloatExtraData>("HH_OFFSET");
-                                    if (hh_offset) {
-                                        if (bipedArmor->formType == RE::TESObjectARMO::FORMTYPE) {
-                                            RE::TESObjectARMO* armor = bipedArmor->As<RE::TESObjectARMO>();
-                                            *heelArmor = armor;
-                                        }
-                                        return hh_offset->value;
-                                    }
-                                } else if (child->HasExtraData("SDTA")) {
-                                    auto sdta = child->GetExtraData<RE::NiStringExtraData>("SDTA");
-                                    if (sdta) {
-                                        json json = json::parse(sdta->value, nullptr, false);
-
-                                        if (!json.is_discarded()) {
-                                            for (auto& element : json) {
-                                                if (element.contains("name") && element["name"] == "NPC" && element.contains("pos")) {
-                                                    if (bipedArmor->formType == RE::TESObjectARMO::FORMTYPE) {
-                                                        RE::TESObjectARMO* armor = bipedArmor->As<RE::TESObjectARMO>();
-                                                        *heelArmor = armor;
-                                                    }
-                                                    return element["pos"][2];
-                                                }
-                                            }
-                                        }
-                                    }
+                                float offset = getHeelOffset(child.get());
+                                if (offset != 0) {
+                                    return offset;
                                 }
                             }
                         }
@@ -106,6 +92,31 @@ namespace ActorUtil {
             }
         }
 
+        return 0;
+    }
+
+    float getHeelOffset(RE::NiAVObject* object) {
+        if (object->HasExtraData("HH_OFFSET")) {
+            logger::info("child has hh offset");
+            auto hh_offset = object->GetExtraData<RE::NiFloatExtraData>("HH_OFFSET");
+            if (hh_offset) {
+                return hh_offset->value;
+            }
+        } else if (object->HasExtraData("SDTA")) {
+            logger::info("child has sdta");
+            auto sdta = object->GetExtraData<RE::NiStringExtraData>("SDTA");
+            if (sdta) {
+                json json = json::parse(sdta->value, nullptr, false);
+
+                if (!json.is_discarded()) {
+                    for (auto& element : json) {
+                        if (element.contains("name") && element["name"] == "NPC" && element.contains("pos")) {
+                            return element["pos"][2];
+                        }
+                    }
+                }
+            }
+        }
         return 0;
     }
 }
