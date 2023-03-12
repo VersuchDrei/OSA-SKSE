@@ -23,6 +23,7 @@ namespace OStim {
         Thread* t = new Thread(id, furniture, actors);
         std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
         m_threadMap.insert(std::make_pair(id, t));
+        m_threadMap[id]->initContinue();
         auto log = RE::ConsoleLog::GetSingleton();
         if (log) {
             log->Print(("Tracking " + std::to_string(id)).c_str());
@@ -42,9 +43,10 @@ namespace OStim {
         std::unique_lock<std::shared_mutex> lock(m_threadMapMtx);
         auto it = m_threadMap.find(a_id);
         if (it != m_threadMap.end()) {
-            it->second->close();
-            delete it->second;
+            Thread* thread = it->second;
             m_threadMap.erase(a_id);
+            thread->close();
+            delete thread;
             auto log = RE::ConsoleLog::GetSingleton();
             if (log) {
                 log->Print(("Found scene: erasing " + std::to_string(a_id)).c_str());

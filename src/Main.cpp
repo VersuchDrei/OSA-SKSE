@@ -66,6 +66,9 @@ namespace {
                 Trait::TraitTable::setupForms();
                 MCM::MCMTable::setupForms();
                 Furniture::FurnitureTable::setupForms();
+
+                // we are installing this hook so late because we need it to overwrite the PapyrusUtil hook
+                Events::PackageStart::Install();
             } break;
             case SKSE::MessagingInterface::kPostPostLoad: {
                 SKEE::InterfaceExchangeMessage msg;

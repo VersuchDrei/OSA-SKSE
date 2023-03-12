@@ -9,6 +9,7 @@ namespace ObjectRefUtil {
     void removeItem(RE::TESObjectREFR* object, RE::TESForm* itemToRemove);
     void stopTranslation(RE::TESObjectREFR* object);
     void translateTo(RE::TESObjectREFR* object, float x, float y, float z, float angleX, float angleY, float angleZ, float speed, float maxRotationSpeed);
+    void translateToRadians(RE::TESObjectREFR* object, float x, float y, float z, float angleX, float angleY, float angleZ, float speed, float maxRotationSpeed);
 
     inline void AddItem(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* object, RE::TESForm* akItemToAdd, int aiCount, bool abSilent) {
         using func_t = decltype(AddItem);

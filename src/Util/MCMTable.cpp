@@ -7,13 +7,17 @@ namespace MCM {
     void MCMTable::setupForms() {
         auto dataHandler = RE::TESDataHandler::GetSingleton();
 
+        OStimUseFreeCam = dataHandler->LookupForm<RE::TESGlobal>(0xDDE, "OStim.esp");
+        OStimFreeCamSpeed = dataHandler->LookupForm<RE::TESGlobal>(0xDDF, "OStim.esp");
+        OStimFreeCamFOV = dataHandler->LookupForm<RE::TESGlobal>(0xDE0, "OStim.esp");
+
         maleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA2, "OStim.esp");
         femaleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA3, "OStim.esp");
         OStimExcitementDecayRate = dataHandler->LookupForm<RE::TESGlobal>(0xDB5, "OStim.esp");
         OStimExcitementDecayGracePeriod = dataHandler->LookupForm<RE::TESGlobal>(0xDB4, "OStim.esp");
 
-        disableScalingSetting = dataHandler->LookupForm<RE::TESGlobal>(0xD94, "OStim.esp");
-        disableSchlongBendingSetting = dataHandler->LookupForm<RE::TESGlobal>(0xD97, "OStim.esp");
+        OStimDisableScaling = dataHandler->LookupForm<RE::TESGlobal>(0xD94, "OStim.esp");
+        OStimDisableSchlongBending = dataHandler->LookupForm<RE::TESGlobal>(0xD97, "OStim.esp");
 
         OStimUndressAtStart = dataHandler->LookupForm<RE::TESGlobal>(0xDAA, "OStim.esp");
         OStimRemoveWeaponsAtStart = dataHandler->LookupForm<RE::TESGlobal>(0xDAB, "OStim.esp");
@@ -36,10 +40,23 @@ namespace MCM {
         doPapyrusUndressing = false;
     }
 
+
+    bool MCMTable::useFreeCam() {
+        return OStimUseFreeCam->value != 0;
+    }
+
+    float MCMTable::freeCamSpeed() {
+        return OStimFreeCamSpeed->value;
+    }
+
+    float MCMTable::freeCamFOV() {
+        return OStimFreeCamFOV->value;
+    }
+
+
     float MCMTable::getMaleSexExcitementMult() {
         return maleExcitementMultSetting->value;
     }
-
 
     float MCMTable::getFemaleSexExcitementMult() {
         return femaleExcitementMultSetting->value;
@@ -55,11 +72,11 @@ namespace MCM {
 
 
     bool MCMTable::isScalingDisabled() {
-        return disableScalingSetting->value != 0;
+        return OStimDisableScaling->value != 0;
     }
 
     bool MCMTable::isSchlongBendingDisabled() {
-        return disableSchlongBendingSetting->value != 0;
+        return OStimDisableSchlongBending->value != 0;
     }
 
 

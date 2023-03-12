@@ -1,18 +1,38 @@
-#include <Core/Thread.h>
+#include "Core/Thread.h"
 #include "Furniture/Furniture.h"
-#include <Graph/LookupTable.h>
-#include <Graph/Node.h>
+#include "Graph/LookupTable.h"
+#include "Graph/Node.h"
 #include <Messaging/IMessages.h>
+#include "Util/CameraUtil.h"
 #include "Util/Constants.h"
-#include <Util/MCMTable.h>
-#include <Util/StringUtil.h>
+#include "Util/MathUtil.h"
+#include "Util/MCMTable.h"
+#include "Util/StringUtil.h"
 #include "Util.h"
 
 namespace OStim {
     Thread::Thread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) : m_threadId{id}, furniture{furniture} {
+        // --- setting up the vehicle --- //
         RE::TESObjectREFR* center = furniture ? furniture : actors[0];
         vehicle = center->PlaceObjectAtMe(Graph::LookupTable::OStimVehicle, false).get();
 
+        if (furniture) {
+            std::vector<float> offset = Furniture::getOffset(furniture);
+            float angle = furniture->GetAngleZ();
+            float sin = std::sin(angle);
+            float cos = std::cos(angle);
+            vehicle->data.angle.z = angle + offset[3]; // setting the angle does not directly rotate the object, but the call to SetPosition updates it
+            vehicle->SetPosition(furniture->GetPositionX() + cos * offset[0] + sin * offset[1],
+                                 furniture->GetPositionY() - sin * offset[0] + cos * offset[1],
+                                 furniture->GetPositionZ() + offset[2]);
+            
+        } else {
+            vehicle->MoveTo(center);
+        }
+
+        float angle = center->GetAngleZ();
+
+        // --- locking the furniture --- //
         if (furniture) {
             if (!Furniture::isFurnitureInUse(furniture, false)) {
                 Furniture::lockFurniture(furniture, actors[0]);
@@ -20,23 +40,67 @@ namespace OStim {
             }
         }
 
+        RE::Actor* player = RE::PlayerCharacter::GetSingleton();
         for (int i = 0; i < actors.size(); i++) {
-            addActorSink(actors[i]);
-            m_actors.insert(std::make_pair(i, ThreadActor(id, actors[i])));
-            ThreadActor* actor = GetActor(i);
-            actor->initContinue();
+
+            RE::Actor* actor = actors[i];
+            ActorUtil::lockActor(actor);
+            actor->MoveTo(vehicle);
+            ActorUtil::setVehicle(actor, vehicle);
+
+            RE::NiPoint3 position = vehicle->GetPosition();
+            RE::NiPoint3 angle = vehicle->GetAngle();
+            ObjectRefUtil::translateTo(actor, position.x, position.y, position.z, MathUtil::toDegrees(angle.x), MathUtil::toDegrees(angle.y), MathUtil::toDegrees(angle.z) + 1, 1000000, 0.0001);
+
+            isPlayerThread |= actor == player;
+            addActorSink(actor);
+            
+            m_actors.insert(std::make_pair(i, ThreadActor(id, actor)));
+            ThreadActor* threadActor = GetActor(i);
+            threadActor->initContinue();
             if (MCM::MCMTable::undressAtStart()) {
-                actor->undress();
+                threadActor->undress();
             }
             if (MCM::MCMTable::removeWeaponsAtStart()) {
-                actor->removeWeapons();
+                threadActor->removeWeapons();
             }
+        }
+
+        if (isPlayerThread) {
+            RE::PlayerCamera* camera = RE::PlayerCamera::GetSingleton();
+            if (MCM::MCMTable::useFreeCam()) {
+                if (!camera->IsInFreeCameraMode()) {
+                    camera->ForceThirdPerson();
+                    std::thread camThread = std::thread([&] {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                        CameraUtil::toggleFlyCam();
+                    });
+                    camThread.detach();
+                }
+            }
+
+            RE::INISettingCollection* ini = RE::INISettingCollection::GetSingleton();
+            RE::Setting* speed = ini->GetSetting("fFreeCameraTranslationSpeed:Camera");
+            if (speed) {
+                freeCamSpeedBefore = speed->data.f;
+                speed->data.f = MCM::MCMTable::freeCamSpeed();
+            }
+
+            worldFOVbefore = camera->worldFOV;
+            camera->worldFOV = MCM::MCMTable::freeCamFOV();
         }
     }
 
     Thread::~Thread() {
         for (auto& actorIt : m_actors) {
             removeActorSink(actorIt.second.getActor());
+        }
+    }
+
+    void Thread::initContinue() {
+        // this stuff needs to happen after the thread has been put into the map in thread manager
+        for (auto& [index, actor] : m_actors) {
+            actor.getActor()->EvaluatePackage();
         }
     }
 
@@ -209,6 +273,24 @@ namespace OStim {
         for (auto& actorIt : m_actors) {
             actorIt.second.free();
         }
+
+        if (isPlayerThread) {
+            RE::PlayerCamera* camera = RE::PlayerCamera::GetSingleton();
+            
+            if (camera->IsInFreeCameraMode()) {
+                CameraUtil::toggleFlyCam();
+            }
+
+            RE::INISettingCollection* ini = RE::INISettingCollection::GetSingleton();
+            RE::Setting* speed = ini->GetSetting("fFreeCameraTranslationSpeed:Camera");
+            if (speed) {
+                speed->data.f = freeCamSpeedBefore;
+            }
+
+            camera->worldFOV = worldFOVbefore;
+        }
+        
+        
     }
 
     void Thread::addActorSink(RE::Actor* a_actor) {

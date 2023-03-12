@@ -1,10 +1,34 @@
 #pragma once
 
 namespace ActorUtil {
+    inline bool setRestrained(RE::Actor* actor, bool restrained) {
+        using func_t = decltype(setRestrained);
+        REL::Relocation<func_t> func{RELOCATION_ID(36489, 37488)};
+        return func(actor, restrained);
+    }
+
+    inline bool setDontMove(RE::Actor* actor, bool dontMove) {
+        using func_t = decltype(setDontMove);
+        REL::Relocation<func_t> func{RELOCATION_ID(36490, 37489)};
+        return func(actor, dontMove);
+    }
+
+    inline void stopMovement(RE::Actor* actor) {
+        using func_t = decltype(stopMovement);
+        REL::Relocation<func_t> func{RELOCATION_ID(36802, 37818)};
+        func(actor);
+    }
+
     inline void setScale(RE::Actor* actor, float scale) {
         using func_t = decltype(setScale);
         REL::Relocation<func_t> func{RELOCATION_ID(19239, 19665)};
         func(actor, scale);
+    }
+
+    inline void SetVehicle(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::Actor* actor, RE::TESObjectREFR* akVehicle) {
+        using func_t = decltype(SetVehicle);
+        REL::Relocation<func_t> func{RELOCATION_ID(53940, 54764)};
+        func(vm, stackID, actor, akVehicle);
     }
 
     inline void EquipItem(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::Actor* actor, RE::TESForm* akItem, bool abPreventRemoval, bool abSilent) {
@@ -24,6 +48,12 @@ namespace ActorUtil {
         REL::Relocation<func_t> func{RELOCATION_ID(36680, 37688)};
         func(actor, faction);
     }
+
+    void lockActor(RE::Actor* actor);
+    void unlockActor(RE::Actor* actor);
+
+    void sheatheWeapon(RE::Actor* actor);
+    void setVehicle(RE::Actor* actor, RE::TESObjectREFR* vehicle);
 
     void equipItem(RE::Actor* actor, RE::TESForm* item, bool preventRemoval, bool silent);
     void equipItem(RE::Actor* actor, RE::TESForm* item);

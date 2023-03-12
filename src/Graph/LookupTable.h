@@ -12,6 +12,7 @@ namespace Graph{
     public:
         inline static RE::TESQuest* OSexIntegrationMainQuest;
         inline static RE::TESObjectSTAT* OStimVehicle;
+        inline static RE::TESPackage* OStimScenePackage;
 
         static void setupForms();
 

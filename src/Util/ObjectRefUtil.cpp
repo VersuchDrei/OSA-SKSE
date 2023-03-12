@@ -1,5 +1,6 @@
 #include "ObjectRefUtil.h"
 
+#include "MathUtil.h"
 #include "StringUtil.h"
 
 namespace ObjectRefUtil {
@@ -73,5 +74,9 @@ namespace ObjectRefUtil {
 
     void ObjectRefUtil::translateTo(RE::TESObjectREFR* object, float x, float y, float z, float angleX, float angleY, float angleZ, float speed, float maxRotationSpeed) {
         TranslateTo(nullptr, 0, object, x, y, z, angleX, angleY, angleZ, speed, maxRotationSpeed);
+    }
+
+    void ObjectRefUtil::translateToRadians(RE::TESObjectREFR* object, float x, float y, float z, float angleX, float angleY, float angleZ, float speed, float maxRotationSpeed) {
+        TranslateTo(nullptr, 0, object, x, y, z, MathUtil::toDegrees(angleX), MathUtil::toDegrees(angleY), MathUtil::toDegrees(angleZ), speed, maxRotationSpeed);
     }
 }

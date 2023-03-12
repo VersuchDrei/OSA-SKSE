@@ -6,6 +6,10 @@ namespace MCM {
         static void setupForms();
         static void resetDefaults();
 
+        static bool useFreeCam();
+        static float freeCamSpeed();
+        static float freeCamFOV();
+
         static float getMaleSexExcitementMult();
         static float getFemaleSexExcitementMult();
         static float getExcitementDecayRate();
@@ -38,13 +42,17 @@ namespace MCM {
         static void importSettings();
 
     private:
+        inline static RE::TESGlobal* OStimUseFreeCam;
+        inline static RE::TESGlobal* OStimFreeCamSpeed;
+        inline static RE::TESGlobal* OStimFreeCamFOV;
+
         inline static RE::TESGlobal* maleExcitementMultSetting;
         inline static RE::TESGlobal* femaleExcitementMultSetting;
         inline static RE::TESGlobal* OStimExcitementDecayRate;
         inline static RE::TESGlobal* OStimExcitementDecayGracePeriod;
 
-        inline static RE::TESGlobal* disableScalingSetting;
-        inline static RE::TESGlobal* disableSchlongBendingSetting;
+        inline static RE::TESGlobal* OStimDisableScaling;
+        inline static RE::TESGlobal* OStimDisableSchlongBending;
 
         inline static RE::TESGlobal* OStimUndressAtStart;
         inline static RE::TESGlobal* OStimRemoveWeaponsAtStart;

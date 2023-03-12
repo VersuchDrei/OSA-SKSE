@@ -15,6 +15,8 @@ namespace OStim {
         Thread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors);
 
         ~Thread();
+
+        void initContinue();
         
         void ChangeNode(Graph::Node* a_node);
         Graph::Node* getCurrentNode();
@@ -38,14 +40,17 @@ namespace OStim {
 
     private:
         ThreadId m_threadId;        
+        bool isPlayerThread = false;
         RE::TESObjectREFR* furniture;
         bool furnitureLocked = false;
         RE::TESObjectREFR* vehicle;
         std::map<int32_t, ThreadActor> m_actors;
         std::shared_mutex nodeLock;
         Graph::Node* m_currentNode = nullptr;
-        int m_currentNodeSpeed = 0;        
-        std::thread m_excitementThread;
+        int m_currentNodeSpeed = 0;
+
+        float freeCamSpeedBefore = 0;
+        float worldFOVbefore = 0;
 
         void addActorSink(RE::Actor* a_actor);
         void removeActorSink(RE::Actor* a_actor);

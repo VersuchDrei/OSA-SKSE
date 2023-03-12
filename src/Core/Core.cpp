@@ -11,5 +11,9 @@ namespace OStim {
         }
 
         Trait::TraitTable::removeFromExcitementFaction(actor);
+        ActorUtil::setVehicle(actor, nullptr);
+        ActorUtil::unlockActor(actor);
+        
+        actor->EvaluatePackage();
     }
 }

@@ -18,6 +18,7 @@ namespace OStim {
         hasSchlong = Trait::TraitTable::hasSchlong(actor);
         isPlayer = actor == RE::PlayerCharacter::GetSingleton();
         Trait::TraitTable::addToExcitementFaction(actor);
+        heelOffset = ActorUtil::getHeelOffset(actor);
 
         baseExcitementMultiplier = isFemale ? MCM::MCMTable::getFemaleSexExcitementMult() : MCM::MCMTable::getMaleSexExcitementMult();
         loopExcitementDecay = MCM::MCMTable::getExcitementDecayRate() * Constants::LOOP_TIME_SECONDS;
@@ -41,7 +42,6 @@ namespace OStim {
             }
         }
 
-        heelOffset = ActorUtil::getHeelOffset(actor);
     }
 
     void ThreadActor::undress() {
