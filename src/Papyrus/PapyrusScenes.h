@@ -46,7 +46,8 @@ namespace PapyrusScenes {
 
     void UpdateSpeed(RE::StaticFunctionTag*, int64_t a_threadId, int a_speed){
         auto tm = OStim::ThreadManager::GetSingleton();
-        tm->GetThread(a_threadId)->SetSpeed(a_speed);
+        auto thread = tm->GetThread(a_threadId);
+        if(thread) thread->SetSpeed(a_speed);
     }
 
     OStim::ThreadActor* GetActor(int64_t a_threadId, RE::Actor* a_actor) {

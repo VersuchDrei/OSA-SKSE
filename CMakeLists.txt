@@ -24,6 +24,7 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Align/Alignments.cpp
     src/Core/Core.cpp
     src/Core/EquipObjectHandler.cpp
     src/Core/ExpressionUpdater.cpp
@@ -51,6 +52,8 @@ set(sources
     src/Trait/Condition.cpp
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
+    src/UI/Align/AlignMenu.cpp
+    src/UI/UIState.cpp
     src/Util/ActorUtil.cpp
     src/Util/CameraUtil.cpp
     src/Util/FormUtil.cpp

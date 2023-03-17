@@ -34,6 +34,19 @@ namespace OStim {
 
         void close();
 
+        RE::TESObjectREFR* GetStageObject() { return stageObject; }
+
+        std::vector<RE::Actor*> GetTESActors() { 
+            std::vector<RE::Actor*> actors;
+            for (auto& pair : m_actors) {                
+                actors.push_back(pair.second.getActor());
+            }
+            return actors;
+        }
+
+    public:
+        RE::TESObjectREFR* stageObject;
+
         virtual RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
 
         Serialization::OldThread serialize();

@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+#include "Align/Alignments.h"
 #include "Events/EventListener.h"
 #include "Furniture/FurnitureTable.h"
 #include "Game/Patch.h"
@@ -11,6 +12,7 @@
 #include "SKEE.h"
 #include "Serial/Manager.h"
 #include "Trait/TraitTable.h"
+#include "UI/Align/AlignMenu.h"
 #include "Util/MCMTable.h"
 
 using namespace RE::BSScript;
@@ -67,10 +69,17 @@ namespace {
                 MCM::MCMTable::setupForms();
                 Furniture::FurnitureTable::setupForms();
 
+                OAlign::Alignments::GetSingleton()->LoadAlignments();
+                UI::Align::AlignMenu::Register();
+                
                 // we are installing this hook so late because we need it to overwrite the PapyrusUtil hook
                 Events::PackageStart::Install();
             } break;
+            case SKSE::MessagingInterface::kNewGame: {
+                UI::Align::AlignMenu::Show();
+            }break;
             case SKSE::MessagingInterface::kPostPostLoad: {
+                UI::Align::AlignMenu::Show();
                 SKEE::InterfaceExchangeMessage msg;
                 auto intfc = SKSE::GetMessagingInterface();
                 intfc->Dispatch(SKEE::InterfaceExchangeMessage::kExchangeInterface, (void*)&msg,

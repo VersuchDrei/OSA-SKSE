@@ -167,6 +167,13 @@ namespace OStim {
         msg.newAnimation = a_node;
         logger::info("Sending animation changed event");
         Messaging::MessagingRegistry::GetSingleton()->SendMessageToListeners(msg);
+
+        if (isPlayerThread) {
+            UI::Align::AlignMenu::SetThread(this);
+            UI::Align::AlignMenu::SetNode(a_node);
+            //TODO: Remove this
+            UI::Align::AlignMenu::SetActor(this->GetTESActors()[0]);
+        }        
     }
 
     Graph::Node* Thread::getCurrentNode() {
