@@ -42,28 +42,9 @@ namespace OStim {
 
         RE::Actor* player = RE::PlayerCharacter::GetSingleton();
         for (int i = 0; i < actors.size(); i++) {
-
             RE::Actor* actor = actors[i];
-            ActorUtil::lockActor(actor);
-            actor->MoveTo(vehicle);
-            ActorUtil::setVehicle(actor, vehicle);
-
-            RE::NiPoint3 position = vehicle->GetPosition();
-            RE::NiPoint3 angle = vehicle->GetAngle();
-            ObjectRefUtil::translateTo(actor, position.x, position.y, position.z, MathUtil::toDegrees(angle.x), MathUtil::toDegrees(angle.y), MathUtil::toDegrees(angle.z) + 1, 1000000, 0.0001);
-
+            addActorInner(i, actor);
             isPlayerThread |= actor == player;
-            addActorSink(actor);
-            
-            m_actors.insert(std::make_pair(i, ThreadActor(id, actor)));
-            ThreadActor* threadActor = GetActor(i);
-            threadActor->initContinue();
-            if (MCM::MCMTable::undressAtStart()) {
-                threadActor->undress();
-            }
-            if (MCM::MCMTable::removeWeaponsAtStart()) {
-                threadActor->removeWeapons();
-            }
         }
 
         if (isPlayerThread) {
@@ -192,18 +173,10 @@ namespace OStim {
         return m_currentNode;
     }
 
-    void Thread::AddActor(RE::Actor* a_actor) {
-        addActorSink(a_actor);
+    void Thread::AddActor(RE::Actor* actor) {
         int index = m_actors.size();
-        m_actors.insert(std::make_pair(index, ThreadActor(m_threadId, a_actor)));
-        ThreadActor* actor = GetActor(index);
-        actor->initContinue();
-        if (MCM::MCMTable::undressAtStart()) {
-            actor->undress();
-        }
-        if (MCM::MCMTable::removeWeaponsAtStart()) {
-            actor->removeWeapons();
-        }
+        addActorInner(index, actor);
+        actor->EvaluatePackage();
     }
 
     void Thread::RemoveActor() {
@@ -213,6 +186,28 @@ namespace OStim {
         actor->free();
 
         m_actors.erase(index);
+    }
+
+    void Thread::addActorInner(int index, RE::Actor* actor) {
+        ActorUtil::lockActor(actor);
+        ActorUtil::setVehicle(actor, vehicle);
+        addActorSink(actor);
+        m_actors.insert(std::make_pair(index, ThreadActor(m_threadId, actor)));
+        ThreadActor* threadActor = GetActor(index);
+        threadActor->initContinue();
+        if (MCM::MCMTable::undressAtStart()) {
+            threadActor->undress();
+        }
+        if (MCM::MCMTable::removeWeaponsAtStart()) {
+            threadActor->removeWeapons();
+        }
+        actor->MoveTo(vehicle);
+        alignActor(actor, 0, 0, 0);
+    }
+
+    void Thread::alignActor(RE::Actor* actor, float x, float y, float z) {
+        ObjectRefUtil::translateTo(actor, vehicle->data.location.x + x, vehicle->data.location.y + y, vehicle->data.location.z + z,MathUtil::toDegrees(vehicle->data.angle.x),
+                                   MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(vehicle->data.angle.z) + 1, 1000000, 0.0001);
     }
 
     void Thread::loop() {

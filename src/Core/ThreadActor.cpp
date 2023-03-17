@@ -41,7 +41,6 @@ namespace OStim {
                 vm->DispatchStaticCall("OSKSE", "GetRmScale", args, callback);
             }
         }
-
     }
 
     void ThreadActor::undress() {

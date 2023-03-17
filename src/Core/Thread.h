@@ -52,6 +52,8 @@ namespace OStim {
         float freeCamSpeedBefore = 0;
         float worldFOVbefore = 0;
 
+        void addActorInner(int index, RE::Actor* actor);
+        void alignActor(RE::Actor* actor, float x, float y, float z);
         void addActorSink(RE::Actor* a_actor);
         void removeActorSink(RE::Actor* a_actor);
     };

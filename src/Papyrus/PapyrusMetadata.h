@@ -1509,7 +1509,7 @@ namespace PapyrusMetadata {
         return {};
     }
 
-    std::vector<std::string> GetAllActionTags(RE::StaticFunctionTag*, std::string id) {
+    std::vector<std::string> GetAllActionsTags(RE::StaticFunctionTag*, std::string id) {
         std::set<std::string> tags;
         if (auto node = Graph::LookupTable::getNodeById(id)) {
             for (Graph::Action* action : node->actions) {
@@ -2620,6 +2620,273 @@ namespace PapyrusMetadata {
     }
 #pragma endregion
 #pragma endregion
+
+#pragma region custom_scene_actor_data
+    int GetCustomSceneActorIntMin(RE::StaticFunctionTag*, std::string id, int position, std::string record, int fallback) {
+        int min = INT_MAX;
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.ints.find(record);
+                    if (it != action->attributes->actor.ints.end()) {
+                        if (min > it->second) {
+                            min = it->second;
+                        }
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.ints.find(record);
+                    if (it != action->attributes->target.ints.end()) {
+                        if (min > it->second) {
+                            min = it->second;
+                        }
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.ints.find(record);
+                    if (it != action->attributes->performer.ints.end()) {
+                        if (min > it->second) {
+                            min = it->second;
+                        }
+                    }
+                }
+            }
+        }
+
+        return min == INT_MAX ? fallback : min;
+    }
+
+    int GetCustomSceneActorIntMax(RE::StaticFunctionTag*, std::string id, int position, std::string record, int fallback) {
+        int max = INT_MIN;
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.ints.find(record);
+                    if (it != action->attributes->actor.ints.end()) {
+                        if (max < it->second) {
+                            max = it->second;
+                        }
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.ints.find(record);
+                    if (it != action->attributes->target.ints.end()) {
+                        if (max < it->second) {
+                            max = it->second;
+                        }
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.ints.find(record);
+                    if (it != action->attributes->performer.ints.end()) {
+                        if (max < it->second) {
+                            max = it->second;
+                        }
+                    }
+                }
+            }
+        }
+
+        return max == INT_MIN ? fallback : max;
+    }
+
+    int GetCustomSceneActorIntSum(RE::StaticFunctionTag*, std::string id, int position, std::string record, int startValue) {
+        int sum = startValue;
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.ints.find(record);
+                    if (it != action->attributes->actor.ints.end()) {
+                        sum += it->second;
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.ints.find(record);
+                    if (it != action->attributes->target.ints.end()) {
+                        sum += it->second;
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.ints.find(record);
+                    if (it != action->attributes->performer.ints.end()) {
+                        sum += it->second;
+                    }
+                }
+            }
+        }
+
+        return sum;
+    }
+
+    int GetCustomSceneActorIntProduct(RE::StaticFunctionTag*, std::string id, int position, std::string record, int startValue) {
+        int product = startValue;
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.ints.find(record);
+                    if (it != action->attributes->actor.ints.end()) {
+                        product *= it->second;
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.ints.find(record);
+                    if (it != action->attributes->target.ints.end()) {
+                        product *= it->second;
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.ints.find(record);
+                    if (it != action->attributes->performer.ints.end()) {
+                        product *= it->second;
+                    }
+                }
+            }
+        }
+
+        return product;
+    }
+
+    
+    float GetCustomSceneActorFloatMin(RE::StaticFunctionTag*, std::string id, int position, std::string record, float fallback) {
+        float min = std::numeric_limits<float>::quiet_NaN();
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.floats.find(record);
+                    if (it != action->attributes->actor.floats.end()) {
+                        if (isnan(min) || min > it->second) {
+                            min = it->second;
+                        }
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.floats.find(record);
+                    if (it != action->attributes->target.floats.end()) {
+                        if (isnan(min) || min > it->second) {
+                            min = it->second;
+                        }
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.floats.find(record);
+                    if (it != action->attributes->performer.floats.end()) {
+                        if (isnan(min) || min > it->second) {
+                            min = it->second;
+                        }
+                    }
+                }
+            }
+        }
+
+        return isnan(min) ? fallback : min;
+    }
+
+    float GetCustomSceneActorFloatMax(RE::StaticFunctionTag*, std::string id, int position, std::string record, float fallback) {
+        float max = std::numeric_limits<float>::quiet_NaN();
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.floats.find(record);
+                    if (it != action->attributes->actor.floats.end()) {
+                        if (isnan(max) || max < it->second) {
+                            max = it->second;
+                        }
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.floats.find(record);
+                    if (it != action->attributes->target.floats.end()) {
+                        if (isnan(max) || max < it->second) {
+                            max = it->second;
+                        }
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.floats.find(record);
+                    if (it != action->attributes->performer.floats.end()) {
+                        if (isnan(max) || max < it->second) {
+                            max = it->second;
+                        }
+                    }
+                }
+            }
+        }
+
+        return isnan(max) ? fallback : max;
+    }
+
+    float GetCustomSceneActorFloatSum(RE::StaticFunctionTag*, std::string id, int position, std::string record, float startValue) {
+        float sum = startValue;
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.floats.find(record);
+                    if (it != action->attributes->actor.floats.end()) {
+                        sum += it->second;
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.floats.find(record);
+                    if (it != action->attributes->target.floats.end()) {
+                        sum += it->second;
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.floats.find(record);
+                    if (it != action->attributes->performer.floats.end()) {
+                        sum += it->second;
+                    }
+                }
+            }
+        }
+
+        return sum;
+    }
+
+    float GetCustomSceneActorFloatProduct(RE::StaticFunctionTag*, std::string id, int position, std::string record, float startValue) {
+        float product = startValue;
+
+        StringUtil::toLower(&record);
+        if (auto node = Graph::LookupTable::getNodeById(id)) {
+            for (Graph::Action* action : node->actions) {
+                if (action->actor == position) {
+                    auto it = action->attributes->actor.floats.find(record);
+                    if (it != action->attributes->actor.floats.end()) {
+                        product *= it->second;
+                    }
+                }
+                if (action->target == position) {
+                    auto it = action->attributes->target.floats.find(record);
+                    if (it != action->attributes->target.floats.end()) {
+                        product *= it->second;
+                    }
+                }
+                if (action->performer == position) {
+                    auto it = action->attributes->performer.floats.find(record);
+                    if (it != action->attributes->performer.floats.end()) {
+                        product *= it->second;
+                    }
+                }
+            }
+        }
+
+        return product;
+    }
+#pragma endregion
 #pragma endregion
 #pragma endregion
 
@@ -2779,7 +3046,7 @@ namespace PapyrusMetadata {
         BIND(GetActionPerformer);
 
         BIND(GetActionTags);
-        BIND(GetAllActionTags);
+        BIND(GetAllActionsTags);
         BIND(HasActionTag);
         BIND(HasActionTagOnAny);
         BIND(HasAnyActionTag);
@@ -2916,6 +3183,15 @@ namespace PapyrusMetadata {
         BIND(CustomActionPerformerStringListContainsAllCSV);
         BIND(GetCustomActionPerformerStringListOverlap);
         BIND(GetCustomActionPerformerStringListOverlapCSV);
+
+        BIND(GetCustomSceneActorIntMin);
+        BIND(GetCustomSceneActorIntMax);
+        BIND(GetCustomSceneActorIntSum);
+        BIND(GetCustomSceneActorIntProduct);
+        BIND(GetCustomSceneActorFloatMin);
+        BIND(GetCustomSceneActorFloatMax);
+        BIND(GetCustomSceneActorFloatSum);
+        BIND(GetCustomSceneActorFloatProduct);
 
         return true;
 	}
