@@ -23,7 +23,9 @@ namespace Graph{
         static bool hasNodes(Furniture::FurnitureType furnitureType, int actorCount);
         static Node* getRandomNode(Furniture::FurnitureType furnitureType, std::vector<Trait::ActorConditions> actorConditions, std::function<bool(Node*)> nodeCondition);
 
-        static bool setNiTransfromInterface(SKEE::INiTransformInterface* nioInterface);
+        static void setActorUpdateManager(SKEE::IActorUpdateManager* manager);
+        static SKEE::IActorUpdateManager* getActorUpdateManager();
+        static void setNiTransfromInterface(SKEE::INiTransformInterface* nioInterface);
         static SKEE::INiTransformInterface* getNiTransformInterface();
 
         static void SetupActions();
@@ -49,6 +51,7 @@ namespace Graph{
             {"vagina", Requirement::VAGINA}
         };
 
-        inline static SKEE::INiTransformInterface* niTransformInterface;
+        inline static SKEE::IActorUpdateManager* actorUpdateManager = nullptr;
+        inline static SKEE::INiTransformInterface* niTransformInterface = nullptr;
     };
 }

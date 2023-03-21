@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "Align/Alignments.h"
+#include "Alignment/Alignments.h"
 #include "Events/EventListener.h"
 #include "Furniture/FurnitureTable.h"
 #include "Game/Patch.h"
@@ -89,15 +89,19 @@ namespace {
                     return;
                 }
 
-                auto nioInterface =
-                    static_cast<SKEE::INiTransformInterface*>(msg.interfaceMap->QueryInterface("NiTransform"));
-                if (!nioInterface) {
-                    logger::critical("Couldn't get serialization NiTransformInterface!");
+                auto manager = static_cast<SKEE::IActorUpdateManager*>(msg.interfaceMap->QueryInterface("ActorUpdateManager"));
+                if (manager) {
+                    Graph::LookupTable::setActorUpdateManager(manager);
+                } else {
+                    logger::critical("Couldn't get ActorUpdateManager!");
                 }
 
-                logger::info("NiTransform version {}", nioInterface->GetVersion());
-                if (!Graph::LookupTable::setNiTransfromInterface(nioInterface)) {
-                    logger::info("NiTransformInterface not provided.");
+                auto nioInterface = static_cast<SKEE::INiTransformInterface*>(msg.interfaceMap->QueryInterface("NiTransform"));
+                if (nioInterface) {
+                    logger::info("NiTransform version {}", nioInterface->GetVersion());
+                    Graph::LookupTable::setNiTransfromInterface(nioInterface);
+                } else {
+                    logger::critical("Couldn't get NiTransformInterface!");
                 }
             } break;
         }
