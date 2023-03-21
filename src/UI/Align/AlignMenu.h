@@ -1,11 +1,13 @@
 #pragma once
-#include <Align/Alignments.h>
+
+#include "IncrementValue.h"
+
+#include <Alignment/Alignments.h>
 #include <Core/Thread.h>
 #include <Graph/Node.h>
 #include <UI/UIInterop.h>
 
 namespace UI::Align {
-
     class AlignMenu : public RE::IMenu {
     public:
         using Super = RE::IMenu;
@@ -72,8 +74,7 @@ namespace UI::Align {
 
         inline static int selectedField = 0;
         inline static int selectedSlot = 0;
-        inline static double incrementvalue = 1.0;
-        inline static int loadedSource = 0;
+        inline static IncrementValue incrementValue = IncrementValue::ONE;
         
     };
 }  // namespace UI::Align

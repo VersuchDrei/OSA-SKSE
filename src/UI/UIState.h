@@ -6,10 +6,11 @@
 namespace UI {
     enum MenuType { kSceneMenu, kAlignMenu };
     class UIState : public OStim::ISingleton<UIState> {
-    public:        
+    public:
         void HandleControl(Controls control, int64_t glyph);
         void SwitchActiveMenu(MenuType type);
-        inline MenuType GetActiveMenu() { return activeMenu; }        
+        void hideAllMenues();
+        inline MenuType GetActiveMenu() { return activeMenu; }
     private:
         MenuType activeMenu = MenuType::kSceneMenu;
     };

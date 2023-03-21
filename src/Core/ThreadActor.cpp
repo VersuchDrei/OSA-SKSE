@@ -43,6 +43,11 @@ namespace OStim {
         }
     }
 
+    Alignment::ActorKey getAlignmentKey() {
+        // TODO
+        return {};
+    }
+
     void ThreadActor::undress() {
         if (MCM::MCMTable::usePapyrusUndressing()) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();

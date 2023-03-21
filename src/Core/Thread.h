@@ -34,7 +34,7 @@ namespace OStim {
 
         void close();
 
-        RE::TESObjectREFR* GetStageObject() { return stageObject; }
+        RE::TESObjectREFR* GetStageObject() { return vehicle; }
 
         std::vector<RE::Actor*> GetTESActors() { 
             std::vector<RE::Actor*> actors;
@@ -44,9 +44,9 @@ namespace OStim {
             return actors;
         }
 
-    public:
-        RE::TESObjectREFR* stageObject;
+        void alignActor(RE::Actor* actor, float x, float y, float z);
 
+    public:
         virtual RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
 
         Serialization::OldThread serialize();
@@ -66,7 +66,6 @@ namespace OStim {
         float worldFOVbefore = 0;
 
         void addActorInner(int index, RE::Actor* actor);
-        void alignActor(RE::Actor* actor, float x, float y, float z);
         void addActorSink(RE::Actor* a_actor);
         void removeActorSink(RE::Actor* a_actor);
     };

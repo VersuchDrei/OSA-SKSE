@@ -3,6 +3,7 @@
 #include "EquipObjectHandler.h"
 #include "ExpressionUpdater.h"
 
+#include "Alignment/ActorKey.h"
 #include "Graph/Node.h"
 #include "Trait/EquipObject.h"
 #include "Serial/OldThread.h"
@@ -22,6 +23,8 @@ namespace OStim {
         int excitementDecayCooldown = 0;
 
 		inline RE::Actor* getActor() { return actor; }
+
+        Alignment::ActorKey getAlignmentKey();
 
         void undress();
         void undressPartial(uint32_t mask);

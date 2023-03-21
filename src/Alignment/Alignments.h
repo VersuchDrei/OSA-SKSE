@@ -30,29 +30,16 @@ namespace OAlign {
         return ret;
     }
 
-    enum Source { None, Global, Pack, Individual };
-
-    inline static std::string GetString(Source src) {
-        switch (src) {
-            case None:
-                return "None";
-            case Global:
-                return "Global";
-            case Pack:
-                return "Pack";
-            case Individual:
-                return "Scene";
-        }
-        return "None";
-    }
-
     // TODO: Think about default values (I.E when we don't want to change from whats defined in scene, important for
     // scales and angles)
     // TODO: Add back in scaling
     struct AlignmentActorInfo {
-        double offsetX = 0;
-        double offsetY = 0;
-        double offsetZ = 0;
+        float offsetX = 0;
+        float offsetY = 0;
+        float offsetZ = 0;
+        float scale = 1;
+        float rotation = 0;
+        float sosBend = 0;
     };
     
     struct NodeAlignmentInfo {
@@ -63,17 +50,14 @@ namespace OAlign {
     public:
         void LoadAlignments();        
 
-        std::tuple<Source, std::vector<AlignmentActorInfo>*> GetAlignmentInfoForScene(Graph::Node* node,
-                                                                                      GenderMap genderMap);
+        std::vector<AlignmentActorInfo>* GetAlignmentInfoForScene(Graph::Node* node, GenderMap genderMap);
 
-        void UpdateAndApplyAlignments(OStim::Thread* thread, OAlign::AlignmentActorInfo currentAlignment, Source source, Graph::Node* node, int selectedActor);
+        void UpdateAndApplyAlignments(OStim::Thread* thread, OAlign::AlignmentActorInfo currentAlignment, Graph::Node* node, int selectedActor);
         void ApplyAlignments(OStim::Thread* thread, std::vector<AlignmentActorInfo>* info);
         
         void SerializeAlignments();
 
     private:
-        NodeAlignmentInfo globalAlignments;
-        std::unordered_map<std::string, NodeAlignmentInfo> packAlignments;
         std::unordered_map<std::string, NodeAlignmentInfo> sceneAlignments;
     };
 }  // namespace OAlign

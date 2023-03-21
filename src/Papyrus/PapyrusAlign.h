@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Align/Alignments.h"
+#include "Alignment/Alignments.h"
 #include "Core/ThreadManager.h"
 #include "UI/Align/AlignMenu.h"
 #include "UI/UIState.h"
@@ -8,7 +8,7 @@
 namespace PapyrusAlign {
     using VM = RE::BSScript::IVirtualMachine;
 
-    void ToggleMenu(RE::StaticFunctionTag* _) {
+    void ToggleMenu(RE::StaticFunctionTag*) {
         auto thread = OStim::ThreadManager::GetSingleton();
         auto uiState = UI::UIState::GetSingleton();
 

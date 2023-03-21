@@ -18,9 +18,9 @@ namespace UI {
                     }
                 }
             } break;
-            case MenuType::kAlignMenu: {
+        case MenuType::kAlignMenu: {
                 UI::Align::AlignMenu::Handle(control);
-            }
+            } break;
         }
     }
 
@@ -28,8 +28,13 @@ namespace UI {
         activeMenu = menu;
         if (menu == MenuType::kAlignMenu) {
             UI::Align::AlignMenu::Show();
+        } else {
+            UI::Align::AlignMenu::Hide();
         }
-        else {
+    }
+
+    void UIState::hideAllMenues() {
+        if (activeMenu == MenuType::kAlignMenu) {
             UI::Align::AlignMenu::Hide();
         }
     }

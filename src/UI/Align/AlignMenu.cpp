@@ -92,16 +92,11 @@ namespace UI::Align {
         auto genderMap = OAlign::GetGenderMap(&actors);
 
         auto alignments = OAlign::Alignments::GetSingleton()->GetAlignmentInfoForScene(currentNode, genderMap);
-        loadedSource = std::get<0>(alignments);
-        auto alignmentInfos = std::get<1>(alignments);
-        if (loadedSource != OAlign::Source::None) {
-            currentActorInfo.offsetX = alignmentInfos->at(selectedSlot).offsetX;
-            currentActorInfo.offsetY = alignmentInfos->at(selectedSlot).offsetY;
-            currentActorInfo.offsetZ = alignmentInfos->at(selectedSlot).offsetZ;
+        auto alignmentInfos = alignments;
+        if (alignments) {
+            currentActorInfo = alignmentInfos->at(selectedSlot);
         } else {
-            currentActorInfo.offsetX = 0;
-            currentActorInfo.offsetY = 0;
-            currentActorInfo.offsetZ = 0;
+            currentActorInfo = {};
         }
     }
 
@@ -147,20 +142,23 @@ namespace UI::Align {
 
         auto gender = OAlign::GetGenderVal(currentActor);
 
+        std::string incString = IncrementValueImpl::format(incrementValue);
+        const RE::GFxValue incValue = RE::GFxValue{incString};
+
         const RE::GFxValue actorGender = RE::GFxValue{gender};
 
-        auto source = OAlign::GetString((OAlign::Source)loadedSource);
-        const RE::GFxValue sourceData{source};
-        RE::GFxValue infoArray[8]{actorName,
+        RE::GFxValue infoArray[10]{actorName,
                                   actorSlot,
                                   actorGender,
-                                  sourceData,
-                                  incrementvalue,
+                                  incValue,
                                   currentActorInfo.offsetX,
                                   currentActorInfo.offsetY,
-                                  currentActorInfo.offsetZ};
+                                  currentActorInfo.offsetZ,
+                                  currentActorInfo.scale,
+                                  currentActorInfo.rotation,
+                                  currentActorInfo.sosBend};
 
-        alignmentInfo.Invoke("updateInfo", nullptr, infoArray, 8);
+        alignmentInfo.Invoke("updateInfo", nullptr, infoArray, 10);
     }
 
     void AlignMenu::Update() {}
@@ -199,8 +197,8 @@ namespace UI::Align {
 
     void AlignMenu::ScrollSelectedField(int field) {
         if (selectedField + field < 0) {
-            selectedField = 2;
-        } else if (selectedField + field > 2) {
+            selectedField = 5;
+        } else if (selectedField + field > 5) {
             selectedField = 0;
         } else {
             selectedField += field;
@@ -222,7 +220,7 @@ namespace UI::Align {
     void AlignMenu::Increment(bool up) {
         auto root = GetRoot();
 
-        double* currentVal;
+        float* currentVal;
         switch (selectedField) {
             case 0:
                 currentVal = &currentActorInfo.offsetX;
@@ -233,37 +231,39 @@ namespace UI::Align {
             case 2:
                 currentVal = &currentActorInfo.offsetZ;
                 break;
+            case 3:
+                currentVal = &currentActorInfo.scale;
+                break;
+            case 4:
+                currentVal = &currentActorInfo.rotation;
+                break;
+            case 5:
+                currentVal = &currentActorInfo.sosBend;
+                break;
             default:
                 return;
         }
+        float actualIncrement = selectedField == 5 ? 1 : IncrementValueImpl::getValue(incrementValue);
         if (up)
-            *currentVal += incrementvalue;
+            *currentVal += actualIncrement;
         else
-            *currentVal -= incrementvalue;
+            *currentVal -= actualIncrement;
 
         RE::GFxValue alignmentInfo;
         root.GetMember("alignmentInfo", &alignmentInfo);
         RE::GFxValue values[2]{*currentVal, up};
         alignmentInfo.Invoke("updateDoubleField", nullptr, values, 2);
 
-        OAlign::Alignments::GetSingleton()->UpdateAndApplyAlignments(currentThread, currentActorInfo,
-                                                                     (OAlign::Source)loadedSource, currentNode, selectedSlot);
+        OAlign::Alignments::GetSingleton()->UpdateAndApplyAlignments(currentThread, currentActorInfo, currentNode, selectedSlot);
     }
 
     void AlignMenu::CycleIncrement() {
-        if (incrementvalue == 1.0) {
-            incrementvalue = 0.1;
-        } else if (incrementvalue == 0.1) {
-            incrementvalue = 0.01;
-        } else if (incrementvalue == 0.01) {
-            incrementvalue = 0.001;
-        } else {
-            incrementvalue = 1.0;
-        }
+        incrementValue = IncrementValueImpl::loop(incrementValue);
         auto root = GetRoot();
         RE::GFxValue alignmentInfo;
         root.GetMember("alignmentInfo", &alignmentInfo);
-        RE::GFxValue values[1]{incrementvalue};
+        std::string incString = IncrementValueImpl::format(incrementValue);
+        RE::GFxValue values[1]{RE::GFxValue{incString}};
         alignmentInfo.Invoke("updateIncrement", nullptr, values, 1);
     }
 

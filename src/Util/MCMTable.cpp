@@ -7,6 +7,8 @@ namespace MCM {
     void MCMTable::setupForms() {
         auto dataHandler = RE::TESDataHandler::GetSingleton();
 
+        OStimKeyAlignment = dataHandler->LookupForm<RE::TESGlobal>(0xDE2, "OStim.esp");
+
         OStimUseFreeCam = dataHandler->LookupForm<RE::TESGlobal>(0xDDE, "OStim.esp");
         OStimFreeCamSpeed = dataHandler->LookupForm<RE::TESGlobal>(0xDDF, "OStim.esp");
         OStimFreeCamFOV = dataHandler->LookupForm<RE::TESGlobal>(0xDE0, "OStim.esp");
@@ -33,6 +35,10 @@ namespace MCM {
         OStimEquipStrapOnIfNeeded = dataHandler->LookupForm<RE::TESGlobal>(0xDDB, "OStim.esp");
         OStimUnequipStrapOnIfNotNeeded = dataHandler->LookupForm<RE::TESGlobal>(0xDDC, "OStim.esp");
         OStimUnequipStrapOnIfInWay = dataHandler->LookupForm<RE::TESGlobal>(0xDDD, "OStim.esp");
+
+        OStimAlignmentGroupBySex = dataHandler->LookupForm<RE::TESGlobal>(0xDE3, "OStim.esp");
+        OStimAlignmentGroupByHeight = dataHandler->LookupForm<RE::TESGlobal>(0xDE4, "OStim.esp");
+        OStimAlignmentGroupByHeels = dataHandler->LookupForm<RE::TESGlobal>(0xDE5, "OStim.esp");
     }
 
     void MCMTable::resetDefaults() {
@@ -161,6 +167,12 @@ namespace MCM {
             return;
         }
 
+        json["keyAlignment"] = OStimKeyAlignment->value;
+
+        json["alignmentGroupBySex"] = OStimAlignmentGroupBySex->value;
+        json["alignmentGroupByHeight"] = OStimAlignmentGroupByHeight->value;
+        json["alignmentGroupByHeels"] = OStimAlignmentGroupByHeels->value;
+
         Serialization::exportSettings(json);
 
         std::ofstream db_file(*settings_path);
@@ -182,6 +194,20 @@ namespace MCM {
             return;
         }
 
+        importSetting(json, OStimKeyAlignment, "keyAlignment", 38);
+
+        importSetting(json, OStimAlignmentGroupBySex, "alignmentGroupBySex", 1);
+        importSetting(json, OStimAlignmentGroupByHeight, "alignmentGroupByHeight", 0);
+        importSetting(json, OStimAlignmentGroupByHeels, "alignmentGroupByHeels", 0);
+
         Serialization::importSettings(json);
+    }
+
+    void MCMTable::importSetting(json json, RE::TESGlobal* setting, std::string key, float fallback) {
+        if (json.contains(key)) {
+            setting->value = json[key];
+        } else {
+            setting->value = fallback;
+        }
     }
 }
