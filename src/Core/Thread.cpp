@@ -30,8 +30,6 @@ namespace OStim {
             vehicle->MoveTo(center);
         }
 
-        float angle = center->GetAngleZ();
-
         // --- locking the furniture --- //
         if (furniture) {
             if (!Furniture::isFurnitureInUse(furniture, false)) {
@@ -206,8 +204,11 @@ namespace OStim {
     }
 
     void Thread::alignActor(RE::Actor* actor, float x, float y, float z) {
-        ObjectRefUtil::translateTo(actor, vehicle->data.location.x + x, vehicle->data.location.y + y, vehicle->data.location.z + z,MathUtil::toDegrees(vehicle->data.angle.x),
-                                   MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(vehicle->data.angle.z) + 1, 1000000, 0.0001);
+        float angle = vehicle->GetAngleZ();
+        float sin = std::sin(angle);
+        float cos = std::cos(angle);
+        ObjectRefUtil::translateTo(actor, vehicle->data.location.x + cos * x + sin * y, vehicle->data.location.y - sin * x + cos * y, vehicle->data.location.z + z,
+            MathUtil::toDegrees(vehicle->data.angle.x), MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(vehicle->data.angle.z) + 1, 1000000, 0.0001);
     }
 
     void Thread::loop() {
@@ -251,6 +252,11 @@ namespace OStim {
                     RE::Actor* actor = actorIt.second.getActor();
                     actor->SetGraphVariableFloat("OStimSpeed", m_currentNode->speeds[speed].playbackSpeed);
                     actor->NotifyAnimationGraph(m_currentNode->speeds[speed].animation + "_" + std::to_string(actorIt.first));
+
+                    SKEE::IActorUpdateManager* updateManager = Graph::LookupTable::getActorUpdateManager();
+                    if (updateManager) {
+                        updateManager->AddNodeOverrideUpdate(actor->GetFormID());
+                    }
                 }
 
                 float speedMod = 1 + speed / m_currentNode->speeds.size();

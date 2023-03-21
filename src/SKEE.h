@@ -23,6 +23,11 @@ namespace SKEE {
         IInterfaceMap* interfaceMap = nullptr;
     };
 
+    class IAddonAttachmentInterface {
+    public:
+        virtual void OnAttach(RE::TESObjectREFR* refr, RE::TESObjectARMO* armor, RE::TESObjectARMA* addon, RE::NiAVObject* object, bool isFirstPerson, RE::NiNode* skeleton, RE::NiNode* root) = 0;
+    };
+
     class INiTransformInterface : public IPluginInterface {
     public:
         struct Position {
@@ -70,5 +75,19 @@ namespace SKEE {
 
         virtual void VisitNodes(RE::TESObjectREFR* refr, bool firstPerson, bool isFemale, NodeVisitor& visitor) = 0;
         virtual void UpdateNodeTransforms(RE::TESObjectREFR* ref, bool firstPerson, bool isFemale, const char* node) = 0;
+    };
+
+    class IActorUpdateManager : public IPluginInterface {
+    public:
+        virtual void AddBodyUpdate(RE::FormID formId) = 0;
+        virtual void AddTransformUpdate(RE::FormID formId) = 0;
+        virtual void AddOverlayUpdate(RE::FormID formId) = 0;
+        virtual void AddNodeOverrideUpdate(RE::FormID formId) = 0;
+        virtual void AddWeaponOverrideUpdate(RE::FormID formId) = 0;
+        virtual void AddAddonOverrideUpdate(RE::FormID formId) = 0;
+        virtual void AddSkinOverrideUpdate(RE::FormID formId) = 0;
+        virtual void Flush() = 0;
+        virtual void AddInterface(IAddonAttachmentInterface* observer) = 0;
+        virtual void RemoveInterface(IAddonAttachmentInterface* observer) = 0;
     };
 }
