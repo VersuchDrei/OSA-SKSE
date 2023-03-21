@@ -3,6 +3,8 @@
 #include "Graph/LookupTable.h"
 #include "Graph/Node.h"
 #include <Messaging/IMessages.h>
+#include "UI/Align/AlignMenu.h"
+#include "UI/UIState.h"
 #include "Util/CameraUtil.h"
 #include "Util/Constants.h"
 #include "Util/MathUtil.h"
@@ -73,6 +75,10 @@ namespace OStim {
     Thread::~Thread() {
         for (auto& actorIt : m_actors) {
             removeActorSink(actorIt.second.getActor());
+        }
+
+        if (isPlayerThread) {
+            UI::UIState::GetSingleton()->hideAllMenues();
         }
     }
 
