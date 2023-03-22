@@ -106,14 +106,6 @@ namespace Graph {
         return nullptr;
     }
 
-    void LookupTable::setActorUpdateManager(SKEE::IActorUpdateManager* manager) {
-        actorUpdateManager = manager;
-    }
-
-    SKEE::IActorUpdateManager* LookupTable::getActorUpdateManager() {
-        return actorUpdateManager;
-    }
-
     void LookupTable::setNiTransfromInterface(SKEE::INiTransformInterface* nioInterface) {
         niTransformInterface = nioInterface;
     }

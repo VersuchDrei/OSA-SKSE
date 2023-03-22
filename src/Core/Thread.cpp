@@ -259,6 +259,10 @@ namespace OStim {
 
     void Thread::SetSpeed(int speed) {
         m_currentNodeSpeed = speed;
+
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+
         for (auto& actorIt : m_actors) {
             if (m_currentNode) {
                 if (m_currentNode->speeds.size() > speed) {
@@ -266,9 +270,10 @@ namespace OStim {
                     actor->SetGraphVariableFloat("OStimSpeed", m_currentNode->speeds[speed].playbackSpeed);
                     actor->NotifyAnimationGraph(m_currentNode->speeds[speed].animation + "_" + std::to_string(actorIt.first));
 
-                    SKEE::IActorUpdateManager* updateManager = Graph::LookupTable::getActorUpdateManager();
-                    if (updateManager) {
-                        updateManager->AddNodeOverrideUpdate(actor->GetFormID());
+                    if (vm) {
+                        RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                        auto args = RE::MakeFunctionArguments<RE::TESObjectREFR*>(std::move(actor));
+                        vm->DispatchStaticCall("NiOverride", "ApplyNodeOverrides", args, callback);
                     }
                 }
 
