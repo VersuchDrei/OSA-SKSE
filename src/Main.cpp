@@ -73,18 +73,10 @@ namespace {
             case SKSE::MessagingInterface::kPostPostLoad: {
                 SKEE::InterfaceExchangeMessage msg;
                 auto intfc = SKSE::GetMessagingInterface();
-                intfc->Dispatch(SKEE::InterfaceExchangeMessage::kExchangeInterface, (void*)&msg,
-                                sizeof(SKEE::InterfaceExchangeMessage*), "skee");
+                intfc->Dispatch(SKEE::InterfaceExchangeMessage::kExchangeInterface, (void*)&msg, sizeof(SKEE::InterfaceExchangeMessage*), "skee");
                 if (!msg.interfaceMap) {
                     logger::critical("Couldn't get interface map!");
                     return;
-                }
-
-                auto manager = static_cast<SKEE::IActorUpdateManager*>(msg.interfaceMap->QueryInterface("ActorUpdateManager"));
-                if (manager) {
-                    Graph::LookupTable::setActorUpdateManager(manager);
-                } else {
-                    logger::critical("Couldn't get ActorUpdateManager!");
                 }
 
                 auto nioInterface = static_cast<SKEE::INiTransformInterface*>(msg.interfaceMap->QueryInterface("NiTransform"));
