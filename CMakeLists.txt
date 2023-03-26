@@ -24,7 +24,9 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Alignment/ActorKey.cpp
     src/Alignment/Alignments.cpp
+    src/Alignment/ThreadKey.cpp
     src/Core/Core.cpp
     src/Core/EquipObjectHandler.cpp
     src/Core/ExpressionUpdater.cpp

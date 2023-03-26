@@ -3,10 +3,12 @@
 #include "ActorKey.h"
 
 namespace Alignment {
-    struct SceneKey {
+    struct ThreadKey {
         std::vector<ActorKey> keys;
 
-        inline bool operator==(SceneKey other) {
+        std::string toString();
+
+        inline bool operator==(ThreadKey other) {
             if (keys.size() != other.keys.size()) {
                 return false;
             }
@@ -20,7 +22,7 @@ namespace Alignment {
             return true;
         }
 
-        inline bool operator!=(SceneKey other) {
+        inline bool operator!=(ThreadKey other) {
             if (keys.size() != other.keys.size()) {
                 return true;
             }

@@ -152,6 +152,20 @@ namespace MCM {
         return OStimUnequipStrapOnIfInWay->value != 0;
     }
 
+
+    bool MCMTable::groupAlignmentBySex() {
+        return OStimAlignmentGroupBySex->value != 0;
+    }
+
+    bool MCMTable::groupAlignmentByHeight() {
+        return OStimAlignmentGroupByHeight->value != 0;
+    }
+
+    bool MCMTable::groupAlignmentByHeels() {
+        return OStimAlignmentGroupByHeels->value != 0;
+    }
+
+
     void MCMTable::exportSettings() {
         const auto settings_path = util::settings_path();
         if (!fs::exists(*settings_path)) {

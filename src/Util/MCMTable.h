@@ -38,6 +38,10 @@ namespace MCM {
         static bool unequipStrapOnIfNotNeeded();
         static bool unequipStrapOnIfInWay();
 
+        static bool groupAlignmentBySex();
+        static bool groupAlignmentByHeight();
+        static bool groupAlignmentByHeels();
+
         static void exportSettings();
         static void importSettings();
 

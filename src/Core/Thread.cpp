@@ -89,6 +89,16 @@ namespace OStim {
         }
     }
 
+    Alignment::ThreadKey Thread::getAlignmentKey() {
+        Alignment::ThreadKey key;
+        
+        for (int i = 0; i < m_actors.size(); i++) {
+            key.keys.push_back(m_actors.find(i)->second.getAlignmentKey());
+        }
+
+        return key;
+    }
+
     void Thread::ChangeNode(Graph::Node* a_node) {
         std::unique_lock<std::shared_mutex> writeLock;
         m_currentNode = a_node;
@@ -213,15 +223,22 @@ namespace OStim {
             threadActor->removeWeapons();
         }
         actor->MoveTo(vehicle);
-        alignActor(actor, 0, 0, 0);
+        alignActor(actor, 0, 0, 0, 0);
     }
 
-    void Thread::alignActor(RE::Actor* actor, float x, float y, float z) {
+    void Thread::alignActor(RE::Actor* actor, float x, float y, float z, float rotation) {
         float angle = vehicle->GetAngleZ();
         float sin = std::sin(angle);
         float cos = std::cos(angle);
+
+        float newAngle = vehicle->data.angle.z + MathUtil::toRadians(rotation);
+
+        ObjectRefUtil::stopTranslation(actor);
+
+        actor->SetRotationZ(newAngle);       
+
         ObjectRefUtil::translateTo(actor, vehicle->data.location.x + cos * x + sin * y, vehicle->data.location.y - sin * x + cos * y, vehicle->data.location.z + z,
-            MathUtil::toDegrees(vehicle->data.angle.x), MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(vehicle->data.angle.z) + 1, 1000000, 0.0001);
+            MathUtil::toDegrees(vehicle->data.angle.x), MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(newAngle) + 1, 1000000, 0.0001);
     }
 
     void Thread::loop() {

@@ -90,7 +90,7 @@ namespace OAlign {
         
         for (int i = 0; i < actors.size(); i++) {
             auto& actorInfo = info->at(i);
-            thread->alignActor(actors[i], info->at(i).offsetX, info->at(i).offsetY, info->at(i).offsetZ);
+            thread->alignActor(actors[i], info->at(i).offsetX, info->at(i).offsetY, info->at(i).offsetZ, info->at(i).rotation);
         }
     }
 

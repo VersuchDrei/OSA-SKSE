@@ -43,9 +43,9 @@ namespace OStim {
         }
     }
 
-    Alignment::ActorKey getAlignmentKey() {
+    Alignment::ActorKey ThreadActor::getAlignmentKey() {
         // TODO
-        return {};
+        return Alignment::ActorKey(isFemale, actor->GetActorBase()->GetHeight() * rmHeight, heelOffsetRemoved ? 0 : heelOffset);
     }
 
     void ThreadActor::undress() {

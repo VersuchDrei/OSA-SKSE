@@ -4,6 +4,7 @@
 
 #include "ThreadActor.h"
 
+#include "Alignment/ThreadKey.h"
 #include "Graph/Node.h"
 #include "Serial/OldThread.h"
 
@@ -17,6 +18,8 @@ namespace OStim {
         ~Thread();
 
         void initContinue();
+
+        Alignment::ThreadKey getAlignmentKey();
         
         void ChangeNode(Graph::Node* a_node);
         Graph::Node* getCurrentNode();
@@ -44,7 +47,7 @@ namespace OStim {
             return actors;
         }
 
-        void alignActor(RE::Actor* actor, float x, float y, float z);
+        void alignActor(RE::Actor* actor, float x, float y, float z, float rotation);
 
     public:
         virtual RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
