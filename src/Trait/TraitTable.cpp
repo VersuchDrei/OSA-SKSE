@@ -279,6 +279,17 @@ namespace Trait {
             }
         }
 
+        RE::TESRace* race = base->GetRace();
+        id = Serialization::getEquipObject(race->GetFormID(), type);
+        if (id == "random") {
+            return MapUtil::randomValue(iter->second);
+        } else if (id != "" && id != "default") {
+            auto iter2 = iter->second.find(id);
+            if (iter2 != iter->second.end()) {
+                return iter2->second;
+            }
+        }
+
         id = Serialization::getEquipObject(base->GetSex() == RE::SEX::kMale ? 0x0 : 0x1, type);
         if (id != "" && id != "random") {
             auto iter2 = iter->second.find(id);
@@ -299,12 +310,22 @@ namespace Trait {
         ret.push_back("random");
         ret.push_back("random");
 
+        std::vector<std::pair<std::string, EquipObject*>> objects;
+
         auto iter = equipObjects.find(type);
         if (iter != equipObjects.end()) {
             for (auto& [id, object] : iter->second) {
-                ret.push_back(id);
-                ret.push_back(object->name);
+                objects.push_back({id, object});
             }
+        }
+
+        std::sort(objects.begin(), objects.end(), [&](std::pair<std::string, EquipObject*> pairA, std::pair<std::string, EquipObject*> pairB) {
+            return pairA.first.compare(pairB.first) <= 0;
+        });
+
+        for (auto& [id, object] : objects) {
+            ret.push_back(id);
+            ret.push_back(object->name);
         }
 
         return ret;

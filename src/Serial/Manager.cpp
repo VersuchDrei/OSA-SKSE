@@ -133,7 +133,7 @@ namespace Serialization {
             json["actorData"][stringID] = json::object();
 
             RE::TESForm* form = RE::TESForm::LookupByID(formID);
-            if (form && form->Is(RE::TESNPC::FORMTYPE)) {
+            if (form) {
                 json["actorData"][stringID]["file"] = form->GetFile(0)->GetFilename();
             }
 
