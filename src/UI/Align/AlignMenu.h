@@ -2,6 +2,7 @@
 
 #include "IncrementValue.h"
 
+#include <Alignment/ActorAlignment.h>
 #include <Alignment/Alignments.h>
 #include <Core/Thread.h>
 #include <Graph/Node.h>
@@ -32,7 +33,6 @@ namespace UI::Align {
 
         static void SetNode(Graph::Node* node);        
         static void SetActor(int actor);
-        static void SetActor(RE::Actor* actor);
 
         static void Handle(UI::Controls control);
 
@@ -68,9 +68,8 @@ namespace UI::Align {
 
     private:
         inline static OStim::Thread* currentThread;
-        inline static Graph::Node* currentNode;
-        inline static RE::Actor* currentActor;        
-        inline static OAlign::AlignmentActorInfo currentActorInfo;
+        inline static Graph::Node* currentNode;     
+        inline static Alignment::ActorAlignment currentActorInfo;
 
         inline static int selectedField = 0;
         inline static int selectedSlot = 0;

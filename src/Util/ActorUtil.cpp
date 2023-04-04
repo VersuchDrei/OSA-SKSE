@@ -154,13 +154,11 @@ namespace ActorUtil {
 
     float getHeelOffset(RE::NiAVObject* object) {
         if (object->HasExtraData("HH_OFFSET")) {
-            logger::info("child has hh offset");
             auto hh_offset = object->GetExtraData<RE::NiFloatExtraData>("HH_OFFSET");
             if (hh_offset) {
                 return hh_offset->value;
             }
         } else if (object->HasExtraData("SDTA")) {
-            logger::info("child has sdta");
             auto sdta = object->GetExtraData<RE::NiStringExtraData>("SDTA");
             if (sdta) {
                 json json = json::parse(sdta->value, nullptr, false);

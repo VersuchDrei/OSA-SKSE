@@ -69,7 +69,6 @@ namespace {
                 MCM::MCMTable::setupForms();
                 Furniture::FurnitureTable::setupForms();
 
-                OAlign::Alignments::GetSingleton()->LoadAlignments();
                 UI::Align::AlignMenu::Register();
                 
                 // we are installing this hook so late because we need it to overwrite the PapyrusUtil hook
@@ -120,6 +119,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     Papyrus::Bind();
     Graph::LookupTable::SetupActions();
     Trait::TraitTable::setup();
+    Alignment::Alignments::LoadAlignments();
     Papyrus::Build();
 
     const auto serial = SKSE::GetSerializationInterface();

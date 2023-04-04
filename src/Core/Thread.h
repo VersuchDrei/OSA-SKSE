@@ -4,6 +4,7 @@
 
 #include "ThreadActor.h"
 
+#include "Alignment/ActorAlignment.h"
 #include "Alignment/ThreadKey.h"
 #include "Graph/Node.h"
 #include "Serial/OldThread.h"
@@ -19,7 +20,10 @@ namespace OStim {
 
         void initContinue();
 
-        Alignment::ThreadKey getAlignmentKey();
+        std::string getAlignmentKey();
+        Alignment::ActorAlignment getActorAlignment(int index);
+        void updateActorAlignment(int index, Alignment::ActorAlignment alignment);
+        void alignActors();
         
         void ChangeNode(Graph::Node* a_node);
         Graph::Node* getCurrentNode();
@@ -39,15 +43,6 @@ namespace OStim {
 
         RE::TESObjectREFR* GetStageObject() { return vehicle; }
 
-        std::vector<RE::Actor*> GetTESActors() { 
-            std::vector<RE::Actor*> actors;
-            for (auto& pair : m_actors) {                
-                actors.push_back(pair.second.getActor());
-            }
-            return actors;
-        }
-
-        void alignActor(RE::Actor* actor, float x, float y, float z, float rotation);
 
     public:
         virtual RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
@@ -62,8 +57,10 @@ namespace OStim {
         RE::TESObjectREFR* vehicle;
         std::map<int32_t, ThreadActor> m_actors;
         std::shared_mutex nodeLock;
+
         Graph::Node* m_currentNode = nullptr;
         int m_currentNodeSpeed = 0;
+        std::string alignmentKey;
 
         float freeCamSpeedBefore = 0;
         float worldFOVbefore = 0;
@@ -71,6 +68,9 @@ namespace OStim {
         void addActorInner(int index, RE::Actor* actor);
         void addActorSink(RE::Actor* a_actor);
         void removeActorSink(RE::Actor* a_actor);
+
+        void rebuildAlignmentKey();
+        void alignActor(ThreadActor* threadActor, Alignment::ActorAlignment alignment);
     };
 
 }  // namespace OStim

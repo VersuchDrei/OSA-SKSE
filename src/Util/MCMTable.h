@@ -9,6 +9,7 @@ namespace MCM {
         static bool useFreeCam();
         static float freeCamSpeed();
         static float freeCamFOV();
+        static bool supportImprovedCam();
 
         static float getMaleSexExcitementMult();
         static float getFemaleSexExcitementMult();
@@ -51,6 +52,7 @@ namespace MCM {
         inline static RE::TESGlobal* OStimUseFreeCam;
         inline static RE::TESGlobal* OStimFreeCamSpeed;
         inline static RE::TESGlobal* OStimFreeCamFOV;
+        inline static RE::TESGlobal* OStimImprovedCamSupport;
 
         inline static RE::TESGlobal* maleExcitementMultSetting;
         inline static RE::TESGlobal* femaleExcitementMultSetting;

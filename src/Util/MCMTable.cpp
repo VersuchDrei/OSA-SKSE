@@ -12,6 +12,7 @@ namespace MCM {
         OStimUseFreeCam = dataHandler->LookupForm<RE::TESGlobal>(0xDDE, "OStim.esp");
         OStimFreeCamSpeed = dataHandler->LookupForm<RE::TESGlobal>(0xDDF, "OStim.esp");
         OStimFreeCamFOV = dataHandler->LookupForm<RE::TESGlobal>(0xDE0, "OStim.esp");
+        OStimImprovedCamSupport = dataHandler->LookupForm<RE::TESGlobal>(0xDE6, "OStim.esp");
 
         maleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA2, "OStim.esp");
         femaleExcitementMultSetting = dataHandler->LookupForm<RE::TESGlobal>(0xDA3, "OStim.esp");
@@ -57,6 +58,10 @@ namespace MCM {
 
     float MCMTable::freeCamFOV() {
         return OStimFreeCamFOV->value;
+    }
+
+    bool MCMTable::supportImprovedCam() {
+        return OStimImprovedCamSupport->value;
     }
 
 
@@ -158,7 +163,7 @@ namespace MCM {
     }
 
     bool MCMTable::groupAlignmentByHeight() {
-        return OStimAlignmentGroupByHeight->value != 0;
+        return OStimDisableScaling->value != 0 && OStimAlignmentGroupByHeight->value != 0;
     }
 
     bool MCMTable::groupAlignmentByHeels() {
@@ -189,8 +194,8 @@ namespace MCM {
 
         Serialization::exportSettings(json);
 
-        std::ofstream db_file(*settings_path);
-        db_file << std::setw(2) << json << std::endl;
+        std::ofstream file(*settings_path);
+        file << std::setw(2) << json << std::endl;
     }
 
     void MCMTable::importSettings() {

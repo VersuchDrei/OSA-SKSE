@@ -3,6 +3,8 @@
 #include "RE/G/GFxValue.h"
 #include "RE/G/GPtr.h"
 
+#include "Alignment/Alignments.h"
+
 namespace UI::Align {
 
     inline RE::GFxValue GetRoot() {
@@ -50,54 +52,32 @@ namespace UI::Align {
         if (msgQ) {
             msgQ->AddMessage(AlignMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
         }
-        if (currentActor == nullptr) {
-            if (currentThread != nullptr) {
-                SetActor(0);
-                SelectField(0);
-            }
+        if (currentThread != nullptr) {
+            SetActor(0);
+            SelectField(0);
         }
     }
 
     void AlignMenu::SetThread(OStim::Thread* thread) {
         currentThread = thread;
-        UpdateSceneInfo();
+        SetActor(0);
     }
 
     void AlignMenu::SetNode(Graph::Node* node) {
         currentNode = node;
         UpdateSceneInfo();
-    }
-
-    void AlignMenu::SetActor(int actor) {
-        selectedSlot = actor;
-        currentActor = currentThread->GetTESActors()[selectedSlot];
         LoadCurrentAlignment();
         UpdateActorInfo();
     }
 
-    void AlignMenu::SetActor(RE::Actor* newActor) {
-        currentActor = newActor;
-        auto actors = currentThread->GetTESActors();
-        for (int i = 0; i < actors.size(); i++) {
-            if (actors[i] == newActor) {
-                selectedSlot = i;
-            }
-        }
+    void AlignMenu::SetActor(int actor) {
+        selectedSlot = actor;
         LoadCurrentAlignment();
         UpdateActorInfo();
     }
 
     void AlignMenu::LoadCurrentAlignment() {
-        auto actors = currentThread->GetTESActors();
-        auto genderMap = OAlign::GetGenderMap(&actors);
-
-        auto alignments = OAlign::Alignments::GetSingleton()->GetAlignmentInfoForScene(currentNode, genderMap);
-        auto alignmentInfos = alignments;
-        if (alignments) {
-            currentActorInfo = alignmentInfos->at(selectedSlot);
-        } else {
-            currentActorInfo = {};
-        }
+        currentActorInfo = currentThread->getActorAlignment(selectedSlot);
     }
 
     void AlignMenu::HandleThreadRemoved(OStim::Thread* thread) {
@@ -111,6 +91,8 @@ namespace UI::Align {
         if (msgQ) {
             msgQ->AddMessage(AlignMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
         }
+
+        Alignment::Alignments::SerializeAlignments();
     }
 
     void AlignMenu::UpdateSceneInfo() {
@@ -122,25 +104,28 @@ namespace UI::Align {
 
         const RE::GFxValue sceneInfoPack = RE::GFxValue{currentNode->sourceModule.c_str()};
         const RE::GFxValue sceneInfoAnimName = RE::GFxValue{currentNode->scene_id.c_str()};
-        auto actors = currentThread->GetTESActors();
-        auto genderMap = OAlign::GetGenderMap(&actors);
-        const RE::GFxValue genderMapValue = RE::GFxValue{genderMap.c_str()};
+        //const RE::GFxValue threadKeyValue = RE::GFxValue{currentThread->getAlignmentKey().toString().c_str()};
+        std::string key = currentThread->getAlignmentKey();
+        const RE::GFxValue threadKeyValue = RE::GFxValue{key.c_str()};
 
-        RE::GFxValue infoArray[3]{sceneInfoPack, sceneInfoAnimName, genderMapValue};
+        RE::GFxValue infoArray[3]{sceneInfoPack, sceneInfoAnimName, threadKeyValue};
         sceneInfo.Invoke("updateInfo", nullptr, infoArray, 3);
     }
 
     void AlignMenu::UpdateActorInfo() {
-        if (currentActor == nullptr) return;
+        if (selectedSlot < 0) {
+            return;
+        }
+
         auto root = GetRoot();
 
         RE::GFxValue alignmentInfo;
         root.GetMember("alignmentInfo", &alignmentInfo);
 
-        const RE::GFxValue actorName = RE::GFxValue{currentActor->GetDisplayFullName()};
+        const RE::GFxValue actorName = RE::GFxValue{currentThread->GetActor(selectedSlot)->getActor()->GetDisplayFullName()};
         const RE::GFxValue actorSlot = selectedSlot;
 
-        auto gender = OAlign::GetGenderVal(currentActor);
+        auto gender = "*";
 
         std::string incString = IncrementValueImpl::format(incrementValue);
         const RE::GFxValue incValue = RE::GFxValue{incString};
@@ -207,9 +192,8 @@ namespace UI::Align {
     }
 
     void AlignMenu::ToggleActor() {
-        auto actors = currentThread->GetTESActors();
         selectedSlot++;
-        if (selectedSlot > actors.size() - 1) {
+        if (selectedSlot > currentNode->actors.size() - 1) {
             selectedSlot = 0;
         }
         SetActor(selectedSlot);
@@ -254,7 +238,7 @@ namespace UI::Align {
         RE::GFxValue values[2]{*currentVal, up};
         alignmentInfo.Invoke("updateDoubleField", nullptr, values, 2);
 
-        OAlign::Alignments::GetSingleton()->UpdateAndApplyAlignments(currentThread, currentActorInfo, currentNode, selectedSlot);
+        currentThread->updateActorAlignment(selectedSlot, currentActorInfo);
     }
 
     void AlignMenu::CycleIncrement() {
