@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Util/CameraUtil.h"
+
 namespace {
     bool _IsFreeCam(RE::PlayerCamera* a_camera) {
         return a_camera->currentState == a_camera->cameraStates[RE::CameraState::kFree];
@@ -41,27 +43,19 @@ namespace PapyrusCamera {
     }
 
     void EnableFreeCam(RE::StaticFunctionTag*, bool a_stopTime) {
-        const auto camera = RE::PlayerCamera::GetSingleton();
-        if (camera) {
-            if (!_IsFreeCam(camera)) {
-                _ToggleFreeCam(camera, a_stopTime);
-
-                const auto control = RE::ControlMap::GetSingleton();
-                _sub_140C11AE0(control, 13);
-            }
+        if (!RE::PlayerCamera::GetSingleton()->IsInFreeCameraMode()) {
+            CameraUtil::toggleFlyCam();
         }
     }
 
     void DisableFreeCam(RE::StaticFunctionTag*) {
-        const auto camera = RE::PlayerCamera::GetSingleton();
-        if (camera) {
-            if (_IsFreeCam(camera)) {
-                _ToggleFreeCam(camera, false);
-
-                const auto control = RE::ControlMap::GetSingleton();
-                _sub_140C11BC0(control, 13);
-            }
+        if (RE::PlayerCamera::GetSingleton()->IsInFreeCameraMode()) {
+            CameraUtil::toggleFlyCam();
         }
+    }
+
+    void ToggleFlyCam(RE::StaticFunctionTag*) {
+        CameraUtil::toggleFlyCam();
     }
 
     void SetFreeCamSpeed(RE::BSScript::IVirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*,
@@ -107,6 +101,7 @@ namespace PapyrusCamera {
         BIND(IsFreeCam);
         BIND(EnableFreeCam);
         BIND(DisableFreeCam);
+        BIND(ToggleFlyCam);
         BIND(SetFreeCamSpeed);
 
         BIND(SetFOV);

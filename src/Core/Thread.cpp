@@ -3,6 +3,8 @@
 #include "Graph/LookupTable.h"
 #include "Graph/Node.h"
 #include <Messaging/IMessages.h>
+#include "UI/Align/AlignMenu.h"
+#include "UI/UIState.h"
 #include "Util/CameraUtil.h"
 #include "Util/Constants.h"
 #include "Util/MathUtil.h"
@@ -74,6 +76,10 @@ namespace OStim {
         for (auto& actorIt : m_actors) {
             removeActorSink(actorIt.second.getActor());
         }
+
+        if (isPlayerThread) {
+            UI::UIState::GetSingleton()->hideAllMenues();
+        }
     }
 
     void Thread::initContinue() {
@@ -81,6 +87,32 @@ namespace OStim {
         for (auto& [index, actor] : m_actors) {
             actor.getActor()->EvaluatePackage();
         }
+
+        if (isPlayerThread) {
+            UI::Align::AlignMenu::SetThread(this);
+        }
+    }
+
+    void Thread::rebuildAlignmentKey() {
+        Alignment::ThreadKey key;
+
+        for (int i = 0; i < m_actors.size(); i++) {
+            key.keys.push_back(m_actors.find(i)->second.getAlignmentKey());
+        }
+
+        alignmentKey = key.toString();
+
+        if (isPlayerThread) {
+            UI::Align::AlignMenu::SetNode(m_currentNode);
+        }   
+    }
+
+    std::string Thread::getAlignmentKey() {
+        return alignmentKey;
+    }
+
+    Alignment::ActorAlignment Thread::getActorAlignment(int index) {
+        return Alignment::Alignments::getActorAlignment(alignmentKey, m_currentNode, index);
     }
 
     void Thread::ChangeNode(Graph::Node* a_node) {
@@ -159,12 +191,14 @@ namespace OStim {
             }
         }
 
+        alignActors();
+
         auto messaging = SKSE::GetMessagingInterface();
 
         Messaging::AnimationChangedMessage msg;
         msg.newAnimation = a_node;
         logger::info("Sending animation changed event");
-        Messaging::MessagingRegistry::GetSingleton()->SendMessageToListeners(msg);
+        Messaging::MessagingRegistry::GetSingleton()->SendMessageToListeners(msg);     
     }
 
     Graph::Node* Thread::getCurrentNode() {
@@ -200,15 +234,38 @@ namespace OStim {
             threadActor->removeWeapons();
         }
         actor->MoveTo(vehicle);
-        alignActor(actor, 0, 0, 0);
+        alignActor(threadActor, {});
     }
 
-    void Thread::alignActor(RE::Actor* actor, float x, float y, float z) {
+    void Thread::alignActors() {
+        rebuildAlignmentKey();
+        for (auto& [index, actor] : m_actors) {
+            alignActor(&actor, getActorAlignment(index));
+        }
+    }
+
+    void Thread::alignActor(ThreadActor* threadActor, Alignment::ActorAlignment alignment) {
         float angle = vehicle->GetAngleZ();
         float sin = std::sin(angle);
         float cos = std::cos(angle);
-        ObjectRefUtil::translateTo(actor, vehicle->data.location.x + cos * x + sin * y, vehicle->data.location.y - sin * x + cos * y, vehicle->data.location.z + z,
-            MathUtil::toDegrees(vehicle->data.angle.x), MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(vehicle->data.angle.z) + 1, 1000000, 0.0001);
+
+        float newAngle = vehicle->data.angle.z + MathUtil::toRadians(alignment.rotation);
+
+        RE::Actor* actor = threadActor->getActor();
+
+        ObjectRefUtil::stopTranslation(actor);
+
+        actor->SetRotationZ(newAngle);       
+
+        ObjectRefUtil::translateTo(actor, vehicle->data.location.x + cos * alignment.offsetX + sin * alignment.offsetY, vehicle->data.location.y - sin * alignment.offsetX + cos * alignment.offsetY, vehicle->data.location.z + alignment.offsetZ,
+            MathUtil::toDegrees(vehicle->data.angle.x), MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(newAngle) + 1, 1000000, 0.0001);
+
+        threadActor->setSoSBend(alignment.sosBend);
+    }
+
+    void Thread::updateActorAlignment(int index, Alignment::ActorAlignment alignment) {
+        alignActor(GetActor(index), alignment);
+        Alignment::Alignments::setActorAlignment(alignmentKey, m_currentNode, index, alignment);
     }
 
     void Thread::loop() {

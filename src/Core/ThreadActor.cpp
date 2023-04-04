@@ -1,6 +1,7 @@
 #include "ThreadActor.h"
 
 #include "Core.h"
+#include "ThreadManager.h"
 #include "Graph/LookupTable.h"
 #include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
@@ -41,6 +42,10 @@ namespace OStim {
                 vm->DispatchStaticCall("OSKSE", "GetRmScale", args, callback);
             }
         }
+    }
+
+    Alignment::ActorKey ThreadActor::getAlignmentKey() {
+        return Alignment::ActorKey(isFemale, actor->GetActorBase()->GetHeight() * rmHeight, heelOffsetRemoved ? 0 : heelOffset);
     }
 
     void ThreadActor::undress() {
@@ -230,7 +235,6 @@ namespace OStim {
 
     void ThreadActor::changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions) {
         this->graphActor = graphActor;
-        bendSchlong();
 
         // heel stuff
         checkHeelOffset();
@@ -268,6 +272,11 @@ namespace OStim {
         this->speed = speed;
     }
 
+    void ThreadActor::setSoSBend(int sosBend) {
+        this->sosBend = sosBend;
+        bendSchlong();
+    }
+
     void ThreadActor::handleNiNodeUpdate() {
         bendSchlong();
         updateHeelOffset();
@@ -302,6 +311,17 @@ namespace OStim {
         }
         if ((underlyingExpressionCooldown -= Constants::LOOP_TIME_MILLISECONDS) < 0) {
             updateUnderlyingExpression();
+
+            // randomly make the actor look down when performing oral
+            if (overrideExpression) {
+                if (eyeballModifierOverride.size() == 1 && eyeballModifierOverride.contains(8) && eyeballModifierOverride[8].baseValue == 100) {
+                    resetLooking();
+                } else {
+                    if (std::uniform_int_distribution<int>(0, 4)(Constants::RNG) == 0) {
+                        setLooking({{8, {.baseValue = 100}}});
+                    }
+                }
+            }
         }
 
         auto faceData = actor->GetFaceGenAnimationData();
@@ -371,7 +391,7 @@ namespace OStim {
 
     void ThreadActor::bendSchlong() {
         if (!MCM::MCMTable::isSchlongBendingDisabled()) {
-            actor->NotifyAnimationGraph("SOSBend" + std::to_string(graphActor ? graphActor->penisAngle : 0));
+            actor->NotifyAnimationGraph("SOSBend" + std::to_string(sosBend));
         }
     }
 
@@ -446,6 +466,9 @@ namespace OStim {
 
         if (!heelOffsetRemoved) {
             scale();
+            if (MCM::MCMTable::groupAlignmentByHeels()) {
+                ThreadManager::GetSingleton()->GetThread(threadId)->alignActors();
+            }
             return;
         }
 
@@ -855,9 +878,17 @@ namespace OStim {
     }
 
     void ThreadActor::GetRmHeightCallbackFunctor::setRmHeight(float height) {
+        if (height == 1) {
+            return;
+        }
+
         threadActor->rmHeight = height;
         float currentScale = threadActor->actor->GetReferenceRuntimeData().refScale / 100.0f;
         ActorUtil::setScale(threadActor->actor, currentScale / height);
+
+        if (MCM::MCMTable::groupAlignmentByHeight()) {
+            ThreadManager::GetSingleton()->GetThread(threadActor->threadId)->alignActors();
+        }
     }
 
     Serialization::OldThreadActor ThreadActor::serialize() {

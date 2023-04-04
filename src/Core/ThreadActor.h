@@ -3,6 +3,7 @@
 #include "EquipObjectHandler.h"
 #include "ExpressionUpdater.h"
 
+#include "Alignment/ActorKey.h"
 #include "Graph/Node.h"
 #include "Trait/EquipObject.h"
 #include "Serial/OldThread.h"
@@ -23,6 +24,8 @@ namespace OStim {
 
 		inline RE::Actor* getActor() { return actor; }
 
+        Alignment::ActorKey getAlignmentKey();
+
         void undress();
         void undressPartial(uint32_t mask);
         void removeWeapons();
@@ -32,6 +35,7 @@ namespace OStim {
 
         void changeNode(Graph::Actor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions);
         void changeSpeed(int speed);
+        void setSoSBend(int sosBend);
 
         void handleNiNodeUpdate();
 
@@ -125,6 +129,7 @@ namespace OStim {
 
         Graph::Actor* graphActor = nullptr;
         int speed = 0;
+        int sosBend = 0;
 
         bool undressed = false;
         uint32_t undressedMask = 0;

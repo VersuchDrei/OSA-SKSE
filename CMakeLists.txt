@@ -24,6 +24,9 @@ set(headers
         include/Header/Header.h)
 
 set(sources
+    src/Alignment/ActorKey.cpp
+    src/Alignment/Alignments.cpp
+    src/Alignment/ThreadKey.cpp
     src/Core/Core.cpp
     src/Core/EquipObjectHandler.cpp
     src/Core/ExpressionUpdater.cpp
@@ -39,6 +42,7 @@ set(sources
 	src/Game/LocaleManager.h
 	src/Game/Locker.h
 	src/Game/Patch.h
+    src/GameAPI/GameSex.cpp
     src/Graph/Action.cpp
     src/Graph/LookupTable.cpp
     src/Graph/Node.cpp
@@ -51,6 +55,9 @@ set(sources
     src/Trait/Condition.cpp
     src/Trait/FacialExpression.cpp
     src/Trait/TraitTable.cpp
+    src/UI/Align/AlignMenu.cpp
+    src/UI/Align/IncrementValue.cpp
+    src/UI/UIState.cpp
     src/Util/ActorUtil.cpp
     src/Util/CameraUtil.cpp
     src/Util/FormUtil.cpp

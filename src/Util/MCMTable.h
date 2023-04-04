@@ -9,6 +9,7 @@ namespace MCM {
         static bool useFreeCam();
         static float freeCamSpeed();
         static float freeCamFOV();
+        static bool supportImprovedCam();
 
         static float getMaleSexExcitementMult();
         static float getFemaleSexExcitementMult();
@@ -38,13 +39,20 @@ namespace MCM {
         static bool unequipStrapOnIfNotNeeded();
         static bool unequipStrapOnIfInWay();
 
+        static bool groupAlignmentBySex();
+        static bool groupAlignmentByHeight();
+        static bool groupAlignmentByHeels();
+
         static void exportSettings();
         static void importSettings();
 
     private:
+        inline static RE::TESGlobal* OStimKeyAlignment;
+
         inline static RE::TESGlobal* OStimUseFreeCam;
         inline static RE::TESGlobal* OStimFreeCamSpeed;
         inline static RE::TESGlobal* OStimFreeCamFOV;
+        inline static RE::TESGlobal* OStimImprovedCamSupport;
 
         inline static RE::TESGlobal* maleExcitementMultSetting;
         inline static RE::TESGlobal* femaleExcitementMultSetting;
@@ -71,5 +79,11 @@ namespace MCM {
         inline static RE::TESGlobal* OStimEquipStrapOnIfNeeded;
         inline static RE::TESGlobal* OStimUnequipStrapOnIfNotNeeded;
         inline static RE::TESGlobal* OStimUnequipStrapOnIfInWay;
+
+        inline static RE::TESGlobal* OStimAlignmentGroupBySex;
+        inline static RE::TESGlobal* OStimAlignmentGroupByHeight;
+        inline static RE::TESGlobal* OStimAlignmentGroupByHeels;
+
+        static void importSetting(json json, RE::TESGlobal* setting, std::string key, float fallback);
     };
 }
